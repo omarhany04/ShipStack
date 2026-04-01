@@ -90,10 +90,10 @@ export default function UserMenu() {
               }}
             />
             <MenuButton
-              label="Open saved projects"
+              label="Database explorer"
               onClick={() => {
                 setIsOpen(false);
-                window.open('/api/projects', '_blank', 'noopener,noreferrer');
+                router.push('/database');
               }}
             />
             <MenuButton

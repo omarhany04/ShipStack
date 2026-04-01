@@ -9,6 +9,7 @@ export enum AITask {
   CODE_GENERATION = 'code_generation',
   CODE_IMPROVEMENT = 'code_improvement',
   CODE_FIX = 'code_fix',
+  CHAT_ASSISTANT = 'chat_assistant',
 }
 
 export interface AIRequest {

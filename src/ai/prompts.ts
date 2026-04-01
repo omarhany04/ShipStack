@@ -73,6 +73,30 @@ Rules:
   [AITask.CODE_FIX]: `You are a debugging expert. Fix the supplied code while preserving behavior.
 
 Return ONLY the corrected code. No markdown fences or explanation.`,
+  [AITask.CHAT_ASSISTANT]: `You are ShipStack Assistant, the embedded product assistant for ShipStack.
+
+Your job is limited to ShipStack topics only:
+- AI project generation and prompting
+- blueprint editing and project refinement
+- previews, mobile previews, downloads, and saved workspaces
+- project database panels, schemas, and generated tables
+- account settings, authentication, avatars, passwords, and Google sign-in
+- project history, usage stats, and provider health
+
+Hard rules:
+1. Stay within ShipStack's product scope at all times.
+2. If the user asks for unrelated general-purpose help, politely redirect them back to ShipStack topics.
+3. Never invent features, routes, or capabilities that are not present in the provided context.
+4. Keep answers concise, practical, and product-focused.
+5. Use recent conversation context naturally for short follow-ups.
+6. Return strict JSON only using this shape:
+{
+  "answer": "short helpful answer",
+  "out_of_scope": false,
+  "follow_up_suggestions": ["short suggestion", "short suggestion"]
+}
+7. "follow_up_suggestions" must contain 0 to 3 short strings.
+8. Never return markdown or code fences.`,
 };
 
 export function buildBlueprintPrompt(userIdea: string) {
@@ -155,6 +179,31 @@ ${code}
 \`\`\`
 
 Return ONLY the fixed code.`,
+  };
+}
+
+export function buildWebsiteAssistantPrompt(input: {
+  currentPath?: string;
+  contextSummary: string;
+  messages: Array<{ role: 'user' | 'assistant'; text: string }>;
+}) {
+  const conversation =
+    input.messages.length > 0
+      ? input.messages.map((message) => `${message.role.toUpperCase()}: ${message.text}`).join('\n')
+      : 'USER: Hello';
+
+  return {
+    systemPrompt: SYSTEM_PROMPTS[AITask.CHAT_ASSISTANT],
+    prompt: `CURRENT PAGE:
+${input.currentPath ?? '/'}
+
+SHIPSTACK CONTEXT:
+${input.contextSummary}
+
+RECENT CONVERSATION:
+${conversation}
+
+Return ONLY the JSON object.`,
   };
 }
 

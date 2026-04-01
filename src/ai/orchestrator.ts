@@ -37,6 +37,11 @@ const ROUTING_RULES: TaskRoutingRule[] = [
     primary: AIProvider.OPENROUTER,
     fallbacks: [AIProvider.GROQ, AIProvider.GEMINI],
   },
+  {
+    task: AITask.CHAT_ASSISTANT,
+    primary: AIProvider.GEMINI,
+    fallbacks: [AIProvider.OPENROUTER, AIProvider.GROQ],
+  },
 ];
 
 class AIOrchestrator {

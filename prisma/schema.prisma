@@ -8,18 +8,31 @@ datasource db {
 }
 
 model User {
-  id         String     @id @default(cuid())
-  email      String?    @unique
-  name       String?
-  avatarUrl  String?
-  sessionId  String?    @unique
-  projects   Project[]
-  usageLogs  UsageLog[]
-  createdAt  DateTime   @default(now())
-  updatedAt  DateTime   @updatedAt
+  id            String     @id @default(cuid())
+  email         String?    @unique
+  passwordHash  String?
+  name          String?
+  avatarUrl     String?
+  company       String?
+  role          UserRole   @default(USER)
+  emailVerified DateTime?
+  isActive      Boolean    @default(true)
+  lastLoginAt   DateTime?
+  // Legacy field kept temporarily so existing anonymous rows do not force a destructive reset.
+  sessionId     String?    @unique
+  projects      Project[]
+  usageLogs     UsageLog[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
-  @@index([sessionId])
   @@index([email])
+  @@index([isActive])
+  @@index([sessionId])
+}
+
+enum UserRole {
+  USER
+  ADMIN
 }
 
 model Project {

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
+import Providers from './providers';
 
 const headingFont = Space_Grotesk({
   subsets: ['latin'],
@@ -14,9 +15,9 @@ const bodyFont = IBM_Plex_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'AI Auto Startup Builder',
+  title: 'ShipStack — Build Apps with AI',
   description:
-    'Describe a startup idea in plain English and generate a full Next.js codebase with AI orchestration, validation, and live preview.',
+    'Describe a product idea in plain English and generate a full Next.js codebase with AI orchestration, validation, persistence, and live preview.',
 };
 
 export default function RootLayout({
@@ -30,7 +31,9 @@ export default function RootLayout({
         <meta httpEquiv="Cross-Origin-Embedder-Policy" content="require-corp" />
         <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin" />
       </head>
-      <body>{children}</body>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }

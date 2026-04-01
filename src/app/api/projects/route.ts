@@ -21,6 +21,16 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       },
     });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Authentication required.',
+        },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

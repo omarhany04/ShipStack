@@ -22,6 +22,13 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
       files: result.files,
     });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required.' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -47,6 +54,13 @@ export async function DELETE(
     await ProjectService.delete(params.id);
     return NextResponse.json({ success: true, message: 'Project deleted.' });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { success: false, error: 'Authentication required.' },
+        { status: 401 }
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,

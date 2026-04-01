@@ -51,7 +51,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       try {
         const user = await getCurrentUser();
         userId = user.id;
-      } catch {}
+      } catch {
+        return errorResponse('Authentication required.', 401, requestId);
+      }
     }
 
     const blueprintResult = await generateBlueprint(body.idea);

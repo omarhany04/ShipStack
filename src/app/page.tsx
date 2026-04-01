@@ -6,9 +6,12 @@ import PreviewPanel from './components/PreviewPanel';
 import ProgressIndicator from './components/ProgressIndicator';
 import PromptInput from './components/PromptInput';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
+import { useAuth } from '@/lib/auth/useAuth';
+import UserMenu from './components/UserMenu';
 
 export default function HomePage() {
   const { state, generate, download, reset } = useProjectGenerator();
+  const { user } = useAuth();
   const isLoading = !['idle', 'ready', 'error'].includes(state.stage);
   const showResults = state.stage === 'ready' && state.project;
   const showProgress = isLoading || state.stage === 'error';
@@ -40,11 +43,21 @@ export default function HomePage() {
                 Start Over
               </button>
             ) : null}
+            <UserMenu />
           </div>
         </div>
       </header>
 
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        {state.stage === 'idle' && user ? (
+          <div className="mb-8 flex justify-center">
+            <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">
+              <span className="font-semibold text-slate-900">Welcome back, {user.name}</span>
+              <span className="text-slate-400">Your generations will be saved to your account.</span>
+            </div>
+          </div>
+        ) : null}
+
         {(state.stage === 'idle' || state.stage === 'error') ? (
           <section className="py-8">
             <div className="mx-auto mb-10 max-w-4xl text-center">
@@ -55,7 +68,7 @@ export default function HomePage() {
                 Turn a plain-English startup idea into a runnable codebase
               </h2>
               <p className="mx-auto mt-5 max-w-3xl text-lg leading-8 text-slate-600">
-                Gemini, Groq, and OpenRouter coordinate blueprint generation, validation, code scaffolding, preview boot, and zip export in one flow.
+                Gemini, Groq, and OpenRouter coordinate blueprint generation, validation, code scaffolding, preview boot, zip export, and authenticated project saving in one flow.
               </p>
             </div>
             <PromptInput onSubmit={generate} isLoading={isLoading} />

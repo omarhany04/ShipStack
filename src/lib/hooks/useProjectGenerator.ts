@@ -130,7 +130,7 @@ export function useProjectGenerator() {
       setStage('generating_blueprint');
       addLog('Requesting blueprint from the orchestration layer...');
 
-      const response = await fetch('/api/generate?mode=full', {
+      const response = await fetch('/api/generate?mode=full&persist=true', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,6 @@ export function useProjectGenerator() {
         body: JSON.stringify({
           idea,
           enableAI: true,
-          persist: false,
         }),
         signal: abortRef.current.signal,
       });

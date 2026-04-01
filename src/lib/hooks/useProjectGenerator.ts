@@ -1,7 +1,7 @@
 'use client';
 
-import { startTransition, useRef, useState } from 'react';
-import { buildDisplayTree, TreeNode } from '@/builder/file-writer';
+import { startTransition, useRef, useState, type Dispatch, type SetStateAction } from 'react';
+import { buildDisplayTree, buildFileSystemTree, TreeNode } from '@/builder/file-writer';
 import { Blueprint } from '@/validators/blueprint.validator';
 
 export type PipelineStage =
@@ -16,17 +16,43 @@ export type PipelineStage =
   | 'ready'
   | 'error';
 
-export interface GeneratedProject {
+interface ProjectStats {
+  totalFiles: number;
+  templateGenerated: number;
+  aiGenerated: number;
+  totalSizeBytes: number;
+  totalLatencyMs: number;
+}
+
+interface ProjectFile {
+  path: string;
+  content: string;
+  source: string;
+}
+
+interface GenerateApiResponse {
+  success: boolean;
+  projectId: string | null;
   blueprint: Blueprint;
-  files: Array<{ path: string; content: string; source: string }>;
+  project: {
+    files: ProjectFile[];
+    stats: ProjectStats;
+    warnings: string[];
+    errors: string[];
+  };
+  metadata: {
+    provider?: string;
+    generation: ProjectStats;
+  };
+  error?: string;
+}
+
+export interface GeneratedProject {
+  projectId: string | null;
+  blueprint: Blueprint;
+  files: ProjectFile[];
   displayTree: TreeNode | null;
-  stats: {
-    totalFiles: number;
-    templateGenerated: number;
-    aiGenerated: number;
-    totalSizeBytes: number;
-    totalLatencyMs: number;
-  } | null;
+  stats: ProjectStats | null;
   warnings: string[];
 }
 
@@ -65,6 +91,12 @@ const STAGE_MESSAGES: Record<PipelineStage, string> = {
   ready: 'Your app is ready',
   error: 'Something went wrong',
 };
+
+interface RunOptions {
+  preserveExistingProject?: boolean;
+  introLog: string;
+  startsWithBlueprint?: boolean;
+}
 
 export function useProjectGenerator() {
   const [state, setState] = useState<PipelineState>({
@@ -107,7 +139,7 @@ export function useProjectGenerator() {
     }));
   }
 
-  async function generate(idea: string) {
+  async function prepareRun(preserveExistingProject = false) {
     abortRef.current?.abort();
     abortRef.current = new AbortController();
 
@@ -116,19 +148,36 @@ export function useProjectGenerator() {
       teardownRef.current = null;
     }
 
-    setState({
+    setState((current) => ({
       stage: 'validating',
       progress: STAGE_PROGRESS.validating,
       message: STAGE_MESSAGES.validating,
       error: null,
-      project: null,
-      previewUrl: null,
+      project: preserveExistingProject ? current.project : null,
+      previewUrl: preserveExistingProject ? current.previewUrl : null,
       logs: [],
-    });
+    }));
+  }
+
+  async function runGeneration(
+    payload: Record<string, unknown>,
+    options: RunOptions
+  ) {
+    await prepareRun(options.preserveExistingProject);
 
     try {
-      setStage('generating_blueprint');
-      addLog('Requesting blueprint from the orchestration layer...');
+      if (options.startsWithBlueprint) {
+        setStage('validating', 'Validating your edited blueprint...');
+      } else {
+        setStage('generating_blueprint');
+      }
+
+      addLog(options.introLog);
+
+      const controller = abortRef.current;
+      if (!controller) {
+        throw new Error('Generation request controller was not initialized.');
+      }
 
       const response = await fetch('/api/generate?mode=full&persist=true', {
         method: 'POST',
@@ -136,43 +185,45 @@ export function useProjectGenerator() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          idea,
           enableAI: true,
+          ...payload,
         }),
-        signal: abortRef.current.signal,
+        signal: controller.signal,
       });
 
-      const data = await response.json().catch(() => null);
+      const data = (await response.json().catch(() => null)) as GenerateApiResponse | null;
       if (!response.ok || !data?.success) {
         throw new Error(data?.error || `Request failed with status ${response.status}`);
       }
 
       setStage('generating_code');
       addLog(`Blueprint ready: ${data.blueprint.projectName}`);
+      if (data.metadata.provider) {
+        addLog(`Blueprint source: ${data.metadata.provider}`);
+      }
       addLog(`Generated ${data.project.stats.totalFiles} files`);
 
       setStage('building');
       addLog('Preparing file tree and preview state...');
 
-      const generatedFiles = data.project.files.map(
-        (file: { path: string; content: string; source: string }) => ({
-          path: file.path,
-          content: file.content,
-          source: file.source,
-        })
-      );
+      const generatedFiles = data.project.files.map((file) => ({
+        path: file.path,
+        content: file.content,
+        source: file.source,
+      }));
 
-      const displayTree = buildDisplayTree(
-        generatedFiles.map((file: { path: string; content: string; source: string }) => ({
-          ...file,
-          source: file.source as 'template' | 'ai' | 'hybrid',
-        }))
-      );
+      const normalizedFiles = generatedFiles.map((file) => ({
+        ...file,
+        source: file.source as 'template' | 'ai' | 'hybrid',
+      }));
+
+      const displayTree = buildDisplayTree(normalizedFiles);
 
       startTransition(() => {
         setState((current) => ({
           ...current,
           project: {
+            projectId: data.projectId ?? current.project?.projectId ?? null,
             blueprint: data.blueprint,
             files: generatedFiles,
             displayTree,
@@ -184,43 +235,9 @@ export function useProjectGenerator() {
 
       addLog('Launching live preview...');
 
-      const { buildFileSystemTree } = await import('@/builder/file-writer');
-      const { runInWebContainer } = await import('@/lib/webcontainer');
-      const fsTree = buildFileSystemTree(
-        generatedFiles.map((file: { path: string; content: string; source: string }) => ({
-          ...file,
-          source: file.source as 'template' | 'ai' | 'hybrid',
-        }))
-      );
-
-      const result = await runInWebContainer(fsTree, {
-        onStatus(status) {
-          if (status === 'booting') setStage('preview_booting');
-          if (status === 'installing') setStage('preview_installing');
-          if (status === 'starting') setStage('preview_starting');
-          if (status === 'ready') setStage('ready');
-        },
-        onLog(message) {
-          addLog(message);
-        },
-        onUrl(url) {
-          setState((current) => ({
-            ...current,
-            previewUrl: url,
-          }));
-        },
-        onError(message) {
-          addLog(`Preview error: ${message}`);
-          setState((current) => ({
-            ...current,
-            stage: 'ready',
-            progress: 100,
-            message: 'Project generated (preview unavailable)',
-          }));
-        },
-      });
-
+      const result = await runPreview(normalizedFiles, setStage, addLog, setState);
       teardownRef.current = result.teardown;
+
       setState((current) => ({
         ...current,
         stage: 'ready',
@@ -232,10 +249,56 @@ export function useProjectGenerator() {
       if (error instanceof DOMException && error.name === 'AbortError') {
         return;
       }
+
       const message = error instanceof Error ? error.message : 'Unexpected error';
       addLog(`Error: ${message}`);
       setError(message);
     }
+  }
+
+  async function generate(idea: string) {
+    return runGeneration(
+      { idea },
+      {
+        introLog: 'Requesting blueprint from the orchestration layer...',
+      }
+    );
+  }
+
+  async function refineWithPrompt(prompt: string) {
+    if (!state.project) {
+      return;
+    }
+
+    return runGeneration(
+      {
+        blueprint: state.project.blueprint,
+        modificationPrompt: prompt,
+        projectId: state.project.projectId,
+      },
+      {
+        introLog: 'Applying your follow-up prompt to the current blueprint...',
+        preserveExistingProject: true,
+      }
+    );
+  }
+
+  async function regenerateFromBlueprint(blueprint: Blueprint) {
+    if (!state.project) {
+      return;
+    }
+
+    return runGeneration(
+      {
+        blueprint,
+        projectId: state.project.projectId,
+      },
+      {
+        introLog: 'Validating your edited blueprint and regenerating the project...',
+        preserveExistingProject: true,
+        startsWithBlueprint: true,
+      }
+    );
   }
 
   async function download() {
@@ -279,6 +342,7 @@ export function useProjectGenerator() {
       await teardownRef.current();
       teardownRef.current = null;
     }
+
     setState({
       stage: 'idle',
       progress: 0,
@@ -293,7 +357,46 @@ export function useProjectGenerator() {
   return {
     state,
     generate,
+    refineWithPrompt,
+    regenerateFromBlueprint,
     download,
     reset,
   };
+}
+
+async function runPreview(
+  files: Array<{ path: string; content: string; source: 'template' | 'ai' | 'hybrid' }>,
+  setStage: (stage: PipelineStage, message?: string) => void,
+  addLog: (message: string) => void,
+  setState: Dispatch<SetStateAction<PipelineState>>
+) {
+  const { runInWebContainer } = await import('@/lib/webcontainer');
+  const fsTree = buildFileSystemTree(files);
+
+  return runInWebContainer(fsTree, {
+    onStatus(status) {
+      if (status === 'booting') setStage('preview_booting');
+      if (status === 'installing') setStage('preview_installing');
+      if (status === 'starting') setStage('preview_starting');
+      if (status === 'ready') setStage('ready');
+    },
+    onLog(message) {
+      addLog(message);
+    },
+    onUrl(url) {
+      setState((current) => ({
+        ...current,
+        previewUrl: url,
+      }));
+    },
+    onError(message) {
+      addLog(`Preview error: ${message}`);
+      setState((current) => ({
+        ...current,
+        stage: 'ready',
+        progress: 100,
+        message: 'Project generated (preview unavailable)',
+      }));
+    },
+  });
 }

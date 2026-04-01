@@ -90,6 +90,11 @@ export class ProjectService {
       await transaction.project.update({
         where: { id: projectId },
         data: {
+          name: blueprint.projectName,
+          displayName: blueprint.projectName
+            .replace(/-/g, ' ')
+            .replace(/\b\w/g, (char) => char.toUpperCase()),
+          description: blueprint.description,
           status: 'GENERATED',
           totalFiles: generationResult.stats.totalFiles,
           totalSizeBytes: generationResult.stats.totalSizeBytes,

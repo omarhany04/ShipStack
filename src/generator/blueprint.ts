@@ -1,6 +1,6 @@
 import { aiLogger } from '@/ai/logger';
 import { aiOrchestrator } from '@/ai/orchestrator';
-import { buildBlueprintPrompt } from '@/ai/prompts';
+import { buildBlueprintPrompt, buildBlueprintRefinementPrompt } from '@/ai/prompts';
 import { AIOrchestrationError, AITask } from '@/ai/types';
 import { validateBlueprint, Blueprint, BlueprintValidationResult } from '@/validators/blueprint.validator';
 import { validateUserInput } from '@/validators/input.validator';
@@ -121,6 +121,93 @@ export async function generateBlueprint(rawInput: unknown): Promise<BlueprintGen
   };
 }
 
+export async function refineBlueprint(
+  currentBlueprint: Blueprint,
+  rawInstructions: unknown
+): Promise<BlueprintGenerationResult> {
+  const startedAt = Date.now();
+
+  if (typeof rawInstructions !== 'string' || rawInstructions.trim().length < 4) {
+    return {
+      success: false,
+      error: 'Please provide a more specific follow-up prompt.',
+      details: ['Follow-up prompt must be at least 4 characters long.'],
+      stage: 'input_validation',
+    };
+  }
+
+  const instructions = rawInstructions.trim();
+  let lastValidation: BlueprintValidationResult | null = null;
+
+  for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt += 1) {
+    aiLogger.info(
+      `Blueprint refinement attempt ${attempt}/${MAX_GENERATION_ATTEMPTS}`,
+      undefined,
+      AITask.BLUEPRINT_GENERATION
+    );
+
+    try {
+      const basePrompt = buildBlueprintRefinementPrompt(currentBlueprint, instructions);
+      const prompt =
+        attempt === 1 || !lastValidation
+          ? basePrompt.prompt
+          : appendValidationFeedback(basePrompt.prompt, lastValidation);
+
+      const aiResponse = await aiOrchestrator.execute({
+        task: AITask.BLUEPRINT_GENERATION,
+        prompt,
+        systemPrompt: basePrompt.systemPrompt,
+        temperature: attempt === 1 ? 0.55 : 0.35,
+        maxTokens: 8192,
+        expectJson: true,
+      });
+
+      const validation = validateBlueprint(aiResponse.parsed);
+      lastValidation = validation;
+
+      if (validation.isValid && validation.blueprint) {
+        return {
+          success: true,
+          blueprint: validation.blueprint,
+          validation,
+          metadata: {
+            userInput: instructions,
+            sanitizedInput: instructions,
+            generationAttempts: attempt,
+            totalLatencyMs: Date.now() - startedAt,
+            provider: aiResponse.provider,
+          },
+        };
+      }
+    } catch (error) {
+      if (error instanceof AIOrchestrationError && attempt === MAX_GENERATION_ATTEMPTS) {
+        return {
+          success: false,
+          error: 'All AI providers failed to refine the blueprint.',
+          details: [error.message],
+          stage: 'ai_generation',
+        };
+      }
+
+      if (!(error instanceof AIOrchestrationError) && attempt === MAX_GENERATION_ATTEMPTS) {
+        return {
+          success: false,
+          error: 'Blueprint refinement failed unexpectedly.',
+          details: [error instanceof Error ? error.message : 'Unknown error'],
+          stage: 'unknown',
+        };
+      }
+    }
+  }
+
+  return {
+    success: false,
+    error: 'Failed to refine the blueprint after multiple attempts.',
+    details: lastValidation?.errors ?? ['Unknown validation error.'],
+    stage: 'blueprint_validation',
+  };
+}
+
 function buildBlueprintGenerationPrompt(
   userIdea: string,
   attempt: number,
@@ -131,7 +218,17 @@ function buildBlueprintGenerationPrompt(
     return base;
   }
 
-  const retryAddendum = `
+  return {
+    systemPrompt: base.systemPrompt,
+    prompt: appendValidationFeedback(base.prompt, previousValidation),
+  };
+}
+
+function appendValidationFeedback(
+  prompt: string,
+  previousValidation: BlueprintValidationResult
+) {
+  return `${prompt}
 
 IMPORTANT: A previous generation attempt failed validation. Fix the following issues:
 
@@ -144,9 +241,4 @@ ${
     : ''
 }
 Ensure the output is ONLY valid JSON matching the exact schema.`;
-
-  return {
-    systemPrompt: base.systemPrompt,
-    prompt: base.prompt + retryAddendum,
-  };
 }

@@ -2,15 +2,18 @@
 
 import DownloadButton from './components/DownloadButton';
 import FileExplorer from './components/FileExplorer';
+import FollowUpPrompt from './components/FollowUpPrompt';
 import PreviewPanel from './components/PreviewPanel';
 import ProgressIndicator from './components/ProgressIndicator';
 import PromptInput from './components/PromptInput';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
 import { useAuth } from '@/lib/auth/useAuth';
 import UserMenu from './components/UserMenu';
+import BlueprintEditor from './components/BlueprintEditor';
 
 export default function HomePage() {
-  const { state, generate, download, reset } = useProjectGenerator();
+  const { state, generate, refineWithPrompt, regenerateFromBlueprint, download, reset } =
+    useProjectGenerator();
   const { user } = useAuth();
   const isLoading = !['idle', 'ready', 'error'].includes(state.stage);
   const showResults = state.stage === 'ready' && state.project;
@@ -140,6 +143,15 @@ export default function HomePage() {
                 </div>
               </details>
             ) : null}
+
+            <div className="grid gap-6 xl:grid-cols-[0.86fr_1.14fr]">
+              <FollowUpPrompt onSubmit={refineWithPrompt} isLoading={isLoading} />
+              <BlueprintEditor
+                blueprint={state.project.blueprint}
+                onRegenerate={regenerateFromBlueprint}
+                isLoading={isLoading}
+              />
+            </div>
 
             <div className="grid gap-6 lg:grid-cols-3">
               <div className="h-[680px] lg:col-span-2">

@@ -82,6 +82,30 @@ export function buildBlueprintPrompt(userIdea: string) {
   };
 }
 
+export function buildBlueprintRefinementPrompt(
+  currentBlueprint: unknown,
+  instructions: string
+) {
+  return {
+    systemPrompt: SYSTEM_PROMPTS[AITask.BLUEPRINT_GENERATION],
+    prompt: `You are refining an existing application blueprint.
+
+CURRENT BLUEPRINT:
+${JSON.stringify(currentBlueprint, null, 2)}
+
+REQUESTED MODIFICATIONS:
+${instructions}
+
+Return a complete updated blueprint JSON object.
+
+Rules:
+- Keep the existing blueprint structure unless the request explicitly changes it
+- Preserve useful details that are still compatible
+- Update features, pages, models, endpoints, and tech stack where needed
+- Return ONLY valid JSON`,
+  };
+}
+
 export function buildCodeGenerationPrompt(
   fileDescription: string,
   blueprint: Record<string, unknown>,

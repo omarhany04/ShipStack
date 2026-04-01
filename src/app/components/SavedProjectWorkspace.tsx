@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import DownloadButton from './DownloadButton';
 import FileExplorer from './FileExplorer';
 import PreviewPanel from './PreviewPanel';
+import ProjectDatabasePanel from './ProjectDatabasePanel';
 
 export interface SavedProjectFile {
   path: string;
@@ -194,12 +195,19 @@ export default function SavedProjectWorkspace({
             </div>
           </div>
 
-          <DownloadButton
-            onDownload={handleDownload}
-            projectName={projectName}
-            fileCount={files.length}
-            disabled={files.length === 0}
-          />
+          <div className="flex flex-wrap items-center gap-3">
+            <ProjectDatabasePanel
+              projectName={projectName}
+              blueprint={blueprint}
+              files={files}
+            />
+            <DownloadButton
+              onDownload={handleDownload}
+              projectName={projectName}
+              fileCount={files.length}
+              disabled={files.length === 0}
+            />
+          </div>
         </div>
       </section>
 

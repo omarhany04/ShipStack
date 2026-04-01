@@ -5,6 +5,7 @@ import FileExplorer from './components/FileExplorer';
 import FollowUpPrompt from './components/FollowUpPrompt';
 import PreviewPanel from './components/PreviewPanel';
 import ProgressIndicator from './components/ProgressIndicator';
+import ProjectDatabasePanel from './components/ProjectDatabasePanel';
 import PromptInput from './components/PromptInput';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
 import { useAuth } from '@/lib/auth/useAuth';
@@ -123,11 +124,18 @@ export default function HomePage() {
                   <StatCard label="Project" value={state.project.blueprint.projectName} highlight />
                 </div>
 
-                <DownloadButton
-                  onDownload={download}
-                  projectName={state.project.blueprint.projectName}
-                  fileCount={state.project.files.length}
-                />
+                <div className="flex flex-wrap items-center gap-3">
+                  <ProjectDatabasePanel
+                    projectName={state.project.blueprint.projectName}
+                    blueprint={state.project.blueprint}
+                    files={state.project.files}
+                  />
+                  <DownloadButton
+                    onDownload={download}
+                    projectName={state.project.blueprint.projectName}
+                    fileCount={state.project.files.length}
+                  />
+                </div>
               </div>
             </div>
 

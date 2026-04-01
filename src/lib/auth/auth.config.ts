@@ -2,6 +2,7 @@ import type { NextAuthOptions } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import GoogleProvider from 'next-auth/providers/google';
 import prisma from '@/lib/prisma';
+import { buildAvatarImageUrl } from './avatar';
 import { verifyPassword } from './password';
 
 function normalizeDisplayName(name: string | null, email: string) {
@@ -151,7 +152,7 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: normalizeDisplayName(user.name, user.email),
-          image: user.avatarUrl,
+          image: user.avatarUrl ? buildAvatarImageUrl() : null,
           role: user.role,
         };
       },
@@ -178,7 +179,7 @@ export const authOptions: NextAuthOptions = {
       user.role = dbUser.role;
       user.name = normalizeDisplayName(dbUser.name, dbUser.email);
       user.email = dbUser.email;
-      user.image = dbUser.avatarUrl;
+      user.image = dbUser.avatarUrl ? buildAvatarImageUrl() : null;
 
       return true;
     },

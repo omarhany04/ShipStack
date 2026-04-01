@@ -2,6 +2,7 @@
 
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { buildAvatarImageUrl } from '@/lib/auth/avatar';
 import { useAuth } from '@/lib/auth/useAuth';
 
 interface AccountProfile {
@@ -147,15 +148,15 @@ export default function AccountPage() {
       setAvatarPreview(result.profile.avatarUrl);
       setRemoveAvatar(false);
       setProfileMessage('Account settings updated.');
-      await refreshSession({
-        user: {
-          id: user?.id ?? result.profile.id ?? '',
-          name: result.profile.name,
-          email: result.profile.email,
-          image: result.profile.avatarUrl,
-          role: result.profile.role,
-        },
-      });
+        await refreshSession({
+          user: {
+            id: user?.id ?? result.profile.id ?? '',
+            name: result.profile.name,
+            email: result.profile.email,
+            image: result.profile.avatarUrl ? buildAvatarImageUrl(Date.now()) : null,
+            role: result.profile.role,
+          },
+        });
     } catch (error) {
       setProfileError(error instanceof Error ? error.message : 'Failed to update account.');
     } finally {

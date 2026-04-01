@@ -72,18 +72,47 @@ export default function UserMenu() {
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 mt-3 w-72 rounded-[24px] border border-slate-200 bg-white p-2 shadow-[0_24px_64px_rgba(15,23,42,0.12)]">
-          <div className="rounded-[18px] bg-slate-50 px-4 py-4">
-            <p className="text-sm font-semibold text-slate-900">{user.name}</p>
-            <p className="mt-1 text-xs text-slate-500">{user.email}</p>
-            <p className="mt-3 inline-flex rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
-              {user.role}
-            </p>
+        <div className="absolute right-0 mt-3 w-80 rounded-[30px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_30px_90px_rgba(15,23,42,0.16)] backdrop-blur-xl">
+          <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.92))] px-4 py-4">
+            <div className="flex items-center gap-3">
+              {user.image ? (
+                <img
+                  src={user.image}
+                  alt={user.name}
+                  className="h-12 w-12 rounded-full border border-white object-cover shadow-sm"
+                />
+              ) : (
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white shadow-sm">
+                  {initials}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-base font-semibold text-slate-950">{user.name}</p>
+                <p className="truncate text-sm text-slate-500">{user.email}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center gap-2">
+              <span className="inline-flex rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+                {user.role}
+              </span>
+              <span className="text-xs text-slate-400">Authenticated workspace</span>
+            </div>
           </div>
 
-          <div className="mt-2 space-y-1">
+          <div className="mt-3 space-y-2">
+            <MenuButton
+              label="My projects"
+              description="Open saved apps with preview and files"
+              icon={<ProjectsIcon />}
+              onClick={() => {
+                setIsOpen(false);
+                router.push('/projects');
+              }}
+            />
             <MenuButton
               label="Account settings"
+              description="Profile, password, and sign-in methods"
+              icon={<AccountIcon />}
               onClick={() => {
                 setIsOpen(false);
                 router.push('/account');
@@ -91,6 +120,8 @@ export default function UserMenu() {
             />
             <MenuButton
               label="Database explorer"
+              description="Live records, schemas, and activity"
+              icon={<DatabaseIcon />}
               onClick={() => {
                 setIsOpen(false);
                 router.push('/database');
@@ -98,6 +129,8 @@ export default function UserMenu() {
             />
             <MenuButton
               label="Open usage stats"
+              description="Provider health, latency, and tokens"
+              icon={<UsageIcon />}
               onClick={() => {
                 setIsOpen(false);
                 window.open('/api/usage', '_blank', 'noopener,noreferrer');
@@ -105,6 +138,8 @@ export default function UserMenu() {
             />
             <MenuButton
               label="Sign out"
+              description="End this session on this device"
+              icon={<LogoutIcon />}
               danger
               onClick={async () => {
                 setIsOpen(false);
@@ -120,10 +155,14 @@ export default function UserMenu() {
 
 function MenuButton({
   label,
+  description,
+  icon,
   onClick,
   danger = false,
 }: {
   label: string;
+  description: string;
+  icon: React.ReactNode;
   onClick: () => void | Promise<void>;
   danger?: boolean;
 }) {
@@ -133,14 +172,95 @@ function MenuButton({
       onClick={() => {
         void onClick();
       }}
-      className={`flex w-full items-center justify-between rounded-2xl px-4 py-3 text-sm transition ${
+      className={`flex w-full items-center gap-3 rounded-[22px] border px-4 py-3.5 text-left transition ${
         danger
-          ? 'text-rose-600 hover:bg-rose-50'
-          : 'text-slate-700 hover:bg-slate-50'
+          ? 'border-rose-100 bg-rose-50/50 text-rose-600 hover:border-rose-200 hover:bg-rose-50'
+          : 'border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50'
       }`}
     >
-      <span className="font-medium">{label}</span>
-      <span className="text-xs opacity-60">→</span>
+      <span
+        className={`inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border ${
+          danger
+            ? 'border-rose-200 bg-white text-rose-500'
+            : 'border-slate-200 bg-slate-50 text-slate-600'
+        }`}
+      >
+        {icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold">{label}</span>
+        <span className={`mt-1 block text-xs ${danger ? 'text-rose-400' : 'text-slate-400'}`}>
+          {description}
+        </span>
+      </span>
     </button>
+  );
+}
+
+function AccountIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 6.75a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.25a8.25 8.25 0 0 1 14.998 0"
+      />
+    </svg>
+  );
+}
+
+function ProjectsIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h4.379c.398 0 .779.158 1.06.439l1.622 1.622c.281.281.663.439 1.06.439H18a2.25 2.25 0 0 1 2.25 2.25v7.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25v-10.5Z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.5h9M7.5 10.5h5.25" />
+    </svg>
+  );
+}
+
+function DatabaseIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 6.75C3.75 5.093 7.444 3.75 12 3.75s8.25 1.343 8.25 3.0-3.694 3.0-8.25 3.0-8.25-1.343-8.25-3.0Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M3.75 6.75v4.5c0 1.657 3.694 3.0 8.25 3.0s8.25-1.343 8.25-3.0v-4.5M3.75 11.25v6.0c0 1.657 3.694 3.0 8.25 3.0s8.25-1.343 8.25-3.0v-6.0"
+      />
+    </svg>
+  );
+}
+
+function UsageIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M7.5 20.25h9a2.25 2.25 0 0 0 2.25-2.25V6.621a2.25 2.25 0 0 0-.659-1.591l-2.121-2.12A2.25 2.25 0 0 0 14.379 2.25H7.5A2.25 2.25 0 0 0 5.25 4.5V18a2.25 2.25 0 0 0 2.25 2.25Z"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 15.75l2.25-2.25 1.5 1.5 2.25-3.0" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15"
+      />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M18 15l3-3m0 0-3-3m3 3H9" />
+    </svg>
   );
 }

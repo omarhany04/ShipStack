@@ -1,0 +1,139 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(cuid())
+  email      String?    @unique
+  name       String?
+  avatarUrl  String?
+  sessionId  String?    @unique
+  projects   Project[]
+  usageLogs  UsageLog[]
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  @@index([sessionId])
+  @@index([email])
+}
+
+model Project {
+  id               String        @id @default(cuid())
+  name             String
+  displayName      String
+  description      String
+  userPrompt       String
+  status           ProjectStatus @default(GENERATING)
+  userId           String
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  blueprint        Blueprint?
+  generations      Generation[]
+  deployment       Deployment?
+  totalFiles       Int           @default(0)
+  totalSizeBytes   Int           @default(0)
+  generationTimeMs Int           @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+enum ProjectStatus {
+  GENERATING
+  GENERATED
+  FAILED
+  DEPLOYED
+  ARCHIVED
+}
+
+model Blueprint {
+  id            String   @id @default(cuid())
+  data          Json
+  featureCount  Int      @default(0)
+  modelCount    Int      @default(0)
+  endpointCount Int      @default(0)
+  pageCount     Int      @default(0)
+  wasRepaired   Boolean  @default(false)
+  warnings      String[] @default([])
+  projectId     String   @unique
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt     DateTime @default(now())
+
+  @@index([projectId])
+}
+
+model Generation {
+  id                 String   @id @default(cuid())
+  files              Json
+  totalFiles         Int      @default(0)
+  templateFiles      Int      @default(0)
+  aiFiles            Int      @default(0)
+  totalSizeBytes     Int      @default(0)
+  latencyMs          Int      @default(0)
+  providersUsed      String[] @default([])
+  validationErrors   Int      @default(0)
+  validationWarnings Int      @default(0)
+  warnings           String[] @default([])
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt          DateTime @default(now())
+
+  @@index([projectId])
+  @@index([createdAt])
+}
+
+model Deployment {
+  id              String           @id @default(cuid())
+  githubRepo      String?
+  githubUrl       String?
+  vercelProjectId String?
+  vercelUrl       String?
+  status          DeploymentStatus @default(PENDING)
+  errorMessage    String?
+  projectId       String           @unique
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([projectId])
+  @@index([status])
+}
+
+enum DeploymentStatus {
+  PENDING
+  DEPLOYING
+  DEPLOYED
+  FAILED
+}
+
+model UsageLog {
+  id               String   @id @default(cuid())
+  provider         String
+  task             String
+  success          Boolean
+  latencyMs        Int      @default(0)
+  promptTokens     Int?
+  completionTokens Int?
+  totalTokens      Int?
+  errorMessage     String?
+  errorCode        Int?
+  isQuotaError     Boolean  @default(false)
+  isRateLimitError Boolean  @default(false)
+  fromCache        Boolean  @default(false)
+  userId           String?
+  user             User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  createdAt        DateTime @default(now())
+
+  @@index([provider])
+  @@index([task])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([success])
+}

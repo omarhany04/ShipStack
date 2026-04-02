@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { BUILDER_SCROLL_TARGET, consumeBuilderScrollTarget } from '@/lib/builder-scroll';
 
 interface PromptInputProps {
   onSubmit: (idea: string) => void | Promise<void>;
@@ -50,6 +51,48 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
     textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 260)}px`;
   }, [idea]);
 
+  useEffect(() => {
+    const pendingTarget = consumeBuilderScrollTarget();
+    const shouldScroll =
+      pendingTarget === BUILDER_SCROLL_TARGET ||
+      window.location.hash === `#${BUILDER_SCROLL_TARGET}`;
+
+    if (!shouldScroll) {
+      return;
+    }
+
+    const timeoutIds: number[] = [];
+
+    const smoothScrollToBuilder = () => {
+      const builder = document.getElementById(BUILDER_SCROLL_TARGET);
+
+      if (!builder) {
+        return;
+      }
+
+      const offsetTop = window.scrollY + builder.getBoundingClientRect().top - 112;
+
+      window.scrollTo({
+        top: Math.max(offsetTop, 0),
+        left: 0,
+        behavior: 'smooth',
+      });
+    };
+
+    const frameId = window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+
+      [60, 180, 340].forEach((delay) => {
+        timeoutIds.push(window.setTimeout(smoothScrollToBuilder, delay));
+      });
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, []);
+
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     if (!idea.trim() || isLoading || disabled) {
@@ -66,7 +109,10 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1200px] animate-fade-up">
+    <div
+      id={BUILDER_SCROLL_TARGET}
+      className="mx-auto w-full max-w-[1200px] scroll-mt-28 animate-fade-up"
+    >
       <div className="space-y-5">
         <form
           onSubmit={handleSubmit}

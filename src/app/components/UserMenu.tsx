@@ -100,12 +100,6 @@ export default function UserMenu() {
                 <p className="truncate text-sm text-slate-500">{user.email}</p>
               </div>
             </div>
-            <div className="mt-4 flex items-center gap-2">
-              <span className="inline-flex rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
-                {user.role}
-              </span>
-              <span className="text-xs text-slate-400">Saved projects and account tools</span>
-            </div>
           </div>
 
           <div className="mt-3 space-y-2">

@@ -9,6 +9,7 @@ interface ChatMessage {
   text: string;
   renderedText: string;
   suggestions: string[];
+  timestamp: string;
   provider?: string;
   isTyping?: boolean;
 }
@@ -24,6 +25,13 @@ const ASSISTANT_TYPING_INTERVAL_MS = 24;
 
 function createId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
+}
+
+function formatMessageTime(date = new Date()) {
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+  }).format(date);
 }
 
 function buildInitialMessage(pathname: string): ChatMessage {
@@ -44,6 +52,7 @@ function buildInitialMessage(pathname: string): ChatMessage {
     renderedText:
       "I'm your ShipStack assistant. Ask me about generation, blueprint editing, previews, project databases, saved workspaces, or account settings.",
     suggestions,
+    timestamp: formatMessageTime(),
     provider: 'assistant',
   };
 }
@@ -146,6 +155,7 @@ export default function WebsiteAssistant() {
       text,
       renderedText: text,
       suggestions: [],
+      timestamp: formatMessageTime(),
     };
 
     const nextMessages = [...messages, userMessage].slice(-MAX_MESSAGES);
@@ -182,6 +192,7 @@ export default function WebsiteAssistant() {
         suggestions: Array.isArray(payload.followUpSuggestions)
           ? payload.followUpSuggestions.filter(Boolean).slice(0, 3)
           : [],
+        timestamp: formatMessageTime(),
         provider: payload.provider,
         isTyping: true,
       };
@@ -204,6 +215,7 @@ export default function WebsiteAssistant() {
           'How do I edit a blueprint?',
           'Where are my saved projects?',
         ],
+        timestamp: formatMessageTime(),
         provider: 'fallback',
         isTyping: true,
       };
@@ -247,25 +259,19 @@ export default function WebsiteAssistant() {
   return (
     <div className="pointer-events-none fixed bottom-5 right-5 z-[85]">
       {isOpen ? (
-        <section className="pointer-events-auto flex h-[min(690px,calc(100vh-2.5rem))] w-[min(400px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.22)]">
-          <div className="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.22),_transparent_42%),linear-gradient(180deg,_rgba(15,23,42,0.98),_rgba(30,41,59,0.98))] px-5 py-4 text-white">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-100">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                  Website Assistant
-                </div>
-                <h2 className="mt-3 text-lg font-bold">Ask ShipStack anything about this product</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-200">
-                  Generation, edits, previews, saved workspaces, project databases, and account settings.
-                </p>
+        <section className="pointer-events-auto flex h-[min(600px,calc(100vh-2.5rem))] w-[min(400px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[30px] border border-slate-200 bg-white shadow-[0_30px_120px_rgba(15,23,42,0.22)]">
+          <div className="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_40%),linear-gradient(180deg,_rgba(15,23,42,0.98),_rgba(30,41,59,0.98))] px-5 py-4 text-white">
+            <div className="flex items-center justify-between gap-4">
+              <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.08] px-3.5 py-1.5 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_0_4px_rgba(52,211,153,0.12)]" />
+                  ShipStack Assistant
               </div>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={resetConversation}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-slate-200 transition hover:bg-white/15"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:-translate-y-0.5 hover:bg-white/[0.14] hover:text-white"
                   aria-label="Start a new conversation"
                   title="New chat"
                 >
@@ -274,7 +280,7 @@ export default function WebsiteAssistant() {
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/10 text-slate-200 transition hover:bg-white/15"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.08] text-slate-200 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition hover:-translate-y-0.5 hover:bg-white/[0.14] hover:text-white"
                   aria-label="Close assistant"
                 >
                   <CloseIcon />
@@ -305,17 +311,13 @@ export default function WebsiteAssistant() {
                       </p>
                     </div>
 
-                    {message.role === 'assistant' &&
-                    message.provider &&
-                    message.provider !== 'assistant' ? (
-                      <p className="mt-2 px-1 text-[11px] font-medium uppercase tracking-[0.18em] text-slate-400">
-                        {message.provider === 'heuristic'
-                          ? 'Instant answer'
-                          : message.provider === 'fallback'
-                            ? 'Fallback'
-                            : `Via ${message.provider}`}
-                      </p>
-                    ) : null}
+                    <p
+                      className={`mt-2 px-1 text-[11px] font-medium text-slate-400 ${
+                        message.role === 'user' ? 'text-right' : ''
+                      }`}
+                    >
+                      {message.timestamp}
+                    </p>
 
                     {message.role === 'assistant' &&
                     isLatestAssistant &&
@@ -328,7 +330,7 @@ export default function WebsiteAssistant() {
                             type="button"
                             onClick={() => void submitMessage(suggestion)}
                             disabled={isSubmitting || Boolean(typingJob)}
-                            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition hover:border-orange-300 hover:bg-orange-50 hover:text-orange-700 disabled:opacity-50"
+                            className="rounded-full border border-slate-200 bg-slate-100/90 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:bg-slate-300/90 hover:text-slate-900 disabled:opacity-50"
                           >
                             {suggestion}
                           </button>

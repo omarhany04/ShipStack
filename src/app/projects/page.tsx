@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import BuilderBackLink from '@/app/components/BuilderBackLink';
+import BuilderScrollLink from '@/app/components/BuilderScrollLink';
 import { getCurrentSessionUser } from '@/lib/services/session.service';
 import { ProjectService } from '@/lib/services/project.service';
 
@@ -45,12 +46,11 @@ export default async function ProjectsPage() {
               label="Generated"
               value={String(projects.filter((project) => project.status === 'GENERATED').length)}
             />
-            <Link
-              href="/"
+            <BuilderScrollLink
               className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
               Generate new project
-            </Link>
+            </BuilderScrollLink>
           </div>
         </div>
       </section>
@@ -65,12 +65,11 @@ export default async function ProjectsPage() {
             Generate your first product from the main builder and it will appear here automatically
             with preview, files, and project database access.
           </p>
-          <Link
-            href="/"
+          <BuilderScrollLink
             className="mt-8 inline-flex rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-orange-600"
           >
             Start building
-          </Link>
+          </BuilderScrollLink>
         </section>
       ) : (
         <section className="mt-8 grid gap-6 xl:grid-cols-2">
@@ -127,12 +126,11 @@ export default async function ProjectsPage() {
                 >
                   Open workspace
                 </Link>
-                <Link
-                  href="/"
+                <BuilderScrollLink
                   className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
                   Generate another
-                </Link>
+                </BuilderScrollLink>
               </div>
             </article>
           ))}

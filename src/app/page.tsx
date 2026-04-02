@@ -13,24 +13,6 @@ const PreviewPanel = dynamic(() => import('./components/PreviewPanel'));
 const ProgressIndicator = dynamic(() => import('./components/ProgressIndicator'));
 const ProjectDatabasePanel = dynamic(() => import('./components/ProjectDatabasePanel'));
 
-const BENEFIT_CARDS = [
-  {
-    eyebrow: 'Generate',
-    title: 'Idea to workspace',
-    copy: 'Blueprint, code, preview, and download in one pass.',
-  },
-  {
-    eyebrow: 'Refine',
-    title: 'Prompt or edit',
-    copy: 'Keep iterating with follow-up prompts or manual schema edits.',
-  },
-  {
-    eyebrow: 'Reopen',
-    title: 'Saved and reusable',
-    copy: 'Open past workspaces with preview, files, and project data.',
-  },
-] as const;
-
 export default function HomePage() {
   const { state, generate, refineWithPrompt, regenerateFromBlueprint, download, reset } =
     useProjectGenerator();
@@ -93,34 +75,15 @@ export default function HomePage() {
                   Interactive AI product generation
                 </div>
 
-                <h2 className="mt-6 max-w-4xl text-balance text-[clamp(3rem,7vw,5.6rem)] font-bold tracking-[-0.05em] text-slate-950">
+                <h2 className="mt-6 max-w-4xl text-balance text-[clamp(2.35rem,5.1vw,4.45rem)] font-bold tracking-[-0.045em] text-slate-950">
                   Build the first version of your startup before the momentum fades
                 </h2>
 
-                <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
+                <p className="mt-5 max-w-3xl text-[17px] leading-8 text-slate-600">
                   Turn a plain-English idea into a blueprint, generated codebase, live preview,
                   and saved workspace, then keep refining it without leaving the flow.
                 </p>
 
-                <div className="mt-8 grid gap-3 sm:grid-cols-3">
-                  {BENEFIT_CARDS.map((card) => (
-                    <div
-                      key={card.title}
-                      className="rounded-[28px] border border-white/70 bg-white/78 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.08)]"
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
-                          {card.eyebrow.slice(0, 2)}
-                        </span>
-                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-500">
-                          {card.eyebrow}
-                        </p>
-                      </div>
-                      <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-950">{card.title}</h3>
-                      <p className="mt-2 text-sm leading-7 text-slate-600">{card.copy}</p>
-                    </div>
-                  ))}
-                </div>
               </div>
 
               <div className="glass-panel-strong overflow-hidden rounded-[36px] border border-white/70 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">

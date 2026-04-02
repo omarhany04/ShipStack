@@ -3,6 +3,7 @@ import { aiOrchestrator } from '@/ai/orchestrator';
 import { buildCodeGenerationPrompt, buildCodeImprovementPrompt } from '@/ai/prompts';
 import { AIOrchestrationError, AITask } from '@/ai/types';
 import { Blueprint } from '@/validators/blueprint.validator';
+import { DesignProfile, summarizeDesignProfile } from './design-system';
 import { GeneratedFile } from './types';
 
 interface EnhancementTask {
@@ -13,11 +14,15 @@ interface EnhancementTask {
 
 const MAX_ENHANCE_FAILURES = 2;
 
-export async function enhanceWithAI(files: GeneratedFile[], blueprint: Blueprint) {
+export async function enhanceWithAI(
+  files: GeneratedFile[],
+  blueprint: Blueprint,
+  designProfile: DesignProfile
+) {
   const warnings: string[] = [];
   const enhanced = [...files];
   const aiGenerated: GeneratedFile[] = [];
-  const tasks = buildEnhancementTasks(blueprint);
+  const tasks = buildEnhancementTasks(blueprint, designProfile);
   let failureCount = 0;
 
   for (const task of tasks) {
@@ -66,12 +71,17 @@ export async function enhanceWithAI(files: GeneratedFile[], blueprint: Blueprint
   };
 }
 
-function buildEnhancementTasks(blueprint: Blueprint): EnhancementTask[] {
+function buildEnhancementTasks(blueprint: Blueprint, designProfile: DesignProfile): EnhancementTask[] {
   const tasks: EnhancementTask[] = [
     {
       description: 'Project README with setup instructions',
       targetPath: 'README.md',
-      prompt: buildReadmePrompt(blueprint),
+      prompt: buildReadmePrompt(blueprint, designProfile),
+    },
+    {
+      description: 'Distinctive landing page with strong product positioning',
+      targetPath: 'src/app/page.tsx',
+      prompt: buildLandingPagePrompt(blueprint, designProfile),
     },
   ];
 
@@ -79,7 +89,7 @@ function buildEnhancementTasks(blueprint: Blueprint): EnhancementTask[] {
     tasks.push({
       description: 'Dashboard component with statistics cards',
       targetPath: 'src/components/Dashboard.tsx',
-      prompt: buildDashboardPrompt(blueprint),
+      prompt: buildDashboardPrompt(blueprint, designProfile),
     });
   }
 
@@ -116,12 +126,13 @@ async function generateAIFile(task: EnhancementTask, blueprint: Blueprint) {
   }
 }
 
-function buildReadmePrompt(blueprint: Blueprint) {
+function buildReadmePrompt(blueprint: Blueprint, designProfile: DesignProfile) {
   return `Generate a concise and professional README.md for "${blueprint.projectName}".
 
 Description: ${blueprint.description}
 Features: ${blueprint.features.map((feature) => feature.name).join(', ')}
 Models: ${blueprint.dataModels.map((model) => model.name).join(', ')}
+Design direction: ${summarizeDesignProfile(designProfile)}
 
 Include:
 - Title and summary
@@ -133,19 +144,41 @@ Include:
 - MIT license note`;
 }
 
-function buildDashboardPrompt(blueprint: Blueprint) {
+function buildLandingPagePrompt(blueprint: Blueprint, designProfile: DesignProfile) {
+  return `Generate a production-ready src/app/page.tsx for a Next.js App Router project.
+
+Project: ${blueprint.projectName}
+Description: ${blueprint.description}
+Top features: ${blueprint.features.slice(0, 6).map((feature) => feature.name).join(', ')}
+Pages: ${blueprint.pages.map((page) => `${page.name} (${page.route})`).join(', ')}
+Design direction: ${summarizeDesignProfile(designProfile)}
+Layout family: ${designProfile.homeVariant}
+
+Requirements:
+- Make it feel modern, premium, and product-specific rather than generic
+- Include a strong hero, quick navigation/actions, product highlights, and operational credibility sections
+- Use a layout composition that feels distinct for this design direction instead of a safe default hero + three cards pattern
+- Vary the information architecture, spacing, and section rhythm so different runs can look meaningfully different
+- Use Tailwind CSS only
+- Keep it fully responsive
+- Use real sections and working links to the generated routes
+- Return ONLY the complete file code.`;
+}
+
+function buildDashboardPrompt(blueprint: Blueprint, designProfile: DesignProfile) {
   return `Generate a responsive Next.js client component named Dashboard.
 
-It should:
-- Render a welcome header
-- Fetch collection counts for these models: ${blueprint.dataModels
+  It should:
+  - Render a welcome header
+  - Fetch collection counts for these models: ${blueprint.dataModels
     .map((model) => model.name)
     .join(', ')}
-- Display each count in a stats card with a "View all" link
-- Use Tailwind CSS
-- Include loading and error states
+  - Display each count in a stats card with a "View all" link
+  - Use Tailwind CSS
+  - Include loading and error states
+  - Match this design direction: ${summarizeDesignProfile(designProfile)}
 
-Return ONLY the component code.`;
+  Return ONLY the component code.`;
 }
 
 export async function improveCode(code: string, instructions: string) {

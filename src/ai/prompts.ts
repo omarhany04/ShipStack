@@ -56,13 +56,18 @@ Use this exact schema:
 Focus on MVP scope. Generate 3-6 models, 8-15 endpoints, and 4-8 pages.`,
   [AITask.CODE_GENERATION]: `You are a senior full-stack developer. Generate clean, production-ready TypeScript code.
 
-Rules:
-- Use strict TypeScript
-- Follow Next.js App Router conventions
-- Use Tailwind CSS for styling
-- Return complete runnable code
-- Include imports and error handling
-- Return ONLY code, with no markdown fences or explanation.`,
+  Rules:
+  - Use strict TypeScript
+  - Follow Next.js App Router conventions
+  - Use Tailwind CSS for styling
+  - Build polished, modern UI with a clear visual direction instead of generic boilerplate cards
+  - Favor strong hierarchy, intentional typography, layered surfaces, and responsive layouts
+  - Avoid repeating the same landing-page skeleton, spacing rhythm, or card layout across unrelated products
+  - When given a design direction, commit to it and make the composition feel intentionally different
+  - Keep interactions useful and working, not placeholder-only
+  - Return complete runnable code
+  - Include imports and error handling
+  - Return ONLY code, with no markdown fences or explanation.`,
   [AITask.CODE_IMPROVEMENT]: `You are a senior code reviewer. Improve the provided code.
 
 Rules:

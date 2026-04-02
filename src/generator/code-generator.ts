@@ -1,4 +1,5 @@
 import { aiLogger } from '@/ai/logger';
+import { selectDesignProfile, summarizeDesignProfile } from './design-system';
 import { Blueprint } from '@/validators/blueprint.validator';
 import { enhanceWithAI } from './ai-enhancer';
 import { generateConfigFiles } from './templates/config';
@@ -35,7 +36,14 @@ export async function generateFullProject(
   const stageTimings: Record<string, number> = {};
   const generatedPaths = new Set<string>();
 
-  const frontendFiles = generateFrontendFiles(blueprint);
+  const designProfile = selectDesignProfile(blueprint);
+
+  aiLogger.info('Selected generated design profile', undefined, undefined, {
+    designProfile: designProfile.id,
+    designSummary: summarizeDesignProfile(designProfile),
+  });
+
+  const frontendFiles = generateFrontendFiles(blueprint, designProfile);
   const backendFiles = generateBackendFiles(blueprint);
 
   const stages: PipelineStage[] = [
@@ -52,7 +60,7 @@ export async function generateFullProject(
     {
       name: GenerationStage.STYLES,
       label: 'Generating styles',
-      execute: generateStyleFiles,
+      execute: () => generateStyleFiles(blueprint, designProfile),
     },
     {
       name: GenerationStage.FRONTEND_LAYOUT,
@@ -133,10 +141,10 @@ export async function generateFullProject(
     });
 
     try {
-      const result = await enhanceWithAI(allFiles, blueprint);
-      allFiles.length = 0;
-      allFiles.push(...result.enhanced);
-      warnings.push(...result.warnings);
+        const result = await enhanceWithAI(allFiles, blueprint, designProfile);
+        allFiles.length = 0;
+        allFiles.push(...result.enhanced);
+        warnings.push(...result.warnings);
     } catch (error) {
       warnings.push(
         `AI enhancement failed: ${error instanceof Error ? error.message : 'Unknown error'}`

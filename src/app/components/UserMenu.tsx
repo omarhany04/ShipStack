@@ -33,7 +33,7 @@ export default function UserMenu() {
   }, []);
 
   if (isLoading) {
-    return <div className="h-10 w-10 animate-pulse rounded-full bg-slate-200" />;
+    return <div className="h-11 w-11 animate-pulse rounded-full bg-slate-200" />;
   }
 
   if (!user) {
@@ -52,28 +52,28 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-3 py-2 text-left shadow-sm transition hover:border-slate-300 hover:shadow"
+        className="glass-panel inline-flex items-center gap-3 rounded-full px-3 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
         <div className="hidden sm:block">
           <p className="max-w-[140px] truncate text-sm font-semibold text-slate-900">{user.name}</p>
-          <p className="max-w-[140px] truncate text-xs text-slate-500">{user.email}</p>
+          <p className="max-w-[140px] truncate text-xs text-slate-500">Workspace account</p>
         </div>
         {user.image ? (
           <img
             src={user.image}
             alt={user.name}
-            className="h-9 w-9 rounded-full object-cover"
+            className="h-10 w-10 rounded-full object-cover"
           />
         ) : (
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">
+          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">
             {initials}
           </div>
         )}
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 mt-3 w-80 rounded-[30px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_30px_90px_rgba(15,23,42,0.16)] backdrop-blur-xl">
-          <div className="rounded-[24px] border border-slate-200/80 bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.92))] px-4 py-4">
+        <div className="glass-panel-strong absolute right-0 mt-3 w-80 rounded-[30px] p-3 shadow-[0_30px_90px_rgba(15,23,42,0.16)]">
+          <div className="rounded-[24px] bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.92))] px-4 py-4">
             <div className="flex items-center gap-3">
               {user.image ? (
                 <img
@@ -95,14 +95,14 @@ export default function UserMenu() {
               <span className="inline-flex rounded-full bg-orange-100 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
                 {user.role}
               </span>
-              <span className="text-xs text-slate-400">Authenticated workspace</span>
+              <span className="text-xs text-slate-400">Saved projects and account tools</span>
             </div>
           </div>
 
           <div className="mt-3 space-y-2">
             <MenuButton
               label="My projects"
-              description="Open saved apps with preview and files"
+              description="Browse and reopen saved generated apps"
               icon={<ProjectsIcon />}
               onClick={() => {
                 setIsOpen(false);
@@ -111,29 +111,11 @@ export default function UserMenu() {
             />
             <MenuButton
               label="Account settings"
-              description="Profile, password, and sign-in methods"
+              description="Update profile, password, and sign-in methods"
               icon={<AccountIcon />}
               onClick={() => {
                 setIsOpen(false);
                 router.push('/account');
-              }}
-            />
-            <MenuButton
-              label="Database explorer"
-              description="Live records, schemas, and activity"
-              icon={<DatabaseIcon />}
-              onClick={() => {
-                setIsOpen(false);
-                router.push('/database');
-              }}
-            />
-            <MenuButton
-              label="Open usage stats"
-              description="Provider health, latency, and tokens"
-              icon={<UsageIcon />}
-              onClick={() => {
-                setIsOpen(false);
-                window.open('/api/usage', '_blank', 'noopener,noreferrer');
               }}
             />
             <MenuButton
@@ -218,36 +200,6 @@ function ProjectsIcon() {
         d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h4.379c.398 0 .779.158 1.06.439l1.622 1.622c.281.281.663.439 1.06.439H18a2.25 2.25 0 0 1 2.25 2.25v7.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25v-10.5Z"
       />
       <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.5h9M7.5 10.5h5.25" />
-    </svg>
-  );
-}
-
-function DatabaseIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 6.75C3.75 5.093 7.444 3.75 12 3.75s8.25 1.343 8.25 3.0-3.694 3.0-8.25 3.0-8.25-1.343-8.25-3.0Z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 6.75v4.5c0 1.657 3.694 3.0 8.25 3.0s8.25-1.343 8.25-3.0v-4.5M3.75 11.25v6.0c0 1.657 3.694 3.0 8.25 3.0s8.25-1.343 8.25-3.0v-6.0"
-      />
-    </svg>
-  );
-}
-
-function UsageIcon() {
-  return (
-    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M7.5 20.25h9a2.25 2.25 0 0 0 2.25-2.25V6.621a2.25 2.25 0 0 0-.659-1.591l-2.121-2.12A2.25 2.25 0 0 0 14.379 2.25H7.5A2.25 2.25 0 0 0 5.25 4.5V18a2.25 2.25 0 0 0 2.25 2.25Z"
-      />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 15.75l2.25-2.25 1.5 1.5 2.25-3.0" />
     </svg>
   );
 }

@@ -20,6 +20,7 @@ interface ChatApiResponse {
 }
 
 const MAX_MESSAGES = 12;
+const ASSISTANT_TYPING_INTERVAL_MS = 24;
 
 function createId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 7)}`;
@@ -119,7 +120,7 @@ export default function WebsiteAssistant() {
         window.clearInterval(timer);
         setTypingJob(null);
       }
-    }, 18);
+    }, ASSISTANT_TYPING_INTERVAL_MS);
 
     return () => window.clearInterval(timer);
   }, [typingJob]);

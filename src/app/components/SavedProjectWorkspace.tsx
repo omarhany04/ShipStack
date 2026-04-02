@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import DownloadButton from './DownloadButton';
-import FileExplorer from './FileExplorer';
 import PreviewPanel from './PreviewPanel';
 import ProjectDatabasePanel from './ProjectDatabasePanel';
 
@@ -177,7 +176,7 @@ export default function SavedProjectWorkspace({
 
   return (
     <div className="space-y-6">
-      <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+      <section className="glass-panel-strong overflow-hidden rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
@@ -218,21 +217,17 @@ export default function SavedProjectWorkspace({
         <StatCard label="Preview" value={previewLabel(previewStatus)} helper={previewHelper(previewStatus)} />
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="h-[680px] lg:col-span-2">
-          <PreviewPanel
-            url={previewUrl}
-            logs={logs}
-            isReady={previewStatus === 'ready' || previewStatus === 'unavailable'}
-          />
-        </div>
-        <div className="h-[680px]">
-          <FileExplorer files={files} />
-        </div>
+      <div className="h-[760px]">
+        <PreviewPanel
+          url={previewUrl}
+          logs={logs}
+          isReady={previewStatus === 'ready' || previewStatus === 'unavailable'}
+          files={files}
+        />
       </div>
 
       {blueprint ? (
-        <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+        <section className="glass-panel-strong rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-3 border-b border-slate-200 pb-5 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
@@ -267,7 +262,7 @@ export default function SavedProjectWorkspace({
           </div>
         </section>
       ) : (
-        <section className="rounded-[30px] border border-dashed border-slate-300 bg-slate-50 px-6 py-10 text-center">
+        <section className="glass-panel rounded-[32px] border border-dashed border-slate-300 px-6 py-10 text-center">
           <p className="text-lg font-semibold text-slate-900">No blueprint stored for this project</p>
           <p className="mt-3 text-sm leading-7 text-slate-500">
             The files are still available, but this project does not currently have a persisted blueprint snapshot.
@@ -330,7 +325,7 @@ function MetaPill({
   mono?: boolean;
 }) {
   return (
-    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
+    <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
       <span className="font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>{' '}
       <span className={mono ? 'font-mono text-[11px] text-slate-700' : 'font-medium text-slate-700'}>
         {value}
@@ -349,7 +344,7 @@ function StatCard({
   helper: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white px-5 py-5 shadow-soft">
+    <div className="glass-panel rounded-[26px] px-5 py-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
       <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{helper}</p>
@@ -359,7 +354,7 @@ function StatCard({
 
 function SummaryColumn({ title, items }: { title: string; items: string[] }) {
   return (
-    <div>
+    <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       <div className="mt-3 space-y-2 text-sm text-slate-600">
         {items.map((item) => (

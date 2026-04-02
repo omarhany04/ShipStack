@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-interface FileItem {
+export interface FileItem {
   path: string;
   content: string;
   source: string;
@@ -10,6 +10,9 @@ interface FileItem {
 
 interface FileExplorerProps {
   files: FileItem[];
+  embedded?: boolean;
+  title?: string;
+  description?: string;
 }
 
 interface TreeNodeData {
@@ -20,10 +23,10 @@ interface TreeNodeData {
 }
 
 const FILE_ICONS: Record<string, string> = {
-  tsx: '⚛',
+  tsx: 'TSX',
   ts: 'TS',
   js: 'JS',
-  json: '{}',
+  json: 'JSON',
   css: 'CSS',
   prisma: 'DB',
   md: 'MD',
@@ -35,18 +38,31 @@ const SOURCE_BADGES: Record<string, string> = {
   hybrid: 'bg-amber-100 text-amber-700',
 };
 
-export default function FileExplorer({ files }: FileExplorerProps) {
+export default function FileExplorer({
+  files,
+  embedded = false,
+  title = 'File Explorer',
+  description = 'Inspect the generated codebase and skim file contents quickly.',
+}: FileExplorerProps) {
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedDirs, setExpandedDirs] = useState<Set<string>>(
     new Set(['src', 'src/app', 'src/app/api', 'src/components', 'src/lib', 'prisma'])
   );
 
-  const tree = buildTree(files);
+  const tree = useMemo(() => buildTree(files), [files]);
   const selectedFile = files.find((file) => file.path === selectedPath) ?? null;
   const filteredFiles = searchQuery
     ? files.filter((file) => file.path.toLowerCase().includes(searchQuery.toLowerCase()))
     : null;
+
+  useEffect(() => {
+    if (selectedPath && files.some((file) => file.path === selectedPath)) {
+      return;
+    }
+
+    setSelectedPath(files[0]?.path ?? null);
+  }, [files, selectedPath]);
 
   function toggleDir(path: string) {
     setExpandedDirs((current) => {
@@ -61,65 +77,98 @@ export default function FileExplorer({ files }: FileExplorerProps) {
   }
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-soft">
-      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-slate-800">Project Files</h3>
-          <span className="text-xs text-slate-400">{files.length}</span>
-        </div>
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(event) => setSearchQuery(event.target.value)}
-          placeholder="Search files..."
-          className="mt-3 w-full rounded-full border border-slate-200 px-3 py-2 text-xs outline-none ring-0"
-        />
-      </div>
-
-      <div className="flex-1 overflow-y-auto px-2 py-3">
-        {filteredFiles ? (
-          <div className="space-y-1">
-            {filteredFiles.map((file) => (
-              <FileRow
-                key={file.path}
-                file={file}
-                selected={selectedPath === file.path}
-                onSelect={() => setSelectedPath(file.path)}
-                indentLevel={0}
-              />
-            ))}
+    <div
+      className={
+        embedded
+          ? 'flex h-full flex-col overflow-hidden bg-transparent'
+          : 'glass-panel flex h-full flex-col overflow-hidden rounded-[30px] shadow-[0_22px_80px_rgba(15,23,42,0.08)]'
+      }
+    >
+      <div className="border-b border-slate-200 bg-white/70 px-4 py-4">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+            <p className="mt-1 text-xs text-slate-400">{description}</p>
           </div>
-        ) : (
-          <TreeView
-            node={tree}
-            files={files}
-            depth={0}
-            expandedDirs={expandedDirs}
-            selectedPath={selectedPath}
-            onToggleDir={toggleDir}
-            onSelectFile={(path) => setSelectedPath(path)}
+          <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
+            {files.length} files
+          </span>
+        </div>
+
+        <div className="mt-4 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(event) => setSearchQuery(event.target.value)}
+            placeholder="Search by path or filename"
+            className="w-full border-none bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
           />
-        )}
+        </div>
       </div>
 
-      {selectedFile ? (
-        <div className="border-t border-slate-200">
-          <div className="flex items-center justify-between gap-3 bg-slate-50 px-4 py-3">
-            <p className="truncate text-xs font-medium text-slate-700">{selectedFile.path}</p>
-            <span
-              className={`rounded-full px-2 py-1 text-[10px] font-semibold ${
-                SOURCE_BADGES[selectedFile.source] ?? 'bg-slate-100 text-slate-600'
-              }`}
-            >
-              {selectedFile.source.toUpperCase()}
-            </span>
-          </div>
-          <pre className="max-h-[220px] overflow-auto bg-slate-950 p-4 text-xs text-slate-300">
-            <code>{selectedFile.content.slice(0, 3000)}</code>
-            {selectedFile.content.length > 3000 ? <span>{'\n\n... truncated ...'}</span> : null}
-          </pre>
+      <div className="grid min-h-0 flex-1 gap-0 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="min-h-0 overflow-y-auto border-b border-slate-200 px-2 py-3 lg:border-b-0 lg:border-r">
+          {filteredFiles ? (
+            <div className="space-y-1">
+              {filteredFiles.map((file) => (
+                <FileRow
+                  key={file.path}
+                  file={file}
+                  selected={selectedPath === file.path}
+                  onSelect={() => setSelectedPath(file.path)}
+                  indentLevel={0}
+                />
+              ))}
+            </div>
+          ) : (
+            <TreeView
+              node={tree}
+              files={files}
+              depth={0}
+              expandedDirs={expandedDirs}
+              selectedPath={selectedPath}
+              onToggleDir={toggleDir}
+              onSelectFile={(path) => setSelectedPath(path)}
+            />
+          )}
         </div>
-      ) : null}
+
+        <div className="min-h-0 overflow-hidden bg-slate-950">
+          {selectedFile ? (
+            <div className="flex h-full flex-col">
+              <div className="flex items-center justify-between gap-3 border-b border-slate-800 px-4 py-3">
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-semibold text-white">{selectedFile.path}</p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    {formatSize(selectedFile.content)} • {selectedFile.path.split('/').pop()}
+                  </p>
+                </div>
+                <span
+                  className={`rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.16em] ${
+                    SOURCE_BADGES[selectedFile.source] ?? 'bg-slate-700 text-slate-200'
+                  }`}
+                >
+                  {selectedFile.source}
+                </span>
+              </div>
+
+              <pre className="overflow-auto px-4 py-4 text-xs leading-6 text-slate-300">
+                <code>{selectedFile.content.slice(0, 4200)}</code>
+                {selectedFile.content.length > 4200 ? <span>{'\n\n... truncated ...'}</span> : null}
+              </pre>
+            </div>
+          ) : (
+            <div className="flex h-full items-center justify-center px-6 text-center">
+              <div>
+                <p className="text-base font-semibold text-white">Choose a file to preview</p>
+                <p className="mt-2 text-sm leading-7 text-slate-400">
+                  Search the project tree or open a file from the left panel.
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -213,11 +262,13 @@ function TreeView({
             <button
               type="button"
               onClick={() => onToggleDir(child.path)}
-              className="flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-xs font-medium text-slate-700 hover:bg-slate-50"
-              style={{ paddingLeft: `${depth * 16 + 8}px` }}
+              className="flex w-full items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-white"
+              style={{ paddingLeft: `${depth * 16 + 10}px` }}
             >
               <span className="w-4 text-slate-400">{isExpanded ? '▾' : '▸'}</span>
-              <span>📁</span>
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-semibold text-slate-500">
+                DIR
+              </span>
               <span>{child.name}</span>
             </button>
             {isExpanded ? (
@@ -251,22 +302,32 @@ function FileRow({
 }) {
   const fileName = file.path.split('/').pop() ?? file.path;
   const extension = fileName.includes('.') ? fileName.split('.').pop()?.toLowerCase() ?? '' : '';
-  const size = new TextEncoder().encode(file.content).length;
 
   return (
     <button
       type="button"
       onClick={onSelect}
-      className={`flex w-full items-center gap-2 rounded-xl px-2 py-2 text-left text-xs ${
-        selected ? 'bg-orange-50 text-orange-700' : 'text-slate-600 hover:bg-slate-50'
+      className={`flex w-full items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs transition ${
+        selected
+          ? 'bg-orange-50 text-orange-700'
+          : 'text-slate-600 hover:bg-white'
       }`}
-      style={{ paddingLeft: `${indentLevel * 16 + 8}px` }}
+      style={{ paddingLeft: `${indentLevel * 16 + 10}px` }}
     >
-      <span className="w-7 text-[10px] font-semibold text-slate-400">
+      <span
+        className={`inline-flex h-6 w-9 items-center justify-center rounded-xl text-[10px] font-semibold ${
+          selected ? 'bg-white text-orange-700' : 'bg-slate-100 text-slate-500'
+        }`}
+      >
         {FILE_ICONS[extension] ?? 'FILE'}
       </span>
       <span className="flex-1 truncate">{fileName}</span>
-      <span className="text-[10px] text-slate-400">{size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`}</span>
+      <span className="text-[10px] text-slate-400">{formatSize(file.content)}</span>
     </button>
   );
+}
+
+function formatSize(content: string) {
+  const size = new TextEncoder().encode(content).length;
+  return size < 1024 ? `${size} B` : `${(size / 1024).toFixed(1)} KB`;
 }

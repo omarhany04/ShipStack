@@ -47,7 +47,7 @@ export default function BlueprintEditor({
   const isDirty = JSON.stringify(draft) !== JSON.stringify(blueprint);
 
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-soft">
+    <div className="glass-panel rounded-[30px] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
@@ -74,7 +74,7 @@ export default function BlueprintEditor({
       </div>
 
       <div className="space-y-6">
-        <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+        <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
           <h4 className="text-sm font-semibold text-slate-900">Project Basics</h4>
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <Field
@@ -102,7 +102,7 @@ export default function BlueprintEditor({
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+        <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-sm font-semibold text-slate-900">Features</h4>
             <button
@@ -183,7 +183,7 @@ export default function BlueprintEditor({
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+        <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
           <div className="flex items-center justify-between gap-3">
             <h4 className="text-sm font-semibold text-slate-900">Pages</h4>
             <button
@@ -281,7 +281,7 @@ export default function BlueprintEditor({
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-4">
+        <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
           <div className="flex items-center justify-between gap-3">
             <div>
               <h4 className="text-sm font-semibold text-slate-900">Database Schema</h4>

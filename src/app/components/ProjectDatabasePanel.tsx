@@ -142,7 +142,7 @@ export default function ProjectDatabasePanel({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+        className="glass-panel inline-flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold text-slate-700 transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50"
       >
         <DatabaseGlyph />
         Project Database
@@ -454,7 +454,7 @@ function SmallPill({
   children,
   tone,
 }: {
-  children: string;
+  children: React.ReactNode;
   tone: 'dark' | 'soft' | 'accent';
 }) {
   const toneClass =

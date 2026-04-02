@@ -1,6 +1,6 @@
 import Link from 'next/link';
-import { ProjectService } from '@/lib/services/project.service';
 import { getCurrentUser } from '@/lib/services/session.service';
+import { ProjectService } from '@/lib/services/project.service';
 
 export const metadata = {
   title: 'My Projects | ShipStack',
@@ -12,26 +12,34 @@ export default async function ProjectsPage() {
   const { projects, total } = await ProjectService.listForUser(user.id, 1, 100);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <section className="rounded-[32px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+    <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+      <div className="pointer-events-none absolute left-0 top-0 -z-10 h-64 w-64 rounded-full bg-orange-200/30 blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/25 blur-3xl" />
+
+      <section className="glass-panel-strong overflow-hidden rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="max-w-3xl">
             <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
               Project Library
             </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">
-              Your generated projects
+            <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl">
+              Your generated workspaces
             </h1>
             <p className="mt-4 text-sm leading-7 text-slate-600">
-              Reopen any saved project to inspect its live preview, files, blueprint, and generation metadata.
+              Reopen any saved project to inspect its preview, files, blueprint, and generated
+              database. Everything here is tied directly to your signed-in workspace.
             </p>
           </div>
 
           <div className="flex flex-wrap gap-3">
             <StatPill label="Projects" value={String(total)} />
+            <StatPill
+              label="Generated"
+              value={String(projects.filter((project) => project.status === 'GENERATED').length)}
+            />
             <Link
               href="/"
-              className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+              className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
             >
               Generate new project
             </Link>
@@ -40,14 +48,18 @@ export default async function ProjectsPage() {
       </section>
 
       {projects.length === 0 ? (
-        <section className="mt-8 rounded-[30px] border border-dashed border-slate-300 bg-slate-50 px-6 py-14 text-center">
-          <p className="text-xl font-semibold text-slate-900">No saved projects yet</p>
+        <section className="glass-panel mt-8 rounded-[32px] px-6 py-16 text-center">
+          <div className="mx-auto inline-flex h-16 w-16 items-center justify-center rounded-[22px] bg-slate-950 text-white shadow-[0_18px_50px_rgba(15,23,42,0.16)]">
+            <ProjectsGlyph />
+          </div>
+          <p className="mt-6 text-2xl font-bold text-slate-950">No saved projects yet</p>
           <p className="mx-auto mt-3 max-w-2xl text-sm leading-7 text-slate-500">
-            Generate a project from the main builder and it will appear here automatically under your account.
+            Generate your first product from the main builder and it will appear here automatically
+            with preview, files, and project database access.
           </p>
           <Link
             href="/"
-            className="mt-6 inline-flex rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600"
+            className="mt-8 inline-flex rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-orange-600"
           >
             Start building
           </Link>
@@ -57,48 +69,61 @@ export default async function ProjectsPage() {
           {projects.map((project) => (
             <article
               key={project.id}
-              className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8"
+              className="glass-panel rounded-[32px] p-6 shadow-[0_18px_60px_rgba(15,23,42,0.06)] transition hover:-translate-y-1 sm:p-7"
             >
               <div className="flex flex-wrap items-center gap-3">
-                <StatusBadge tone={project.status === 'GENERATED' ? 'success' : project.status === 'FAILED' ? 'danger' : 'default'}>
+                <StatusBadge
+                  tone={
+                    project.status === 'GENERATED'
+                      ? 'success'
+                      : project.status === 'FAILED'
+                        ? 'danger'
+                        : 'default'
+                  }
+                >
                   {humanize(project.status)}
                 </StatusBadge>
                 <span className="text-xs uppercase tracking-[0.16em] text-slate-400">
-                  {formatDate(project.updatedAt)}
+                  Updated {formatDate(project.updatedAt)}
                 </span>
               </div>
 
-              <h2 className="mt-4 text-2xl font-bold text-slate-950">{project.displayName}</h2>
+              <h2 className="mt-5 text-2xl font-bold text-slate-950">{project.displayName}</h2>
               <p className="mt-3 line-clamp-3 text-sm leading-7 text-slate-600">
                 {project.description}
               </p>
 
+              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                <MetricCard label="Files" value={String(project.totalFiles)} />
+                <MetricCard label="Size" value={formatBytes(project.totalSizeBytes)} />
+                <MetricCard label="Time" value={formatDuration(project.generationTimeMs)} />
+              </div>
+
               <div className="mt-5 flex flex-wrap gap-2">
-                <MetaChip label="Files" value={String(project.totalFiles)} />
-                <MetaChip label="Size" value={formatBytes(project.totalSizeBytes)} />
-                <MetaChip label="Time" value={formatDuration(project.generationTimeMs)} />
                 <MetaChip label="Features" value={String(project.blueprint?.featureCount ?? 0)} />
                 <MetaChip label="Models" value={String(project.blueprint?.modelCount ?? 0)} />
                 <MetaChip label="Pages" value={String(project.blueprint?.pageCount ?? 0)} />
               </div>
 
-              <p className="mt-5 text-xs leading-6 text-slate-400">
-                Prompt: {truncate(project.userPrompt, 180)}
-              </p>
+              <div className="mt-5 rounded-[24px] bg-slate-950 px-4 py-4 text-sm text-slate-300">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+                  Original prompt
+                </p>
+                <p className="mt-2 leading-7 text-slate-200">{truncate(project.userPrompt, 190)}</p>
+              </div>
 
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link
                   href={`/projects/${project.id}`}
-                  className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
+                  className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
                 >
                   Open workspace
                 </Link>
                 <Link
-                  href={`/api/projects/${project.id}`}
-                  target="_blank"
+                  href="/"
                   className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
                 >
-                  Raw JSON
+                  Generate another
                 </Link>
               </div>
             </article>
@@ -120,8 +145,8 @@ function StatusBadge({
     tone === 'success'
       ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
       : tone === 'danger'
-      ? 'border-rose-200 bg-rose-50 text-rose-700'
-      : 'border-slate-200 bg-slate-100 text-slate-700';
+        ? 'border-rose-200 bg-rose-50 text-rose-700'
+        : 'border-slate-200 bg-slate-100 text-slate-700';
 
   return (
     <span
@@ -134,7 +159,7 @@ function StatusBadge({
 
 function StatPill({ label, value }: { label: string; value: string }) {
   return (
-    <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-sm text-slate-600">
+    <span className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-600">
       <span className="font-semibold text-slate-900">{value}</span> {label}
     </span>
   );
@@ -142,10 +167,28 @@ function StatPill({ label, value }: { label: string; value: string }) {
 
 function MetaChip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs text-slate-500">
+    <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
       <span className="font-semibold uppercase tracking-[0.14em] text-slate-400">{label}</span>{' '}
       <span className="font-medium text-slate-700">{value}</span>
     </span>
+  );
+}
+
+function MetricCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
+      <p className="mt-2 text-xl font-bold text-slate-950">{value}</p>
+    </div>
+  );
+}
+
+function ProjectsGlyph() {
+  return (
+    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-6 w-6 fill-none stroke-current" strokeWidth="1.8">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75A2.25 2.25 0 0 1 6 4.5h4.379c.398 0 .779.158 1.06.439l1.622 1.622c.281.281.663.439 1.06.439H18a2.25 2.25 0 0 1 2.25 2.25v7.5A2.25 2.25 0 0 1 18 19.5H6a2.25 2.25 0 0 1-2.25-2.25v-10.5Z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 13.5h9M7.5 10.5h5.25" />
+    </svg>
   );
 }
 
@@ -190,5 +233,5 @@ function truncate(value: string, maxLength: number) {
     return value;
   }
 
-  return `${value.slice(0, maxLength - 1)}…`;
+  return `${value.slice(0, maxLength - 1)}...`;
 }

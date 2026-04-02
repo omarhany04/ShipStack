@@ -66,21 +66,21 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
   }
 
   return (
-    <div className="mx-auto w-full max-w-6xl animate-fade-up">
-      <div className="grid gap-5 xl:grid-cols-[1.25fr_0.75fr]">
+    <div className="mx-auto w-full max-w-[1200px] animate-fade-up">
+      <div className="space-y-5">
         <form
           onSubmit={handleSubmit}
-          className="glass-panel-strong soft-ring animate-shimmer overflow-hidden rounded-[34px] p-5 sm:p-6"
+          className="glass-panel-strong soft-ring animate-shimmer overflow-hidden rounded-[34px] p-6 sm:p-7"
         >
           <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.26em] text-orange-500">
                 Describe your product
               </p>
-              <h3 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
+              <h3 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
                 Turn an idea into a working product blueprint
               </h3>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-600">
+              <p className="mt-3 max-w-3xl text-[15px] leading-8 text-slate-600">
                 Include the audience, core workflows, standout differentiators, and any must-have
                 roles or admin needs. The more concrete the prompt, the better the generated app.
               </p>
@@ -92,11 +92,11 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
             </div>
           </div>
 
-          <div className="mt-5 rounded-[28px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.94))] p-4 sm:p-5">
+          <div className="mt-6 rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.94))] p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-sm font-semibold text-slate-900">Your idea</p>
-                <p className="mt-1 text-xs text-slate-400">
+                <p className="text-base font-semibold text-slate-900">Your idea</p>
+                <p className="mt-1 text-sm text-slate-400">
                   Use <span className="font-semibold text-slate-600">Ctrl</span> +{' '}
                   <span className="font-semibold text-slate-600">Enter</span> to generate quickly
                 </p>
@@ -111,14 +111,14 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
               value={idea}
               onChange={(event) => setIdea(event.target.value)}
               onKeyDown={handleKeyDown}
-              rows={5}
+              rows={7}
               maxLength={2000}
               disabled={isLoading || disabled}
               placeholder="Example: A modern CRM for boutique agencies with deal tracking, proposal approvals, client portals, invoice reminders, and a leadership dashboard for pipeline health."
-              className="mt-4 min-h-[180px] w-full resize-none border-none bg-transparent text-[15px] leading-8 text-slate-900 outline-none placeholder:text-slate-400"
+              className="mt-5 min-h-[260px] w-full resize-none border-none bg-transparent text-base leading-8 text-slate-900 outline-none placeholder:text-slate-400"
             />
 
-            <div className="mt-4 grid gap-3 rounded-[24px] bg-slate-950 px-4 py-4 text-slate-200 sm:grid-cols-3">
+            <div className="mt-5 grid gap-3 rounded-[26px] bg-slate-950 px-4 py-4 text-slate-200 md:grid-cols-3">
               {OUTPUT_PREVIEWS.map((item) => (
                 <div key={item} className="flex items-start gap-2 text-sm leading-6">
                   <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] text-orange-300">
@@ -132,12 +132,12 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
 
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-slate-500">
-              Prefer browsing first? Tap one of the prepared prompts on the right and tailor it.
+              Want a shortcut? Use one of the quick-start prompts below and customize it before generating.
             </p>
             <button
               type="submit"
               disabled={!idea.trim() || isLoading || disabled}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-6 py-3.5 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? 'Generating project...' : 'Generate startup workspace'}
               <ArrowGlyph />
@@ -146,19 +146,22 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
         </form>
 
         <aside className="glass-panel rounded-[34px] p-5 sm:p-6">
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">
                 Quick starts
               </p>
-              <h3 className="mt-3 text-xl font-bold text-slate-950">Prompt ideas that produce richer projects</h3>
+              <h3 className="mt-3 text-2xl font-bold text-slate-950">Prompt ideas that produce richer projects</h3>
+              <p className="mt-2 text-sm leading-7 text-slate-500">
+                Choose one to instantly fill the main prompt, then edit it to match your exact product.
+              </p>
             </div>
             <div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white sm:inline-flex">
               <CompassGlyph />
             </div>
           </div>
 
-          <div className="mt-5 space-y-3">
+          <div className="mt-6 grid gap-3 lg:grid-cols-2">
             {EXAMPLE_IDEAS.map((example, index) => (
               <button
                 key={example.title}

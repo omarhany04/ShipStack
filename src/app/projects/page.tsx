@@ -1,5 +1,6 @@
 import Link from 'next/link';
-import { getCurrentUser } from '@/lib/services/session.service';
+import BuilderBackLink from '@/app/components/BuilderBackLink';
+import { getCurrentSessionUser } from '@/lib/services/session.service';
 import { ProjectService } from '@/lib/services/project.service';
 
 export const metadata = {
@@ -8,13 +9,20 @@ export const metadata = {
 };
 
 export default async function ProjectsPage() {
-  const user = await getCurrentUser();
-  const { projects, total } = await ProjectService.listForUser(user.id, 1, 100);
+  const user = await getCurrentSessionUser();
+  const { projects } = await ProjectService.listForUser(user.id, 1, 24, {
+    includeTotal: false,
+  });
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute left-0 top-0 -z-10 h-64 w-64 rounded-full bg-orange-200/30 blur-3xl" />
       <div className="pointer-events-none absolute right-0 top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/25 blur-3xl" />
+
+      <BuilderBackLink
+        title="Back to builder"
+        description="Jump back into the main workspace to generate a new product or continue refining one."
+      />
 
       <section className="glass-panel-strong overflow-hidden rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
@@ -32,7 +40,7 @@ export default async function ProjectsPage() {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <StatPill label="Projects" value={String(total)} />
+            <StatPill label="Projects" value={String(projects.length)} />
             <StatPill
               label="Generated"
               value={String(projects.filter((project) => project.status === 'GENERATED').length)}

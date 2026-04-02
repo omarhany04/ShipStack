@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@/lib/services/project.service';
-import { getCurrentUser } from '@/lib/services/session.service';
+import { getCurrentSessionUser } from '@/lib/services/session.service';
 
 interface RouteParams {
   params: { id: string };
@@ -8,7 +8,7 @@ interface RouteParams {
 
 export async function GET(_request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentSessionUser();
     const result = await ProjectService.loadWithDetails(params.id);
 
     if (!result || result.project.userId !== user.id) {
@@ -44,7 +44,7 @@ export async function DELETE(
   { params }: RouteParams
 ): Promise<NextResponse> {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentSessionUser();
     const result = await ProjectService.loadWithDetails(params.id);
 
     if (!result || result.project.userId !== user.id) {

@@ -1,31 +1,33 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useAuth } from '@/lib/auth/useAuth';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
-import BlueprintEditor from './components/BlueprintEditor';
-import DownloadButton from './components/DownloadButton';
-import FollowUpPrompt from './components/FollowUpPrompt';
-import PreviewPanel from './components/PreviewPanel';
-import ProgressIndicator from './components/ProgressIndicator';
-import ProjectDatabasePanel from './components/ProjectDatabasePanel';
 import PromptInput from './components/PromptInput';
 import UserMenu from './components/UserMenu';
+
+const BlueprintEditor = dynamic(() => import('./components/BlueprintEditor'));
+const DownloadButton = dynamic(() => import('./components/DownloadButton'));
+const FollowUpPrompt = dynamic(() => import('./components/FollowUpPrompt'));
+const PreviewPanel = dynamic(() => import('./components/PreviewPanel'));
+const ProgressIndicator = dynamic(() => import('./components/ProgressIndicator'));
+const ProjectDatabasePanel = dynamic(() => import('./components/ProjectDatabasePanel'));
 
 const BENEFIT_CARDS = [
   {
     eyebrow: 'Generate',
-    title: 'Blueprint, code, and preview in one run',
-    copy: 'Describe the product once and get a full architecture, project files, preview sandbox, and downloadable workspace.',
+    title: 'Idea to workspace',
+    copy: 'Blueprint, code, preview, and download in one pass.',
   },
   {
     eyebrow: 'Refine',
-    title: 'Iterate with prompts or edit the blueprint directly',
-    copy: 'Keep prompting in plain English or open the Smart Blueprint Editor when you want tighter control over pages and data models.',
+    title: 'Prompt or edit',
+    copy: 'Keep iterating with follow-up prompts or manual schema edits.',
   },
   {
     eyebrow: 'Reopen',
-    title: 'Saved workspaces stay actionable',
-    copy: 'Every project can be reopened with its preview, files, database view, downloads, and follow-up history-ready workflow.',
+    title: 'Saved and reusable',
+    copy: 'Open past workspaces with preview, files, and project data.',
   },
 ] as const;
 
@@ -78,64 +80,76 @@ export default function HomePage() {
       <main className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
         {(state.stage === 'idle' || state.stage === 'error') ? (
           <section className="animate-fade-up">
-            <div className="grid gap-8 xl:grid-cols-[1.08fr_0.92fr] xl:items-end">
-              <div>
+            <div className="grid gap-8 xl:grid-cols-[1.12fr_0.88fr] xl:items-start">
+              <div className="max-w-4xl">
                 {user ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-sm text-slate-600 shadow-sm">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-white/85 px-4 py-2 text-sm text-slate-600 shadow-sm backdrop-blur">
                     <span className="font-semibold text-slate-900">Welcome back, {user.name}</span>
-                    <span className="text-slate-400">Your generated workspaces save automatically.</span>
+                    <span className="hidden text-slate-400 sm:inline">Your workspaces are saved automatically.</span>
                   </div>
                 ) : null}
 
-                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">
+                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">
                   Interactive AI product generation
                 </div>
 
-                <h2 className="mt-6 max-w-4xl text-balance text-5xl font-bold tracking-tight text-slate-950 sm:text-6xl">
+                <h2 className="mt-6 max-w-4xl text-balance text-[clamp(3rem,7vw,5.6rem)] font-bold tracking-[-0.05em] text-slate-950">
                   Build the first version of your startup before the momentum fades
                 </h2>
 
                 <p className="mt-6 max-w-3xl text-lg leading-8 text-slate-600">
-                  ShipStack turns a plain-English idea into a blueprint, generated codebase,
-                  preview, download, and saved workspace. Then it lets you keep iterating with
-                  prompts, manual blueprint edits, and a project-aware database view.
+                  Turn a plain-English idea into a blueprint, generated codebase, live preview,
+                  and saved workspace, then keep refining it without leaving the flow.
                 </p>
 
-                <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="mt-8 grid gap-3 sm:grid-cols-3">
                   {BENEFIT_CARDS.map((card) => (
                     <div
                       key={card.title}
-                      className="glass-panel rounded-[28px] p-5 shadow-[0_18px_50px_rgba(15,23,42,0.06)] transition hover:-translate-y-1"
+                      className="rounded-[28px] border border-white/70 bg-white/78 p-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)] backdrop-blur transition hover:-translate-y-1 hover:shadow-[0_22px_55px_rgba(15,23,42,0.08)]"
                     >
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-500">
-                        {card.eyebrow}
-                      </p>
-                      <h3 className="mt-3 text-lg font-bold text-slate-950">{card.title}</h3>
-                      <p className="mt-3 text-sm leading-7 text-slate-600">{card.copy}</p>
+                      <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-[11px] font-bold uppercase tracking-[0.18em] text-white">
+                          {card.eyebrow.slice(0, 2)}
+                        </span>
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-500">
+                          {card.eyebrow}
+                        </p>
+                      </div>
+                      <h3 className="mt-4 text-xl font-semibold tracking-tight text-slate-950">{card.title}</h3>
+                      <p className="mt-2 text-sm leading-7 text-slate-600">{card.copy}</p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="glass-panel rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-                <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">
-                  What happens next
-                </p>
-                <div className="mt-5 space-y-4">
+              <div className="glass-panel-strong overflow-hidden rounded-[36px] border border-white/70 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
+                <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.26),_transparent_42%),linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(30,41,59,0.98))] px-6 py-6 text-white">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-100">
+                    Launch path
+                  </div>
+                  <h3 className="mt-4 text-2xl font-bold tracking-tight">From prompt to workspace</h3>
+                  <p className="mt-2 max-w-md text-sm leading-7 text-slate-200">
+                    A cleaner three-step flow for getting from a rough idea to something you can inspect, edit, and ship.
+                  </p>
+                </div>
+
+                <div className="space-y-5 bg-white/88 px-5 py-5 sm:px-6 sm:py-6">
                   <WorkflowStep
                     index="01"
-                    title="Generate the first version"
-                    copy="Prompt the builder with your product idea and get a structured blueprint plus project files."
+                    title="Generate the first cut"
+                    copy="Start with one clear prompt and ShipStack builds the initial blueprint and code."
                   />
                   <WorkflowStep
                     index="02"
-                    title="Inspect preview and database"
-                    copy="Use desktop or mobile preview, skim the file explorer, and open the project database side panel."
+                    title="Review the output"
+                    copy="Switch between preview, code, and project database tools in the same workspace."
                   />
                   <WorkflowStep
                     index="03"
-                    title="Refine until it feels right"
-                    copy="Apply another prompt or edit the blueprint manually to keep evolving the project."
+                    title="Refine and save"
+                    copy="Apply follow-up prompts or blueprint edits, then reopen the project anytime."
+                    isLast
                   />
                 </div>
               </div>
@@ -278,21 +292,26 @@ function WorkflowStep({
   index,
   title,
   copy,
+  isLast = false,
 }: {
   index: string;
   title: string;
   copy: string;
+  isLast?: boolean;
 }) {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4 transition hover:-translate-y-0.5">
-      <div className="flex items-start gap-4">
-        <span className="inline-flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-xs font-bold text-white">
+    <div className="relative pl-16">
+      {!isLast ? (
+        <span className="absolute left-[19px] top-12 h-[calc(100%-1.75rem)] w-px bg-slate-200" />
+      ) : null}
+
+      <span className="absolute left-0 top-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-xs font-bold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)]">
           {index}
-        </span>
-        <div>
-          <p className="text-sm font-semibold text-slate-950">{title}</p>
-          <p className="mt-2 text-sm leading-7 text-slate-500">{copy}</p>
-        </div>
+      </span>
+
+      <div className="rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5">
+        <p className="text-base font-semibold text-slate-950">{title}</p>
+        <p className="mt-2 text-sm leading-7 text-slate-500">{copy}</p>
       </div>
     </div>
   );

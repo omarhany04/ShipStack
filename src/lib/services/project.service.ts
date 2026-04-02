@@ -144,33 +144,43 @@ export class ProjectService {
     };
   }
 
-  static async listForUser(userId: string, page = 1, pageSize = 10) {
+  static async listForUser(
+    userId: string,
+    page = 1,
+    pageSize = 10,
+    options: { includeTotal?: boolean } = {}
+  ) {
     const skip = (page - 1) * pageSize;
-    const [projects, total] = await Promise.all([
-      prisma.project.findMany({
-        where: { userId },
-        include: {
-          blueprint: {
-            select: {
-              featureCount: true,
-              modelCount: true,
-              pageCount: true,
-            },
+    const includeTotal = options.includeTotal ?? true;
+    const projectsPromise = prisma.project.findMany({
+      where: { userId },
+      include: {
+        blueprint: {
+          select: {
+            featureCount: true,
+            modelCount: true,
+            pageCount: true,
           },
         },
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: pageSize,
-      }),
-      prisma.project.count({
-        where: { userId },
-      }),
-    ]);
+      },
+      orderBy: { createdAt: 'desc' },
+      skip,
+      take: pageSize,
+    });
+
+    const totalPromise = includeTotal
+      ? prisma.project.count({
+          where: { userId },
+        })
+      : Promise.resolve<number | null>(null);
+
+    const [projects, totalResult] = await Promise.all([projectsPromise, totalPromise]);
+    const total = totalResult ?? projects.length;
 
     return {
       projects,
       total,
-      totalPages: Math.max(1, Math.ceil(total / pageSize)),
+      totalPages: includeTotal ? Math.max(1, Math.ceil(total / pageSize)) : 1,
     };
   }
 

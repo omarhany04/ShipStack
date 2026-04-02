@@ -6,15 +6,21 @@ export async function getCurrentSession() {
   return getServerSession(authOptions);
 }
 
-export async function getCurrentUser() {
+export async function getCurrentSessionUser() {
   const session = await getCurrentSession();
 
   if (!session?.user?.id) {
     throw new Error('Unauthorized');
   }
 
+  return session.user;
+}
+
+export async function getCurrentUser() {
+  const sessionUser = await getCurrentSessionUser();
+
   const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
+    where: { id: sessionUser.id },
   });
 
   if (!user || !user.isActive) {

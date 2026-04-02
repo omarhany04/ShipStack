@@ -32,6 +32,15 @@ export default function UserMenu() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    router.prefetch('/projects');
+    router.prefetch('/account');
+  }, [isOpen, router]);
+
   if (isLoading) {
     return <div className="h-11 w-11 animate-pulse rounded-full bg-slate-200" />;
   }

@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/services/session.service';
+import { getCurrentSessionUser } from '@/lib/services/session.service';
 import { ProjectService } from '@/lib/services/project.service';
 
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
-    const user = await getCurrentUser();
+    const user = await getCurrentSessionUser();
     const { searchParams } = new URL(request.url);
     const page = Number.parseInt(searchParams.get('page') || '1', 10);
     const pageSize = Math.min(Number.parseInt(searchParams.get('pageSize') || '10', 10), 50);

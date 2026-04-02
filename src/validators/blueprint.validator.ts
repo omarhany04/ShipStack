@@ -1,4 +1,5 @@
 import { aiLogger } from '@/ai/logger';
+import { normalizeGeneratedRoute } from '@/lib/generated-route';
 
 export interface BlueprintFeature {
   name: string;
@@ -359,6 +360,7 @@ function validatePages(raw: unknown, warnings: string[]) {
   }
 
   const items: BlueprintPage[] = [];
+  const seenRoutes = new Set<string>();
   raw.forEach((entry, index) => {
     if (!entry || typeof entry !== 'object') {
       warnings.push(`pages[${index}] invalid - skipped.`);
@@ -374,15 +376,26 @@ function validatePages(raw: unknown, warnings: string[]) {
       return;
     }
 
-    let route = validateString(page.route) ?? `/${toKebabCase(name)}`;
-    if (!validateString(page.route)) {
+    const inputRoute = validateString(page.route);
+    let route = inputRoute ?? `/${toKebabCase(name)}`;
+    if (!inputRoute) {
       warnings.push(`pages[${index}] missing route - generated "${route}".`);
       repaired = true;
     }
-    if (!route.startsWith('/')) {
-      route = `/${route}`;
+
+    const normalizedRoute = normalizeGeneratedRoute(route);
+    if (normalizedRoute !== route) {
+      warnings.push(`pages[${index}] route normalized from "${route}" to "${normalizedRoute}".`);
       repaired = true;
     }
+    route = normalizedRoute;
+
+    if (seenRoutes.has(route)) {
+      warnings.push(`pages[${index}] route "${route}" duplicates another page - skipped.`);
+      repaired = true;
+      return;
+    }
+    seenRoutes.add(route);
 
     const components = Array.isArray(page.components)
       ? page.components.filter((value): value is string => typeof value === 'string' && !!value)

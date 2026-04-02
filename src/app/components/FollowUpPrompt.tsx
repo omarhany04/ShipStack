@@ -94,7 +94,7 @@ export default function FollowUpPrompt({
       </form>
 
       <div className="mt-5 grid gap-3">
-        {EXAMPLE_REFINEMENTS.map((example) => (
+        {EXAMPLE_REFINEMENTS.slice(0, 2).map((example) => (
           <button
             key={example.title}
             type="button"

@@ -6,6 +6,11 @@ import {
   BlueprintField,
   BlueprintPage,
 } from '@/validators/blueprint.validator';
+import {
+  getGeneratedPageFilePath,
+  isDynamicGeneratedRoute,
+  normalizeGeneratedRoute,
+} from '@/lib/generated-route';
 import { DesignProfile } from '../design-system';
 import { GeneratedFile } from '../types';
 import { dedent, joinBlocks } from '../template-engine';
@@ -70,14 +75,7 @@ export function generateFrontendFiles(
 function generateRootLayout(blueprint: Blueprint, designProfile: DesignProfile): GeneratedFile {
   const headingFont = designProfile.fonts.heading;
   const bodyFont = designProfile.fonts.body;
-  const footerLinks = serializeValue(
-    blueprint.pages
-      .map((page) => ({
-        name: page.name,
-        route: normalizeRoutePath(page.route),
-      }))
-      .slice(0, 6)
-  );
+  const footerLinks = serializeValue(getPreferredPageLinks(blueprint.pages).slice(0, 6));
 
   return {
     path: 'src/app/layout.tsx',
@@ -143,7 +141,7 @@ function generateRootLayout(blueprint: Blueprint, designProfile: DesignProfile):
 }
 
 function generateNavigation(blueprint: Blueprint, designProfile: DesignProfile): GeneratedFile {
-  const navigationLinks = serializeValue(serializePageLinks(blueprint.pages).slice(0, 6));
+  const navigationLinks = serializeValue(getPreferredPageLinks(blueprint.pages).slice(0, 6));
   const firstAction = getPrimaryActionLink(blueprint.pages);
   const secondaryAction = getSecondaryActionLink(blueprint.pages, firstAction.route);
 
@@ -689,18 +687,19 @@ function generateDashboardComponent(
   blueprint: Blueprint,
   designProfile: DesignProfile
 ): GeneratedFile {
+  const preferredPageLinks = getPreferredPageLinks(blueprint.pages);
   const metrics = serializeValue(
     blueprint.dataModels.map((model) => ({
       title: model.name,
       endpoint: getCollectionApiPath(model, blueprint),
       description: buildModelDescription(model),
       route:
-        serializePageLinks(blueprint.pages).find((page) => matchesPageToModelRoute(page, model))?.route ??
-        normalizeRoutePath(blueprint.pages.find((page) => page.route === '/')?.route ?? '/'),
+        preferredPageLinks.find((page) => matchesPageToModelRoute(page, model))?.route ??
+        normalizeRoutePath(blueprint.pages.find((page) => normalizeRoutePath(page.route) === '/')?.route ?? '/'),
     }))
   );
   const featureCards = serializeValue(serializeFeatureCards(blueprint.features).slice(0, 4));
-  const routeCards = serializeValue(serializePageLinks(blueprint.pages).slice(0, 6));
+  const routeCards = serializeValue(preferredPageLinks.slice(0, 6));
 
   return {
     path: 'src/components/Dashboard.tsx',
@@ -911,7 +910,9 @@ function generateHomePage(
   blueprint: Blueprint,
   designProfile: DesignProfile
 ) {
-  const pageLinks = serializeValue(serializePageLinks(blueprint.pages).filter((page) => page.route !== '/'));
+  const pageLinks = serializeValue(
+    getPreferredPageLinks(blueprint.pages).filter((page) => page.route !== '/')
+  );
   const featureCards = serializeValue(serializeFeatureCards(blueprint.features).slice(0, 6));
   const modelCards = serializeValue(serializeModelCards(blueprint.dataModels).slice(0, 4));
   const endpointCards = serializeValue(serializeEndpointCards(blueprint.apiEndpoints).slice(0, 6));
@@ -943,7 +944,7 @@ function generateHomePage(
 
 function generateDashboardPage(page: BlueprintPage, blueprint: Blueprint) {
   const siblingPages = serializeValue(
-    serializePageLinks(blueprint.pages)
+    getPreferredPageLinks(blueprint.pages)
       .filter((item) => item.route !== normalizeRoutePath(page.route))
       .slice(0, 4)
   );
@@ -984,7 +985,7 @@ function generateCollectionPage(
 ) {
   const fields = serializeValue(serializeCollectionFields(model));
   const relatedRoutes = serializeValue(
-    serializePageLinks(blueprint.pages)
+    getPreferredPageLinks(blueprint.pages)
       .filter(
         (item) =>
           item.route !== normalizeRoutePath(page.route) &&
@@ -1093,7 +1094,7 @@ function generateGenericPage(
     serializeEndpointCards(getEndpointsForPage(page, blueprint.apiEndpoints)).slice(0, 4)
   );
   const siblingPages = serializeValue(
-    serializePageLinks(blueprint.pages)
+    getPreferredPageLinks(blueprint.pages)
       .filter((item) => item.route !== normalizeRoutePath(page.route))
       .slice(0, 6)
   );
@@ -1477,6 +1478,12 @@ function serializePageLinks(pages: Array<BlueprintPage | SerializedPageLink>): S
   }));
 }
 
+function getPreferredPageLinks(pages: Array<BlueprintPage | SerializedPageLink>) {
+  const serialized = serializePageLinks(pages);
+  const staticRoutes = serialized.filter((page) => !isDynamicGeneratedRoute(page.route));
+  return staticRoutes.length > 0 ? staticRoutes : serialized;
+}
+
 function serializeFeatureCards(features: BlueprintFeature[]): SerializedFeatureCard[] {
   return features.map((feature) => ({
     name: feature.name,
@@ -1680,22 +1687,11 @@ function isDashboardLikePage(page: BlueprintPage) {
 }
 
 function getPageFilePath(route: string) {
-  if (route === '/') {
-    return 'src/app/page.tsx';
-  }
-
-  const cleanRoute = route
-    .replace(/\/+/g, '/')
-    .split('/')
-    .filter(Boolean)
-    .map((segment) => segment.replace(/^:/, '').replace(/[^a-zA-Z0-9_-]/g, '') || 'page')
-    .join('/');
-
-  return `src/app/${cleanRoute}/page.tsx`;
+  return getGeneratedPageFilePath(route);
 }
 
 function getPageComponentName(page: BlueprintPage) {
-  const value = page.route === '/' ? 'Home' : page.name || page.route;
+  const value = normalizeRoutePath(page.route) === '/' ? 'Home' : page.name || page.route;
   return toPascalCase(value.replace(/\//g, ' '));
 }
 
@@ -1735,16 +1731,7 @@ function blueprintFieldToTs(field: BlueprintField) {
 }
 
 function normalizeRoutePath(route: string) {
-  if (!route) {
-    return '/';
-  }
-
-  const trimmed = route.trim();
-  if (!trimmed || trimmed === '/') {
-    return '/';
-  }
-
-  return `/${trimmed.replace(/^\/+/, '').replace(/\/+/g, '/')}`;
+  return normalizeGeneratedRoute(route);
 }
 
 function normalizeForMatch(value: string) {
@@ -1795,7 +1782,8 @@ function pluralize(value: string) {
 }
 
 function getPrimaryActionLink(pages: BlueprintPage[]) {
-  const target = pages.find((page) => normalizeRoutePath(page.route) !== '/') ?? pages[0];
+  const preferredPages = getPreferredPageLinks(pages);
+  const target = preferredPages.find((page) => page.route !== '/') ?? preferredPages[0];
   return {
     label: target ? `Open ${target.name}` : 'Explore workspace',
     route: normalizeRoutePath(target?.route ?? '/'),
@@ -1803,11 +1791,11 @@ function getPrimaryActionLink(pages: BlueprintPage[]) {
 }
 
 function getSecondaryActionLink(pages: BlueprintPage[], excludedRoute: string) {
+  const preferredPages = getPreferredPageLinks(pages);
   const target =
-    pages.find(
-      (page) =>
-        normalizeRoutePath(page.route) !== '/' && normalizeRoutePath(page.route) !== excludedRoute
-    ) ?? pages.find((page) => normalizeRoutePath(page.route) === '/') ?? pages[0];
+    preferredPages.find((page) => page.route !== '/' && page.route !== excludedRoute) ??
+    preferredPages.find((page) => page.route === '/') ??
+    preferredPages[0];
 
   return {
     label: target ? `Visit ${target.name}` : 'View home',

@@ -186,12 +186,6 @@ export default function SavedProjectWorkspace({
               {displayName}
             </h1>
             <p className="mt-4 text-sm leading-7 text-slate-600">{description}</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <MetaPill label="Status" value={humanize(status)} />
-              <MetaPill label="Project ID" value={projectId} mono />
-              <MetaPill label="Created" value={formatDate(createdAt)} />
-              <MetaPill label="Updated" value={formatDate(updatedAt)} />
-            </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
@@ -315,25 +309,6 @@ function previewHelper(status: PreviewStatus) {
   }
 }
 
-function MetaPill({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string;
-  mono?: boolean;
-}) {
-  return (
-    <span className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-500">
-      <span className="font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</span>{' '}
-      <span className={mono ? 'font-mono text-[11px] text-slate-700' : 'font-medium text-slate-700'}>
-        {value}
-      </span>
-    </span>
-  );
-}
-
 function StatCard({
   label,
   value,
@@ -387,16 +362,4 @@ function formatDuration(value: number) {
   }
 
   return `${(value / 1000).toFixed(1)} s`;
-}
-
-function formatDate(value: string) {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  }).format(new Date(value));
-}
-
-function humanize(value: string) {
-  return value.replace(/_/g, ' ').replace(/\b\w/g, (character) => character.toUpperCase());
 }

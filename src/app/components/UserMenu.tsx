@@ -61,7 +61,7 @@ export default function UserMenu() {
       <button
         type="button"
         onClick={() => setIsOpen((current) => !current)}
-        className="glass-panel inline-flex items-center gap-3 rounded-full px-3 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+        className="theme-button-secondary inline-flex items-center gap-3 rounded-full px-3 py-2 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
       >
         <div className="hidden sm:block">
           <p className="max-w-[140px] truncate text-sm font-semibold text-slate-900">{user.name}</p>
@@ -74,7 +74,7 @@ export default function UserMenu() {
             className="h-10 w-10 rounded-full object-cover"
           />
         ) : (
-          <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-slate-950 text-xs font-bold text-white">
+          <div className="theme-icon-badge inline-flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold">
             {initials}
           </div>
         )}
@@ -82,7 +82,7 @@ export default function UserMenu() {
 
       {isOpen ? (
         <div className="glass-panel-strong absolute right-0 mt-3 w-80 rounded-[30px] p-3 shadow-[0_30px_90px_rgba(15,23,42,0.16)]">
-          <div className="rounded-[24px] bg-[linear-gradient(180deg,rgba(248,250,252,0.96),rgba(241,245,249,0.92))] px-4 py-4">
+          <div className="theme-card-muted rounded-[24px] px-4 py-4">
             <div className="flex items-center gap-3">
               {user.image ? (
                 <img
@@ -91,7 +91,7 @@ export default function UserMenu() {
                   className="h-12 w-12 rounded-full border border-white object-cover shadow-sm"
                 />
               ) : (
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-white shadow-sm">
+                <div className="theme-icon-badge inline-flex h-12 w-12 items-center justify-center rounded-full text-sm font-bold shadow-sm">
                   {initials}
                 </div>
               )}
@@ -159,15 +159,15 @@ function MenuButton({
       }}
       className={`flex w-full items-center gap-3 rounded-[22px] border px-4 py-3.5 text-left transition ${
         danger
-          ? 'border-rose-100 bg-rose-50/50 text-rose-600 hover:border-rose-200 hover:bg-rose-50'
-          : 'border-transparent bg-white text-slate-700 hover:border-slate-200 hover:bg-slate-50'
+          ? 'theme-status-danger hover:border-rose-200 hover:bg-rose-50'
+          : 'theme-card text-slate-700 hover:border-[rgba(83,119,153,0.3)] hover:bg-[rgba(241,246,250,0.92)]'
       }`}
     >
       <span
         className={`inline-flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border ${
           danger
             ? 'border-rose-200 bg-white text-rose-500'
-            : 'border-slate-200 bg-slate-50 text-slate-600'
+            : 'border-[rgba(83,119,153,0.14)] bg-[rgba(83,119,153,0.08)] text-[color:var(--brand-secondary-strong)]'
         }`}
       >
         {icon}

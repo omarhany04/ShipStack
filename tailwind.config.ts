@@ -37,11 +37,11 @@ const config: Config = {
         }
       },
       boxShadow: {
-        soft: '0 18px 40px rgba(16, 19, 33, 0.08)'
+        soft: '0 22px 60px rgba(17, 32, 54, 0.08)'
       },
       backgroundImage: {
         mesh:
-          'radial-gradient(circle at top left, rgba(249, 115, 22, 0.16), transparent 30%), radial-gradient(circle at top right, rgba(59, 130, 246, 0.14), transparent 28%), linear-gradient(180deg, #fffdf7 0%, #ffffff 100%)'
+          'radial-gradient(circle at top left, rgba(185, 130, 77, 0.16), transparent 30%), radial-gradient(circle at top right, rgba(83, 119, 153, 0.14), transparent 28%), linear-gradient(180deg, #f8f5ef 0%, #eef3f7 48%, #e8eef5 100%)'
       }
     }
   },

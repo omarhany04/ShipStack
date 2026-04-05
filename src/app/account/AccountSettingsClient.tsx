@@ -164,7 +164,7 @@ export default function AccountSettingsClient({
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
             Account Settings
           </p>
           <h1 className="mt-2 text-4xl font-bold tracking-tight text-slate-950">
@@ -177,7 +177,7 @@ export default function AccountSettingsClient({
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+        <section className="glass-panel-strong rounded-[30px] p-6 shadow-soft sm:p-8">
           <div className="flex flex-col gap-6 md:flex-row md:items-start">
             <div className="flex flex-col items-center gap-4">
               {avatarPreview ? (
@@ -187,12 +187,12 @@ export default function AccountSettingsClient({
                   className="h-28 w-28 rounded-full border border-slate-200 object-cover"
                 />
               ) : (
-                <div className="flex h-28 w-28 items-center justify-center rounded-full bg-slate-950 text-3xl font-bold text-white">
+                <div className="theme-icon-badge flex h-28 w-28 items-center justify-center rounded-full text-3xl font-bold">
                   {initials}
                 </div>
               )}
               <div className="flex flex-wrap justify-center gap-2">
-                <label className="inline-flex cursor-pointer rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+                <label className="theme-button-secondary inline-flex cursor-pointer rounded-full px-4 py-2 text-sm font-medium">
                   Upload photo
                   <input
                     type="file"
@@ -208,7 +208,7 @@ export default function AccountSettingsClient({
                     setRemoveAvatar(true);
                     setProfileMessage(null);
                   }}
-                  className="rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-sm font-medium text-rose-600 transition hover:bg-rose-100"
+                  className="theme-status-danger rounded-full px-4 py-2 text-sm font-medium transition hover:bg-rose-100"
                 >
                   Remove
                 </button>
@@ -231,7 +231,7 @@ export default function AccountSettingsClient({
                     setProfile((current) => ({ ...current, name: event.target.value }));
                     setProfileMessage(null);
                   }}
-                  className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="theme-input block w-full rounded-2xl px-4 py-3 text-sm placeholder:text-slate-400"
                 />
               </div>
 
@@ -244,7 +244,7 @@ export default function AccountSettingsClient({
                   type="email"
                   value={profile.email}
                   disabled
-                  className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500"
+                  className="theme-card-muted block w-full rounded-2xl px-4 py-3 text-sm text-slate-500"
                 />
               </div>
 
@@ -261,18 +261,18 @@ export default function AccountSettingsClient({
                     setProfileMessage(null);
                   }}
                   placeholder="Your company or studio"
-                  className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="theme-input block w-full rounded-2xl px-4 py-3 text-sm placeholder:text-slate-400"
                 />
               </div>
 
               {profileError ? (
-                <p className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                <p className="theme-status-danger rounded-2xl px-4 py-3 text-sm">
                   {profileError}
                 </p>
               ) : null}
 
               {profileMessage ? (
-                <p className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+                <p className="theme-status-success rounded-2xl px-4 py-3 text-sm">
                   {profileMessage}
                 </p>
               ) : null}
@@ -283,7 +283,7 @@ export default function AccountSettingsClient({
                   void saveProfile();
                 }}
                 disabled={isSavingProfile}
-                className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                className="theme-button-primary inline-flex rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSavingProfile ? 'Saving profile...' : 'Save profile'}
               </button>
@@ -292,9 +292,9 @@ export default function AccountSettingsClient({
         </section>
 
         <div className="space-y-6">
-          <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+          <section className="glass-panel-strong rounded-[30px] p-6 shadow-soft sm:p-8">
             <div className="mb-5">
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
                 Security
               </p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">
@@ -316,14 +316,14 @@ export default function AccountSettingsClient({
                   <input
                     id="currentPassword"
                     type="password"
-                    value={passwordForm.currentPassword}
-                    onChange={(event) =>
-                      setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))
-                    }
-                    className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-100"
-                  />
-                </div>
-              ) : null}
+                      value={passwordForm.currentPassword}
+                      onChange={(event) =>
+                        setPasswordForm((current) => ({ ...current, currentPassword: event.target.value }))
+                      }
+                      className="theme-input block w-full rounded-2xl px-4 py-3 text-sm"
+                    />
+                  </div>
+                ) : null}
 
               <div>
                 <label htmlFor="newPassword" className="mb-2 block text-sm font-medium text-slate-700">
@@ -336,7 +336,7 @@ export default function AccountSettingsClient({
                   onChange={(event) =>
                     setPasswordForm((current) => ({ ...current, newPassword: event.target.value }))
                   }
-                  className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="theme-input block w-full rounded-2xl px-4 py-3 text-sm"
                 />
               </div>
 
@@ -351,7 +351,7 @@ export default function AccountSettingsClient({
                   onChange={(event) =>
                     setPasswordForm((current) => ({ ...current, confirmPassword: event.target.value }))
                   }
-                  className="block w-full rounded-2xl border border-slate-200 px-4 py-3 text-sm text-slate-900 focus:border-orange-400 focus:outline-none focus:ring-4 focus:ring-orange-100"
+                  className="theme-input block w-full rounded-2xl px-4 py-3 text-sm"
                 />
               </div>
             </div>
@@ -361,12 +361,14 @@ export default function AccountSettingsClient({
                 <p
                   key={hint.label}
                   className={`flex items-center gap-2 text-xs ${
-                    hint.met ? 'text-emerald-700' : 'text-slate-400'
+                    hint.met ? 'text-[color:var(--brand-success)]' : 'text-slate-400'
                   }`}
                 >
                   <span
                     className={`inline-flex h-4 w-4 items-center justify-center rounded-full text-[10px] ${
-                      hint.met ? 'bg-emerald-100 text-emerald-600' : 'border border-slate-300 text-transparent'
+                      hint.met
+                        ? 'bg-[rgba(34,112,93,0.12)] text-[color:var(--brand-success)]'
+                        : 'border border-slate-300 text-transparent'
                     }`}
                   >
                     •
@@ -377,13 +379,13 @@ export default function AccountSettingsClient({
             </div>
 
             {passwordError ? (
-              <p className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+              <p className="theme-status-danger mt-5 rounded-2xl px-4 py-3 text-sm">
                 {passwordError}
               </p>
             ) : null}
 
             {passwordMessage ? (
-              <p className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700">
+              <p className="theme-status-success mt-5 rounded-2xl px-4 py-3 text-sm">
                 {passwordMessage}
               </p>
             ) : null}
@@ -391,17 +393,17 @@ export default function AccountSettingsClient({
             <button
               type="button"
               onClick={() => {
-                void savePassword();
-              }}
-              disabled={isSavingPassword}
-              className="mt-5 inline-flex rounded-full bg-orange-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSavingPassword ? 'Updating password...' : profile.hasPassword ? 'Update password' : 'Add password'}
-            </button>
+                  void savePassword();
+                }}
+                disabled={isSavingPassword}
+                className="theme-button-primary mt-5 inline-flex rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSavingPassword ? 'Updating password...' : profile.hasPassword ? 'Update password' : 'Add password'}
+              </button>
           </section>
 
-          <section className="rounded-[30px] border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+          <section className="glass-panel-strong rounded-[30px] p-6 shadow-soft sm:p-8">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
               Sign-in Options
             </p>
             <h2 className="mt-2 text-2xl font-bold text-slate-950">Google account access</h2>
@@ -417,7 +419,7 @@ export default function AccountSettingsClient({
                 void loginWithGoogle();
               }}
               disabled={!googleEnabled}
-              className="mt-5 inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+              className="theme-button-secondary mt-5 inline-flex items-center gap-3 rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
             >
               <GoogleMark />
               Continue with Google

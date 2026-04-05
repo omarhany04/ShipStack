@@ -242,9 +242,9 @@ export default function ProjectDatabasePanel({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="inline-flex items-center gap-3 rounded-full border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 shadow-[0_14px_36px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50 hover:text-slate-900"
+        className="theme-button-secondary inline-flex items-center gap-3 rounded-full px-4 py-3 text-sm font-semibold shadow-[0_14px_36px_rgba(15,23,42,0.06)] transition hover:-translate-y-0.5"
       >
-        <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-slate-950 text-white">
+        <span className="theme-icon-badge inline-flex h-9 w-9 items-center justify-center rounded-full">
           <DatabaseGlyph />
         </span>
         <span className="flex flex-col items-start leading-tight">
@@ -269,12 +269,12 @@ export default function ProjectDatabasePanel({
             role="dialog"
             aria-modal="true"
             aria-label={`${projectName} project database`}
-            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[960px] flex-col border-l border-white/40 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(248,250,252,0.98))] shadow-[-24px_0_80px_rgba(15,23,42,0.16)]"
+            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[960px] flex-col border-l border-white/40 bg-[linear-gradient(180deg,_rgba(248,245,239,0.98),_rgba(241,246,250,0.98))] shadow-[-24px_0_80px_rgba(15,23,42,0.16)]"
           >
-            <div className="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_34%),linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(30,41,59,0.98))] px-6 py-6 text-white sm:px-8">
+            <div className="theme-dark-panel border-b border-slate-200 px-6 py-6 text-white sm:px-8">
               <div className="flex items-start justify-between gap-4">
                 <div className="max-w-2xl">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-100">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#eadbcb]">
                     Generated schema studio
                   </div>
                   <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">{projectName}</h2>
@@ -944,7 +944,7 @@ function TabButton({
       className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
         active
           ? 'bg-white text-slate-950 shadow-[0_10px_30px_rgba(15,23,42,0.14)]'
-          : 'border border-white/10 bg-white/8 text-slate-200 hover:bg-white/14'
+          : 'border border-white/10 bg-white/10 text-slate-200 hover:bg-white/15'
       }`}
     >
       {label}
@@ -967,11 +967,11 @@ function SurfaceCard({
 }) {
   return (
     <section
-      className={`rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] shadow-[0_18px_48px_rgba(15,23,42,0.05)] ${
+      className={`theme-card rounded-[30px] ${
         compact ? 'px-5 py-5' : 'px-5 py-6 sm:px-6'
       }`}
     >
-      <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-500">{eyebrow}</p>
+      <p className="theme-eyebrow text-[11px] font-semibold uppercase tracking-[0.18em]">{eyebrow}</p>
       <h3 className="mt-3 text-xl font-bold text-slate-950">{title}</h3>
       <p className="mt-2 text-sm leading-7 text-slate-600">{description}</p>
       <div className="mt-5">{children}</div>
@@ -981,7 +981,7 @@ function SurfaceCard({
 
 function MetricTile({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4">
+    <div className="theme-card-muted rounded-[22px] px-4 py-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
       <p className="mt-2 text-base font-semibold text-slate-950">{value}</p>
     </div>
@@ -1001,8 +1001,8 @@ function SourcePill({
         compact ? 'px-2.5 py-1 text-[10px]' : 'px-2.5 py-1 text-[11px]'
       } ${
         source === 'prisma'
-          ? 'bg-emerald-100 text-emerald-700'
-          : 'bg-sky-100 text-sky-700'
+          ? 'theme-status-success'
+          : 'theme-chip-muted'
       }`}
     >
       {source === 'prisma' ? 'Prisma' : 'Blueprint'}
@@ -1012,7 +1012,7 @@ function SourcePill({
 
 function InfoBadge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-500">
+    <span className="theme-chip-muted rounded-full px-3 py-1 text-xs font-semibold">
       {children}
     </span>
   );
@@ -1020,7 +1020,7 @@ function InfoBadge({ children }: { children: React.ReactNode }) {
 
 function CompactMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[20px] border border-slate-200 bg-slate-50 px-3 py-3 text-center">
+    <div className="theme-card-muted rounded-[20px] px-3 py-3 text-center">
       <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
       <p className="mt-1 text-lg font-bold text-slate-950">{value}</p>
     </div>
@@ -1029,7 +1029,7 @@ function CompactMetric({ label, value }: { label: string; value: string }) {
 
 function EndpointRow({ endpoint }: { endpoint: SchemaEndpoint }) {
   return (
-    <div className="rounded-[20px] border border-slate-200 bg-white px-4 py-4">
+    <div className="theme-card rounded-[20px] px-4 py-4">
       <div className="flex flex-wrap items-center gap-2">
         <HttpMethodPill method={endpoint.method} />
         <p className="text-sm font-semibold text-slate-950">{endpoint.path}</p>
@@ -1048,14 +1048,14 @@ function HttpMethodPill({ method }: { method: string }) {
   const upperMethod = method.toUpperCase();
   const toneClass =
     upperMethod === 'GET'
-      ? 'bg-emerald-100 text-emerald-700'
+      ? 'theme-status-success'
       : upperMethod === 'POST'
-        ? 'bg-sky-100 text-sky-700'
+        ? 'theme-chip-muted'
         : upperMethod === 'PATCH' || upperMethod === 'PUT'
-          ? 'bg-amber-100 text-amber-700'
+          ? 'theme-status-accent'
           : upperMethod === 'DELETE'
-            ? 'bg-rose-100 text-rose-700'
-            : 'bg-slate-100 text-slate-600';
+            ? 'theme-status-danger'
+            : 'theme-status-default';
 
   return (
     <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase ${toneClass}`}>
@@ -1066,7 +1066,7 @@ function HttpMethodPill({ method }: { method: string }) {
 
 function FieldTypePill({ children }: { children: React.ReactNode }) {
   return (
-    <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-600">
+    <span className="theme-chip-muted rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em]">
       {children}
     </span>
   );
@@ -1074,7 +1074,7 @@ function FieldTypePill({ children }: { children: React.ReactNode }) {
 
 function InlineChip({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-medium text-slate-500">
+    <span className="theme-chip-muted inline-flex rounded-full px-2.5 py-1 text-[11px] font-medium">
       {children}
     </span>
   );
@@ -1091,8 +1091,8 @@ function SmallPill({
     tone === 'dark'
       ? 'bg-slate-950 text-white'
       : tone === 'accent'
-        ? 'bg-orange-100 text-orange-700'
-        : 'bg-slate-100 text-slate-600';
+        ? 'theme-status-accent'
+        : 'theme-status-default';
 
   return (
     <span className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${toneClass}`}>
@@ -1109,8 +1109,8 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <div className="rounded-[30px] border border-dashed border-slate-300 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(248,250,252,0.98))] px-6 py-12 text-center shadow-[0_16px_40px_rgba(15,23,42,0.04)]">
-      <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px] bg-slate-950 text-white">
+    <div className="theme-card rounded-[30px] border-dashed border-slate-300 px-6 py-12 text-center">
+      <div className="theme-icon-badge mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px]">
         <DatabaseGlyph />
       </div>
       <p className="mt-5 text-lg font-semibold text-slate-950">{title}</p>

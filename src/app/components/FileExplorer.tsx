@@ -33,9 +33,9 @@ const FILE_ICONS: Record<string, string> = {
 };
 
 const SOURCE_BADGES: Record<string, string> = {
-  template: 'bg-sky-100 text-sky-700',
-  ai: 'bg-orange-100 text-orange-700',
-  hybrid: 'bg-amber-100 text-amber-700',
+  template: 'bg-[rgba(83,119,153,0.18)] text-[rgb(211,225,239)]',
+  ai: 'bg-[rgba(185,130,77,0.22)] text-[#eadbcb]',
+  hybrid: 'bg-[rgba(125,149,171,0.2)] text-slate-200',
 };
 
 export default function FileExplorer({
@@ -90,12 +90,12 @@ export default function FileExplorer({
             <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
             <p className="mt-1 text-xs text-slate-400">{description}</p>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
+          <span className="theme-chip-muted rounded-full px-3 py-1 text-[11px] font-semibold">
             {files.length} files
           </span>
         </div>
 
-        <div className="mt-4 rounded-full border border-slate-200 bg-slate-50 px-3 py-2">
+        <div className="theme-card-muted mt-4 rounded-full px-3 py-2">
           <input
             type="text"
             value={searchQuery}
@@ -262,11 +262,11 @@ function TreeView({
             <button
               type="button"
               onClick={() => onToggleDir(child.path)}
-              className="flex w-full items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-white"
+              className="flex w-full items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-white/80"
               style={{ paddingLeft: `${depth * 16 + 10}px` }}
             >
               <span className="w-4 text-slate-400">{isExpanded ? '▾' : '▸'}</span>
-              <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-slate-100 text-[10px] font-semibold text-slate-500">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-xl bg-[rgba(83,119,153,0.1)] text-[10px] font-semibold text-[color:var(--brand-secondary-strong)]">
                 DIR
               </span>
               <span>{child.name}</span>
@@ -309,14 +309,16 @@ function FileRow({
       onClick={onSelect}
       className={`flex w-full items-center gap-2 rounded-2xl px-2 py-2 text-left text-xs transition ${
         selected
-          ? 'bg-orange-50 text-orange-700'
+          ? 'bg-[rgba(83,119,153,0.14)] text-[color:var(--brand-secondary-strong)]'
           : 'text-slate-600 hover:bg-white'
       }`}
       style={{ paddingLeft: `${indentLevel * 16 + 10}px` }}
     >
       <span
         className={`inline-flex h-6 w-9 items-center justify-center rounded-xl text-[10px] font-semibold ${
-          selected ? 'bg-white text-orange-700' : 'bg-slate-100 text-slate-500'
+          selected
+            ? 'bg-white text-[color:var(--brand-secondary-strong)]'
+            : 'bg-slate-100 text-slate-500'
         }`}
       >
         {FILE_ICONS[extension] ?? 'FILE'}

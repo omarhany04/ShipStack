@@ -50,7 +50,7 @@ export default function BlueprintEditor({
     <div className="glass-panel flex max-h-[85vh] flex-col overflow-hidden rounded-[30px] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] lg:max-h-[calc(100dvh-6rem)]">
       <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
             Smart Blueprint Editor
           </p>
           <h3 className="mt-2 text-2xl font-bold text-slate-950">
@@ -61,13 +61,13 @@ export default function BlueprintEditor({
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-xs text-slate-500">
-          <span className="rounded-full bg-slate-100 px-3 py-2">
+          <span className="theme-chip-muted rounded-full px-3 py-2">
             {draft.features.length} features
           </span>
-          <span className="rounded-full bg-slate-100 px-3 py-2">
+          <span className="theme-chip-muted rounded-full px-3 py-2">
             {draft.pages.length} pages
           </span>
-          <span className="rounded-full bg-slate-100 px-3 py-2">
+          <span className="theme-chip-muted rounded-full px-3 py-2">
             {draft.dataModels.length} models
           </span>
         </div>
@@ -75,7 +75,7 @@ export default function BlueprintEditor({
 
       <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain pr-2">
         <div className="space-y-6">
-          <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
+          <section className="theme-card-muted rounded-[26px] p-4">
             <h4 className="text-sm font-semibold text-slate-900">Project Basics</h4>
             <div className="mt-4 grid gap-4 lg:grid-cols-2">
               <Field
@@ -121,7 +121,7 @@ export default function BlueprintEditor({
                     ],
                   }))
                 }
-                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                className="theme-button-secondary rounded-full px-3 py-2 text-xs font-medium"
               >
                 Add feature
               </button>
@@ -129,7 +129,7 @@ export default function BlueprintEditor({
 
             <div className="mt-4 space-y-4">
               {draft.features.map((feature, index) => (
-                <div key={`${feature.name}-${index}`} className="rounded-[20px] border border-slate-200 bg-white p-4">
+                <div key={`${feature.name}-${index}`} className="theme-card rounded-[20px] p-4">
                   <div className="grid gap-4 lg:grid-cols-[1fr_160px_auto]">
                     <Field
                       label="Name"
@@ -161,7 +161,7 @@ export default function BlueprintEditor({
                           features: current.features.filter((_, featureIndex) => featureIndex !== index),
                         }))
                       }
-                      className="mt-6 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-100"
+                      className="theme-status-danger mt-6 rounded-full px-4 py-2 text-xs font-medium transition hover:bg-rose-100"
                     >
                       Remove
                     </button>
@@ -184,7 +184,7 @@ export default function BlueprintEditor({
             </div>
           </section>
 
-          <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
+          <section className="theme-card-muted rounded-[26px] p-4">
             <div className="flex items-center justify-between gap-3">
               <h4 className="text-sm font-semibold text-slate-900">Pages</h4>
               <button
@@ -203,7 +203,7 @@ export default function BlueprintEditor({
                     ],
                   }))
                 }
-                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                className="theme-button-secondary rounded-full px-3 py-2 text-xs font-medium"
               >
                 Add page
               </button>
@@ -211,7 +211,7 @@ export default function BlueprintEditor({
 
             <div className="mt-4 space-y-4">
               {draft.pages.map((page, index) => (
-                <div key={`${page.route}-${index}`} className="rounded-[20px] border border-slate-200 bg-white p-4">
+                <div key={`${page.route}-${index}`} className="theme-card rounded-[20px] p-4">
                   <div className="grid gap-4 lg:grid-cols-2">
                     <Field
                       label="Page name"
@@ -256,7 +256,7 @@ export default function BlueprintEditor({
                           pages: current.pages.filter((_, pageIndex) => pageIndex !== index),
                         }))
                       }
-                      className="mt-6 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-100"
+                      className="theme-status-danger mt-6 rounded-full px-4 py-2 text-xs font-medium transition hover:bg-rose-100"
                     >
                       Remove
                     </button>
@@ -282,7 +282,7 @@ export default function BlueprintEditor({
             </div>
           </section>
 
-          <section className="rounded-[26px] border border-slate-200 bg-white/80 p-4">
+          <section className="theme-card-muted rounded-[26px] p-4">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <h4 className="text-sm font-semibold text-slate-900">Database Schema</h4>
@@ -307,7 +307,7 @@ export default function BlueprintEditor({
                     ],
                   }))
                 }
-                className="rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                className="theme-button-secondary rounded-full px-3 py-2 text-xs font-medium"
               >
                 Add model
               </button>
@@ -315,7 +315,7 @@ export default function BlueprintEditor({
 
             <div className="mt-4 space-y-4">
               {draft.dataModels.map((model, modelIndex) => (
-                <div key={`${model.name}-${modelIndex}`} className="rounded-[20px] border border-slate-200 bg-white p-4">
+                <div key={`${model.name}-${modelIndex}`} className="theme-card rounded-[20px] p-4">
                   <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
                     <div className="w-full lg:max-w-sm">
                       <Field
@@ -342,7 +342,7 @@ export default function BlueprintEditor({
                             ],
                           })
                         }
-                        className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                        className="theme-button-secondary rounded-full px-3 py-2 text-xs font-medium"
                       >
                         Add field
                       </button>
@@ -354,7 +354,7 @@ export default function BlueprintEditor({
                             dataModels: current.dataModels.filter((_, index) => index !== modelIndex),
                           }))
                         }
-                        className="rounded-full border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-100"
+                        className="theme-status-danger rounded-full px-3 py-2 text-xs font-medium transition hover:bg-rose-100"
                       >
                         Remove model
                       </button>
@@ -363,7 +363,7 @@ export default function BlueprintEditor({
 
                   <div className="mt-4 space-y-3">
                     {model.fields.map((field, fieldIndex) => (
-                      <div key={`${field.name}-${fieldIndex}`} className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                      <div key={`${field.name}-${fieldIndex}`} className="theme-card-muted rounded-2xl p-3">
                         <div className="grid gap-3 lg:grid-cols-[1.1fr_180px_120px_auto]">
                           <Field
                             label="Field name"
@@ -406,7 +406,7 @@ export default function BlueprintEditor({
                                 fields: model.fields.filter((_, index) => index !== fieldIndex),
                               })
                             }
-                            className="mt-6 rounded-full border border-rose-200 bg-rose-50 px-4 py-2 text-xs font-medium text-rose-600 transition hover:bg-rose-100"
+                            className="theme-status-danger mt-6 rounded-full px-4 py-2 text-xs font-medium transition hover:bg-rose-100"
                           >
                             Remove
                           </button>
@@ -445,7 +445,7 @@ export default function BlueprintEditor({
             type="button"
             onClick={() => setDraft(cloneBlueprint(blueprint))}
             disabled={!isDirty || isLoading}
-            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+            className="theme-button-secondary rounded-full px-4 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50"
           >
             Reset changes
           </button>
@@ -455,7 +455,7 @@ export default function BlueprintEditor({
               void onRegenerate(draft);
             }}
             disabled={isLoading}
-            className="rounded-full bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-button-primary rounded-full px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? 'Regenerating...' : 'Regenerate from blueprint'}
           </button>
@@ -543,7 +543,7 @@ function Field({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+        className="theme-input w-full rounded-2xl px-4 py-3 text-sm"
       />
     </div>
   );
@@ -570,7 +570,7 @@ function TextAreaField({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-900 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+        className="theme-input w-full rounded-2xl px-4 py-3 text-sm leading-6"
       />
     </div>
   );
@@ -595,7 +595,7 @@ function SelectField({
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100"
+        className="theme-input w-full rounded-2xl px-4 py-3 text-sm"
       >
         {options.map((option) => (
           <option key={option} value={option}>
@@ -622,7 +622,8 @@ function ToggleField({
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
-        className="h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+        className="h-4 w-4 rounded border-slate-300"
+        style={{ accentColor: 'var(--brand-secondary)' }}
       />
       {label}
     </label>

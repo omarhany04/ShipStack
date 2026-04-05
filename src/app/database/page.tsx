@@ -23,11 +23,11 @@ export default async function DatabasePage() {
           description="Return to the ShipStack builder workspace to generate, inspect, and refine app workspaces."
         />
 
-        <section className="overflow-hidden rounded-[32px] border border-slate-200 bg-white shadow-soft">
-          <div className="bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_36%),linear-gradient(135deg,_#0f172a_0%,_#111827_45%,_#1e293b_100%)] px-6 py-8 text-white sm:px-8 lg:px-10">
+        <section className="glass-panel-strong overflow-hidden rounded-[32px] shadow-soft">
+          <div className="theme-dark-panel px-6 py-8 text-white sm:px-8 lg:px-10">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="max-w-3xl">
-                <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-orange-100">
+                <p className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#eadbcb]">
                   Live Prisma + Supabase
                 </p>
                 <h1 className="mt-5 text-balance text-4xl font-bold tracking-tight sm:text-5xl">
@@ -40,7 +40,7 @@ export default async function DatabasePage() {
 
               <div className="grid gap-4 rounded-[28px] border border-white/10 bg-white/10 p-5 backdrop-blur xl:min-w-[320px]">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-orange-100">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#eadbcb]">
                     Access scope
                   </p>
                   <p className="mt-2 text-2xl font-semibold">
@@ -65,7 +65,7 @@ export default async function DatabasePage() {
             </div>
           </div>
 
-          <div className="grid gap-4 border-t border-slate-200 bg-slate-50/80 p-6 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 border-t border-slate-200 bg-[rgba(244,247,250,0.92)] p-6 sm:grid-cols-2 xl:grid-cols-5">
             <MetricCard label="Rows in scope" value={formatNumber(data.overview.totalRowsInScope)} helper="Across core user, project, schema, generation, deployment, and usage tables." />
             <MetricCard label="Projects" value={formatNumber(data.overview.totalProjects)} helper="Saved project workspaces in the current visibility scope." />
             <MetricCard label="Blueprints" value={formatNumber(data.overview.totalBlueprints)} helper="Stored product plans and generated app schemas." />
@@ -398,7 +398,7 @@ export default async function DatabasePage() {
             {error instanceof Error ? error.message : 'Something unexpected happened while loading the live database explorer.'}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/account" className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
+            <Link href="/account" className="theme-button-secondary inline-flex rounded-full px-5 py-3 text-sm font-semibold">
               Open account settings
             </Link>
           </div>
@@ -411,7 +411,7 @@ export default async function DatabasePage() {
 function SectionIntro({ eyebrow, title, description }: { eyebrow: string; title: string; description: string }) {
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">{eyebrow}</p>
+      <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">{eyebrow}</p>
       <h2 className="mt-2 text-2xl font-bold text-slate-950">{title}</h2>
       <p className="mt-2 max-w-3xl text-sm leading-7 text-slate-600">{description}</p>
     </div>
@@ -420,7 +420,7 @@ function SectionIntro({ eyebrow, title, description }: { eyebrow: string; title:
 
 function MetricCard({ label, value, helper }: { label: string; value: string; helper: string }) {
   return (
-    <div className="rounded-[22px] border border-slate-200 bg-white px-4 py-4 shadow-sm">
+    <div className="theme-card rounded-[22px] px-4 py-4 shadow-sm">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
       <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{helper}</p>
@@ -430,7 +430,7 @@ function MetricCard({ label, value, helper }: { label: string; value: string; he
 
 function KeyValue({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4">
+    <div className="theme-card-muted rounded-2xl px-4 py-4">
       <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{label}</p>
       <p className="mt-2 text-sm font-medium text-slate-900">{value}</p>
     </div>

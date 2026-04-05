@@ -62,7 +62,12 @@ export default function SignupPage() {
     }
 
     if (score === 3) {
-      return { label: 'Good', width: 'w-3/4', color: 'bg-orange-500', text: 'text-orange-600' };
+      return {
+        label: 'Good',
+        width: 'w-3/4',
+        color: 'bg-[color:var(--brand-accent)]',
+        text: 'text-[color:var(--brand-accent-strong)]',
+      };
     }
 
     return { label: 'Strong', width: 'w-full', color: 'bg-emerald-500', text: 'text-emerald-600' };
@@ -150,17 +155,17 @@ export default function SignupPage() {
   if (sessionLoading) {
     return (
       <div className="flex min-h-[320px] items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-orange-200 border-t-orange-500" />
+        <div className="h-10 w-10 animate-spin rounded-full border-4 border-[rgba(83,119,153,0.18)] border-t-[color:var(--brand-secondary)]" />
       </div>
     );
   }
 
   return (
     <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[0.98fr_1.02fr]">
-      <section className="rounded-[32px] border border-white/80 bg-white/90 p-8 shadow-[0_24px_80px_rgba(15,23,42,0.1)] backdrop-blur sm:p-10">
+      <section className="glass-panel-strong rounded-[32px] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.1)] backdrop-blur sm:p-10">
         <div className="mb-8">
           <Link href="/auth/login" className="inline-flex items-center gap-3">
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-orange-500 text-lg font-bold text-white shadow-lg shadow-orange-500/30">
+            <span className="theme-icon-badge inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg font-bold">
               S
             </span>
             <div>
@@ -171,7 +176,7 @@ export default function SignupPage() {
         </div>
 
         {serverError ? (
-          <div className="mb-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="theme-status-danger mb-5 rounded-2xl px-4 py-3 text-sm">
             {serverError}
           </div>
         ) : null}
@@ -185,7 +190,7 @@ export default function SignupPage() {
                   void loginWithGoogle();
                 }}
                 disabled={isSubmitting}
-                className="inline-flex w-full items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="theme-button-secondary inline-flex w-full items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <GoogleMark />
                 Sign up with Google
@@ -195,7 +200,7 @@ export default function SignupPage() {
                   <div className="w-full border-t border-slate-200" />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-white px-4 text-xs uppercase tracking-[0.24em] text-slate-400">
+                  <span className="bg-[rgba(248,250,252,0.96)] px-4 text-xs uppercase tracking-[0.24em] text-slate-400">
                     Or create with email
                   </span>
                 </div>
@@ -239,10 +244,10 @@ export default function SignupPage() {
                 autoComplete="new-password"
                 placeholder="Create a strong password"
                 disabled={isSubmitting}
-                className={`block w-full rounded-2xl border px-4 py-3 pr-12 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 ${
+                className={`block w-full rounded-2xl px-4 py-3 pr-12 text-sm placeholder:text-slate-400 focus:outline-none ${
                   fieldErrors.password
-                    ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100'
-                    : 'border-slate-200 focus:border-orange-400 focus:ring-orange-100'
+                    ? 'border-rose-300 bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-100'
+                    : 'theme-input'
                 }`}
               />
               <button
@@ -258,7 +263,7 @@ export default function SignupPage() {
             ) : null}
 
             {form.password ? (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4">
+              <div className="theme-card-muted mt-4 rounded-2xl p-4">
                 <div className="flex items-center justify-between gap-4">
                   <div className="h-2 flex-1 rounded-full bg-slate-200">
                     <div className={`h-2 rounded-full ${passwordStrength.width} ${passwordStrength.color}`} />
@@ -304,11 +309,12 @@ export default function SignupPage() {
             disabled={isSubmitting}
           />
 
-          <label className="flex items-start gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs leading-6 text-slate-500">
+          <label className="theme-card-muted flex items-start gap-3 rounded-2xl px-4 py-3 text-xs leading-6 text-slate-500">
             <input
               type="checkbox"
               required
-              className="mt-1 h-4 w-4 rounded border-slate-300 text-orange-500 focus:ring-orange-500"
+              className="mt-1 h-4 w-4 rounded border-slate-300"
+              style={{ accentColor: 'var(--brand-secondary)' }}
             />
             <span>
               I agree to the terms of service and privacy policy for this workspace.
@@ -318,7 +324,7 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="inline-flex w-full items-center justify-center rounded-2xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-button-primary inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? 'Creating account...' : 'Create account'}
           </button>
@@ -326,21 +332,21 @@ export default function SignupPage() {
 
         <p className="mt-8 text-center text-sm text-slate-500">
           Already have an account?{' '}
-          <Link href="/auth/login" className="font-semibold text-orange-600 hover:text-orange-700">
+          <Link href="/auth/login" className="theme-link font-semibold">
             Sign in
           </Link>
         </p>
       </section>
 
-      <section className="hidden rounded-[32px] border border-white/70 bg-white/70 p-10 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur lg:flex lg:flex-col lg:justify-between">
+      <section className="theme-dark-panel hidden rounded-[32px] p-10 lg:flex lg:flex-col lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#eadbcb]">
             Product workspace
           </p>
-          <h1 className="mt-5 text-5xl font-bold tracking-tight text-slate-950">
+          <h1 className="mt-5 text-5xl font-bold tracking-tight text-white">
             Save every generated project under your own account.
           </h1>
-          <p className="mt-5 max-w-xl text-lg leading-8 text-slate-600">
+          <p className="mt-5 max-w-xl text-lg leading-8 text-slate-200">
             Once you sign up, ShipStack protects the builder, ties generations to your identity, and keeps project history ready for follow-up work.
           </p>
         </div>
@@ -389,10 +395,10 @@ function Field({
         placeholder={placeholder}
         autoComplete={autoComplete}
         disabled={disabled}
-        className={`block w-full rounded-2xl border px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-4 ${
+        className={`block w-full rounded-2xl px-4 py-3 text-sm placeholder:text-slate-400 focus:outline-none ${
           error
-            ? 'border-rose-300 focus:border-rose-400 focus:ring-rose-100'
-            : 'border-slate-200 focus:border-orange-400 focus:ring-orange-100'
+            ? 'border-rose-300 bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-100'
+            : 'theme-input'
         }`}
       />
       {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}
@@ -402,9 +408,9 @@ function Field({
 
 function FeaturePill({ title, text }: { title: string; text: string }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-slate-50 px-5 py-4">
-      <p className="text-sm font-semibold text-slate-900">{title}</p>
-      <p className="mt-2 text-sm text-slate-600">{text}</p>
+    <div className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4">
+      <p className="text-sm font-semibold text-white">{title}</p>
+      <p className="mt-2 text-sm text-slate-200">{text}</p>
     </div>
   );
 }

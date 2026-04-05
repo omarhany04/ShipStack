@@ -188,7 +188,7 @@ export default function SavedProjectWorkspace({
       <section className="glass-panel-strong overflow-hidden rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-3xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
               Saved Project
             </p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-950">
@@ -233,7 +233,7 @@ export default function SavedProjectWorkspace({
         <section className="glass-panel-strong rounded-[34px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8">
           <div className="flex flex-col gap-3 border-b border-slate-200 pb-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
                 Blueprint Snapshot
               </p>
               <h2 className="mt-2 text-2xl font-bold text-slate-950">{blueprint.projectName}</h2>
@@ -328,7 +328,7 @@ function StatCard({
   helper: string;
 }) {
   return (
-    <div className="glass-panel rounded-[26px] px-5 py-5 shadow-[0_16px_50px_rgba(15,23,42,0.06)]">
+    <div className="theme-card rounded-[26px] px-5 py-5">
       <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
       <p className="mt-3 text-3xl font-bold text-slate-950">{value}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{helper}</p>
@@ -338,7 +338,7 @@ function StatCard({
 
 function SummaryColumn({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4">
+    <div className="theme-card rounded-[24px] px-4 py-4">
       <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
       <div className="mt-3 space-y-2 text-sm text-slate-600">
         {items.map((item) => (

@@ -122,7 +122,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
         >
           <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-5 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.26em] text-orange-500">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.26em]">
                 Describe your product
               </p>
               <h3 className="mt-3 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
@@ -134,13 +134,13 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
               </p>
             </div>
 
-            <div className="flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-orange-700">
+            <div className="theme-chip-muted flex items-center gap-2 rounded-full px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em]">
               <SparkGlyph />
               Guided input
             </div>
           </div>
 
-          <div className="mt-6 rounded-[30px] border border-slate-200 bg-[linear-gradient(180deg,rgba(255,255,255,0.92),rgba(248,250,252,0.94))] p-5 sm:p-6">
+          <div className="theme-card-muted mt-6 rounded-[30px] p-5 sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-base font-semibold text-slate-900">Your idea</p>
@@ -149,7 +149,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
                   <span className="font-semibold text-slate-600">Enter</span> to generate quickly
                 </p>
               </div>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
+              <span className="theme-chip-muted rounded-full px-3 py-1 text-[11px] font-semibold">
                 {idea.length}/{IDEA_CHARACTER_LIMIT}
               </span>
             </div>
@@ -163,13 +163,13 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
               maxLength={IDEA_CHARACTER_LIMIT}
               disabled={isLoading || disabled}
               placeholder="Example: A modern CRM for boutique agencies with deal tracking, proposal approvals, client portals, invoice reminders, and a leadership dashboard for pipeline health."
-              className="mt-5 min-h-[260px] w-full resize-none border-none bg-transparent text-base leading-8 text-slate-900 outline-none placeholder:text-slate-400"
+              className="theme-input mt-5 min-h-[260px] w-full resize-none rounded-[26px] px-5 py-4 text-base leading-8 placeholder:text-slate-400"
             />
 
-            <div className="mt-5 grid gap-3 rounded-[26px] bg-slate-950 px-4 py-4 text-slate-200 md:grid-cols-3">
+            <div className="theme-dark-panel mt-5 grid gap-3 rounded-[26px] px-4 py-4 text-slate-200 md:grid-cols-3">
               {OUTPUT_PREVIEWS.map((item) => (
                 <div key={item} className="flex items-start gap-2 text-sm leading-6">
-                  <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] text-orange-300">
+                  <span className="mt-1 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-[11px] text-[#eadbcb]">
                     ✓
                   </span>
                   <span>{item}</span>
@@ -185,7 +185,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
             <button
               type="submit"
               disabled={!idea.trim() || isLoading || disabled}
-              className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-7 py-4 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+              className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-7 py-4 text-sm font-semibold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isLoading ? 'Generating project...' : 'Generate startup workspace'}
               <ArrowGlyph />
@@ -196,7 +196,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
         <aside className="glass-panel rounded-[34px] p-5 sm:p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">
+              <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
                 Quick starts
               </p>
               <h3 className="mt-3 text-2xl font-bold text-slate-950">Prompt ideas that produce richer projects</h3>
@@ -204,7 +204,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
                 Choose one to instantly fill the main prompt, then edit it to match your exact product.
               </p>
             </div>
-            <div className="hidden h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white sm:inline-flex">
+            <div className="theme-icon-badge hidden h-12 w-12 items-center justify-center rounded-2xl sm:inline-flex">
               <CompassGlyph />
             </div>
           </div>
@@ -216,16 +216,16 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
                 type="button"
                 disabled={isLoading || disabled}
                 onClick={() => setIdea(example.prompt)}
-                className="group block w-full rounded-[26px] border border-slate-200 bg-white px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-orange-300 hover:bg-orange-50/60 disabled:cursor-not-allowed disabled:opacity-50"
+                className="theme-card group block w-full rounded-[26px] px-4 py-4 text-left transition hover:-translate-y-0.5 hover:border-[rgba(83,119,153,0.34)] hover:bg-[rgba(241,246,250,0.94)] disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-slate-100 text-sm font-bold text-slate-700 transition group-hover:bg-white">
+                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-[rgba(83,119,153,0.1)] text-sm font-bold text-[color:var(--brand-secondary-strong)] transition group-hover:bg-white">
                       0{index + 1}
                     </span>
                     <span className="text-sm font-semibold text-slate-900">{example.title}</span>
                   </div>
-                  <ArrowGlyph className="h-4 w-4 text-slate-300 transition group-hover:text-orange-500" />
+                  <ArrowGlyph className="h-4 w-4 text-slate-300 transition group-hover:text-[color:var(--brand-accent)]" />
                 </div>
                 <p className="mt-3 text-sm leading-7 text-slate-500">{example.prompt}</p>
               </button>

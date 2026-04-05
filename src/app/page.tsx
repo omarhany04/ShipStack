@@ -1,8 +1,10 @@
 'use client';
 
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { useAuth } from '@/lib/auth/useAuth';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
+import logoImage from './icon.png';
 import PromptInput from './components/PromptInput';
 import UserMenu from './components/UserMenu';
 
@@ -23,18 +25,21 @@ export default function HomePage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[460px] bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.18),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(20,184,166,0.12),_transparent_22%),linear-gradient(180deg,_rgba(255,255,255,0.9),_transparent)]" />
-      <div className="pointer-events-none absolute left-[-90px] top-[160px] -z-10 h-64 w-64 rounded-full bg-orange-200/40 blur-3xl animate-float-soft" />
-      <div className="pointer-events-none absolute right-[-70px] top-[280px] -z-10 h-64 w-64 rounded-full bg-teal-200/40 blur-3xl animate-float-soft" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-[radial-gradient(circle_at_top_left,_rgba(185,130,77,0.22),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(83,119,153,0.18),_transparent_26%),linear-gradient(180deg,_rgba(255,255,255,0.82),_transparent)]" />
+      <div className="pointer-events-none absolute left-[-90px] top-[160px] -z-10 h-64 w-64 rounded-full bg-[rgba(185,130,77,0.18)] blur-3xl animate-float-soft" />
+      <div className="pointer-events-none absolute right-[-70px] top-[280px] -z-10 h-64 w-64 rounded-full bg-[rgba(83,119,153,0.2)] blur-3xl animate-float-soft" />
 
-      <header className="sticky top-0 z-40 border-b border-white/60 bg-white/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-40 border-b border-[rgba(188,199,214,0.68)] bg-white/62 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-4">
-            <div className="inline-flex h-12 w-12 items-center justify-center rounded-[18px] bg-slate-950 text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]">
-              <BrandGlyph />
-            </div>
+            <Image
+              src={logoImage}
+              alt="ShipStack logo"
+              priority
+              className="h-12 w-12 rounded-[18px] object-cover shadow-[0_18px_40px_rgba(17,32,54,0.14)] ring-1 ring-white/55"
+            />
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-orange-500">
+              <p className="theme-eyebrow text-[11px] font-semibold uppercase tracking-[0.28em]">
                 ShipStack
               </p>
               <h1 className="mt-1 text-lg font-bold text-slate-950">
@@ -49,7 +54,7 @@ export default function HomePage() {
                 type="button"
                 onClick={() => void reset()}
                 disabled={isLoading}
-                className="glass-panel rounded-full px-4 py-2 text-xs font-semibold text-slate-700 transition hover:-translate-y-0.5 disabled:opacity-50"
+                className="theme-button-secondary rounded-full px-4 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:opacity-50"
               >
                 New project
               </button>
@@ -65,13 +70,13 @@ export default function HomePage() {
             <div className="grid gap-8 xl:grid-cols-[1.12fr_0.88fr] xl:items-start">
               <div className="max-w-4xl">
                 {user ? (
-                  <div className="inline-flex items-center gap-2 rounded-full border border-orange-200/80 bg-white/85 px-4 py-2 text-sm text-slate-600 shadow-sm backdrop-blur">
+                  <div className="theme-chip-muted inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm shadow-sm backdrop-blur">
                     <span className="font-semibold text-slate-900">Welcome back, {user.name}</span>
                     <span className="hidden text-slate-400 sm:inline">Your workspaces are saved automatically.</span>
                   </div>
                 ) : null}
 
-                <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50/90 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-orange-700">
+                <div className="theme-chip mt-6 inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em]">
                   Interactive AI product generation
                 </div>
 
@@ -87,8 +92,8 @@ export default function HomePage() {
               </div>
 
               <div className="glass-panel-strong overflow-hidden rounded-[36px] border border-white/70 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-                <div className="border-b border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.26),_transparent_42%),linear-gradient(135deg,_rgba(15,23,42,0.98),_rgba(30,41,59,0.98))] px-6 py-6 text-white">
-                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-orange-100">
+                <div className="theme-dark-panel border-b border-white/10 px-6 py-6 text-white">
+                  <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#eadbcb]">
                     Launch path
                   </div>
                   <h3 className="mt-4 text-2xl font-bold tracking-tight">From prompt to workspace</h3>
@@ -97,7 +102,7 @@ export default function HomePage() {
                   </p>
                 </div>
 
-                <div className="space-y-5 bg-white/88 px-5 py-5 sm:px-6 sm:py-6">
+                <div className="space-y-5 bg-[rgba(251,252,253,0.88)] px-5 py-5 sm:px-6 sm:py-6">
                   <WorkflowStep
                     index="01"
                     title="Generate the first cut"
@@ -154,10 +159,10 @@ export default function HomePage() {
         {showResults && state.project ? (
           <section className="animate-fade-up space-y-6">
             <div className="glass-panel-strong overflow-hidden rounded-[34px] shadow-[0_28px_90px_rgba(15,23,42,0.1)]">
-              <div className="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(249,115,22,0.16),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.94),_rgba(248,250,252,0.98))] px-5 py-6 sm:px-6">
+              <div className="border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(185,130,77,0.15),_transparent_34%),radial-gradient(circle_at_right,_rgba(83,119,153,0.12),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.94),_rgba(243,246,250,0.98))] px-5 py-6 sm:px-6">
                 <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
                   <div className="max-w-3xl">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                    <div className="theme-chip-success inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.2em]">
                       Generated workspace ready
                     </div>
                     <h3 className="mt-4 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
@@ -213,7 +218,7 @@ export default function HomePage() {
             </div>
 
             {state.project.warnings.length > 0 ? (
-              <details className="rounded-[26px] border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-800">
+              <details className="theme-status-accent rounded-[26px] px-5 py-4 text-sm">
                 <summary className="cursor-pointer font-semibold">
                   {state.project.warnings.length} generation warning{state.project.warnings.length === 1 ? '' : 's'}
                 </summary>
@@ -265,14 +270,14 @@ function WorkflowStep({
   return (
     <div className="relative pl-16">
       {!isLast ? (
-        <span className="absolute left-[19px] top-12 h-[calc(100%-1.75rem)] w-px bg-slate-200" />
+        <span className="absolute left-[19px] top-12 h-[calc(100%-1.75rem)] w-px bg-[rgba(132,150,171,0.35)]" />
       ) : null}
 
-      <span className="absolute left-0 top-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-slate-950 text-xs font-bold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)]">
+      <span className="theme-icon-badge absolute left-0 top-1 inline-flex h-10 w-10 items-center justify-center rounded-2xl text-xs font-bold">
           {index}
       </span>
 
-      <div className="rounded-[26px] border border-slate-200 bg-white px-5 py-5 shadow-[0_12px_30px_rgba(15,23,42,0.05)] transition hover:-translate-y-0.5">
+      <div className="theme-card rounded-[26px] px-5 py-5 transition hover:-translate-y-0.5">
         <p className="text-base font-semibold text-slate-950">{title}</p>
         <p className="mt-2 text-sm leading-7 text-slate-500">{copy}</p>
       </div>
@@ -292,9 +297,9 @@ function StatCard({
   highlight?: boolean;
 }) {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4 transition hover:-translate-y-0.5">
+    <div className="theme-card rounded-[24px] px-4 py-4 transition hover:-translate-y-0.5">
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">{label}</p>
-      <p className={`mt-3 text-3xl font-bold ${highlight ? 'text-orange-600' : 'text-slate-950'}`}>{value}</p>
+      <p className={`mt-3 text-3xl font-bold ${highlight ? 'theme-link' : 'text-slate-950'}`}>{value}</p>
       <p className="mt-2 text-sm leading-6 text-slate-500">{helper}</p>
     </div>
   );
@@ -317,7 +322,7 @@ function BlueprintSummary({
     <div className="glass-panel-strong rounded-[32px] p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
       <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">Blueprint</p>
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">Blueprint</p>
           <h3 className="mt-3 text-2xl font-bold text-slate-950 sm:text-3xl">{blueprint.projectName}</h3>
         </div>
         <p className="max-w-3xl text-sm leading-7 text-slate-600">{blueprint.description}</p>
@@ -351,7 +356,7 @@ function BlueprintSummary({
 
 function SummaryColumn({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="rounded-[24px] border border-slate-200 bg-white px-4 py-4">
+    <div className="theme-card rounded-[24px] px-4 py-4">
       <h4 className="text-sm font-semibold text-slate-900">{title}</h4>
       <div className="mt-3 space-y-2 text-sm text-slate-600">
         {items.map((item) => (
@@ -359,15 +364,5 @@ function SummaryColumn({ title, items }: { title: string; items: string[] }) {
         ))}
       </div>
     </div>
-  );
-}
-
-function BrandGlyph() {
-  return (
-    <svg aria-hidden="true" viewBox="0 0 24 24" className="h-5 w-5 fill-none stroke-current" strokeWidth="1.8">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3.5 4.75 7.75v8.5L12 20.5l7.25-4.25v-8.5L12 3.5Z" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="m8.5 10.25 3.5 2 3.5-2" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 12.25v4.25" />
-    </svg>
   );
 }

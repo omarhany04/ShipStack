@@ -18,9 +18,9 @@ export default function StandalonePreview({ url }: StandalonePreviewProps) {
 
   if (!url || !isValidUrl) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.12),_transparent_32%),linear-gradient(180deg,_rgba(255,255,255,0.96),_rgba(241,245,249,0.94))] px-6 py-12">
-        <div className="w-full max-w-2xl rounded-[36px] border border-white/80 bg-white/90 p-8 shadow-[0_28px_90px_rgba(15,23,42,0.1)] backdrop-blur">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(185,130,77,0.14),_transparent_32%),radial-gradient(circle_at_right,_rgba(83,119,153,0.12),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.96),_rgba(241,245,249,0.94))] px-6 py-12">
+        <div className="glass-panel-strong w-full max-w-2xl rounded-[36px] p-8 shadow-[0_28px_90px_rgba(15,23,42,0.1)] backdrop-blur">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
             Preview
           </p>
           <h1 className="mt-4 text-3xl font-bold tracking-tight text-slate-950">
@@ -33,7 +33,7 @@ export default function StandalonePreview({ url }: StandalonePreviewProps) {
           <div className="mt-8">
             <Link
               href="/"
-              className="inline-flex rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800"
+              className="theme-button-primary inline-flex rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
             >
               Back to builder
             </Link>
@@ -44,11 +44,11 @@ export default function StandalonePreview({ url }: StandalonePreviewProps) {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.1),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.96),_rgba(241,245,249,0.94))]">
+    <div className="flex min-h-screen flex-col bg-[radial-gradient(circle_at_top,_rgba(185,130,77,0.1),_transparent_28%),radial-gradient(circle_at_right,_rgba(83,119,153,0.1),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.96),_rgba(241,245,249,0.94))]">
       <header className="border-b border-white/70 bg-white/80 px-4 py-4 backdrop-blur sm:px-6">
         <div className="mx-auto flex max-w-7xl flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-orange-500">
+            <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.24em]">
               Standalone Preview
             </p>
             <h1 className="mt-2 text-xl font-bold text-slate-950">
@@ -57,7 +57,7 @@ export default function StandalonePreview({ url }: StandalonePreviewProps) {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+            <div className="theme-card inline-flex rounded-full p-1">
               <DeviceButton
                 label="Desktop preview"
                 active={viewMode === 'desktop'}
@@ -95,7 +95,7 @@ export default function StandalonePreview({ url }: StandalonePreviewProps) {
               title="Standalone generated app preview"
             />
           ) : (
-            <div className="h-full w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
+            <div className="theme-card h-full w-full overflow-hidden rounded-[28px]">
               <iframe
                 key={`${iframeKey}-${viewMode}`}
                 src={url}
@@ -145,7 +145,7 @@ function DeviceButton({
       title={label}
       aria-label={label}
       className={`inline-flex h-10 w-10 items-center justify-center rounded-full transition ${
-        active ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+        active ? 'bg-[color:var(--brand-ink)] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
       }`}
     >
       {icon}
@@ -168,7 +168,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+      className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600"
     >
       {icon}
     </button>

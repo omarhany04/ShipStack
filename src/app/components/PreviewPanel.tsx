@@ -38,7 +38,7 @@ export default function PreviewPanel({
 
   return (
     <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
-      <div className="border-b border-slate-200 bg-white/80 px-4 py-4">
+      <div className="border-b border-slate-200 bg-[rgba(255,255,255,0.78)] px-4 py-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <div>
@@ -51,7 +51,7 @@ export default function PreviewPanel({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+            <div className="theme-card inline-flex rounded-full p-1">
               <TabButton active={activeTab === 'preview'} onClick={() => setActiveTab('preview')}>
                 Preview
               </TabButton>
@@ -64,7 +64,7 @@ export default function PreviewPanel({
             </div>
 
             {activeTab === 'preview' ? (
-              <div className="inline-flex rounded-full border border-slate-200 bg-white p-1">
+              <div className="theme-card inline-flex rounded-full p-1">
                 <DeviceButton
                   label="Desktop preview"
                   active={viewMode === 'desktop'}
@@ -91,7 +91,7 @@ export default function PreviewPanel({
                   href={`/preview?src=${encodeURIComponent(url)}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"
+                  className="theme-button-secondary inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-medium"
                 >
                   Open
                 </a>
@@ -105,7 +105,7 @@ export default function PreviewPanel({
         {activeTab === 'preview' ? (
           url ? (
             <div
-              className={`flex h-full w-full overflow-auto bg-[radial-gradient(circle_at_top,_rgba(249,115,22,0.08),_transparent_34%),linear-gradient(180deg,_rgba(255,255,255,0.92),_rgba(241,245,249,0.82))] p-4 ${
+              className={`flex h-full w-full overflow-auto bg-[radial-gradient(circle_at_top,_rgba(185,130,77,0.1),_transparent_34%),radial-gradient(circle_at_right,_rgba(83,119,153,0.1),_transparent_30%),linear-gradient(180deg,_rgba(255,255,255,0.92),_rgba(241,245,249,0.82))] p-4 ${
                 viewMode === 'mobile' ? 'items-center justify-center' : ''
               }`}
             >
@@ -116,7 +116,7 @@ export default function PreviewPanel({
                   title="Generated app preview"
                 />
               ) : (
-                <div className="h-full w-full overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
+                <div className="theme-card h-full w-full overflow-hidden rounded-[26px]">
                   <iframe
                     key={`${iframeKey}-${viewMode}`}
                     src={url}
@@ -128,9 +128,9 @@ export default function PreviewPanel({
               )}
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center bg-slate-50 px-6 text-center">
+            <div className="flex h-full items-center justify-center bg-[rgba(244,247,250,0.92)] px-6 text-center">
               <div className="max-w-md">
-                <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px] bg-slate-950 text-white">
+                <div className="theme-icon-badge mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px]">
                   <PreviewGlyph />
                 </div>
                 <p className="mt-5 text-lg font-semibold text-slate-800">
@@ -147,7 +147,7 @@ export default function PreviewPanel({
         ) : activeTab === 'code' ? (
           files.length > 0 ? (
             <div className="h-full bg-[linear-gradient(180deg,_rgba(255,255,255,0.9),_rgba(248,250,252,0.96))] p-4">
-              <div className="h-full overflow-hidden rounded-[26px] border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
+              <div className="theme-card h-full overflow-hidden rounded-[26px]">
                 <FileExplorer
                   files={files}
                   embedded
@@ -157,9 +157,9 @@ export default function PreviewPanel({
               </div>
             </div>
           ) : (
-            <div className="flex h-full items-center justify-center bg-slate-50 px-6 text-center">
+            <div className="flex h-full items-center justify-center bg-[rgba(244,247,250,0.92)] px-6 text-center">
               <div className="max-w-md">
-                <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px] bg-slate-950 text-white">
+                <div className="theme-icon-badge mx-auto inline-flex h-14 w-14 items-center justify-center rounded-[20px]">
                   <CodeGlyph />
                 </div>
                 <p className="mt-5 text-lg font-semibold text-slate-800">No code available yet</p>
@@ -201,7 +201,7 @@ function TabButton({
       type="button"
       onClick={onClick}
       className={`rounded-full px-4 py-2 text-xs font-semibold transition ${
-        active ? 'bg-slate-950 text-white' : 'text-slate-500 hover:bg-slate-100'
+        active ? 'bg-[color:var(--brand-ink)] text-white' : 'text-slate-500 hover:bg-slate-100'
       }`}
     >
       {children}
@@ -227,7 +227,7 @@ function DeviceButton({
       title={label}
       aria-label={label}
       className={`inline-flex h-9 w-9 items-center justify-center rounded-full transition ${
-        active ? 'bg-slate-950 text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
+        active ? 'bg-[color:var(--brand-ink)] text-white shadow-sm' : 'text-slate-500 hover:bg-slate-100'
       }`}
     >
       {icon}
@@ -250,7 +250,7 @@ function IconButton({
       onClick={onClick}
       title={label}
       aria-label={label}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition hover:border-slate-300 hover:bg-slate-50"
+      className="theme-button-secondary inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-600"
     >
       {icon}
     </button>
@@ -266,13 +266,13 @@ function StatusBadge({
 }) {
   const toneClass =
     tone === 'success'
-      ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+      ? 'theme-status-success'
       : tone === 'warning'
-        ? 'border-amber-200 bg-amber-50 text-amber-700'
-        : 'border-slate-200 bg-slate-100 text-slate-600';
+        ? 'theme-status-accent'
+        : 'theme-status-default';
 
   return (
-    <span className={`inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${toneClass}`}>
+    <span className={`inline-flex rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] ${toneClass}`}>
       {children}
     </span>
   );

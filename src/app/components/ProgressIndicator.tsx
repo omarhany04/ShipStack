@@ -58,7 +58,7 @@ export default function ProgressIndicator({
     <div className="glass-panel-strong mx-auto w-full max-w-5xl animate-fade-up overflow-hidden rounded-[32px] p-5 shadow-[0_28px_100px_rgba(15,23,42,0.12)] sm:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-orange-500">
+          <p className="theme-eyebrow text-xs font-semibold uppercase tracking-[0.26em]">
             Generation in progress
           </p>
           <h3 className="mt-3 text-2xl font-bold tracking-tight text-slate-950 sm:text-3xl">
@@ -76,7 +76,7 @@ export default function ProgressIndicator({
         </div>
       </div>
 
-      <div className="mt-6 rounded-[26px] border border-slate-200 bg-slate-50/80 p-4 sm:p-5">
+      <div className="theme-card-muted mt-6 rounded-[26px] p-4 sm:p-5">
         <div className="flex items-center justify-between gap-3">
           <p className="text-sm font-semibold text-slate-900">Pipeline progress</p>
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
@@ -84,9 +84,9 @@ export default function ProgressIndicator({
           </p>
         </div>
 
-        <div className="mt-4 h-3 overflow-hidden rounded-full bg-white">
+        <div className="mt-4 h-3 overflow-hidden rounded-full bg-white/80">
           <div
-            className="animate-shimmer h-full rounded-full bg-gradient-to-r from-orange-500 via-amber-400 to-teal-400 transition-all duration-700"
+            className="animate-shimmer h-full rounded-full bg-[linear-gradient(90deg,#b9824d_0%,#d1ad7f_46%,#537799_100%)] transition-all duration-700"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -100,18 +100,18 @@ export default function ProgressIndicator({
                 key={step.label}
                 className={`rounded-[24px] border px-4 py-4 text-left transition ${
                   isActive
-                    ? 'border-orange-200 bg-orange-50'
+                    ? 'theme-status-accent'
                     : isDone
-                      ? 'border-slate-200 bg-slate-950 text-white'
-                      : 'border-slate-200 bg-white text-slate-700'
+                      ? 'theme-dark-panel border-transparent text-white'
+                      : 'theme-card text-slate-700'
                 }`}
               >
                 <div
                   className={`inline-flex h-9 w-9 items-center justify-center rounded-2xl text-xs font-bold ${
                     isDone
                       ? 'bg-white/10 text-white'
-                      : isActive
-                        ? 'bg-white text-orange-700 shadow-sm'
+                    : isActive
+                        ? 'bg-white text-[color:var(--brand-accent-strong)] shadow-sm'
                         : 'bg-slate-100 text-slate-500'
                   }`}
                 >
@@ -122,7 +122,11 @@ export default function ProgressIndicator({
                 </p>
                 <p
                   className={`mt-2 text-xs leading-6 ${
-                    isDone ? 'text-slate-200' : isActive ? 'text-orange-700/80' : 'text-slate-400'
+                    isDone
+                      ? 'text-slate-200'
+                      : isActive
+                        ? 'text-[color:var(--brand-accent-strong)]/80'
+                        : 'text-slate-400'
                   }`}
                 >
                   {step.caption}
@@ -134,7 +138,7 @@ export default function ProgressIndicator({
       </div>
 
       {error ? (
-        <div className="mt-5 whitespace-pre-line rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm leading-7 text-rose-700">
+        <div className="theme-status-danger mt-5 whitespace-pre-line rounded-[24px] px-5 py-4 text-sm leading-7">
           {error}
         </div>
       ) : null}
@@ -153,15 +157,15 @@ function StatusChip({
 }) {
   const toneClass =
     tone === 'accent'
-      ? 'border-orange-200 bg-orange-50 text-orange-700'
+      ? 'theme-status-accent'
       : tone === 'success'
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+        ? 'theme-status-success'
         : tone === 'danger'
-          ? 'border-rose-200 bg-rose-50 text-rose-700'
-          : 'border-slate-200 bg-white text-slate-700';
+          ? 'theme-status-danger'
+          : 'theme-status-default';
 
   return (
-    <div className={`rounded-[22px] border px-4 py-3 ${toneClass}`}>
+    <div className={`rounded-[22px] px-4 py-3 ${toneClass}`}>
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">{label}</p>
       <p className="mt-2 text-sm font-semibold">{value}</p>
     </div>

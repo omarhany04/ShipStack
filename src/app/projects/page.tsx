@@ -36,8 +36,8 @@ export default async function ProjectsPage() {
 
   return (
     <div className="relative mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <div className="pointer-events-none absolute left-0 top-0 -z-10 h-64 w-64 rounded-full bg-orange-200/30 blur-3xl" />
-      <div className="pointer-events-none absolute right-0 top-20 -z-10 h-64 w-64 rounded-full bg-teal-200/25 blur-3xl" />
+      <div className="pointer-events-none absolute left-0 top-0 -z-10 h-64 w-64 rounded-full bg-[rgba(185,130,77,0.18)] blur-3xl" />
+      <div className="pointer-events-none absolute right-0 top-20 -z-10 h-64 w-64 rounded-full bg-[rgba(83,119,153,0.18)] blur-3xl" />
 
       <BuilderBackLink
         title="Back to builder"

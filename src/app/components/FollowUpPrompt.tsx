@@ -44,7 +44,7 @@ export default function FollowUpPrompt({
   return (
     <section className="glass-panel rounded-[30px] p-5 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-6">
       <div className="flex flex-col gap-4 border-b border-slate-200/80 pb-5">
-        <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-orange-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em] text-orange-700">
+        <div className="theme-chip inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.22em]">
           Continue prompting
         </div>
         <div>
@@ -65,10 +65,10 @@ export default function FollowUpPrompt({
           placeholder="Example: Add a client billing dashboard, make the navigation more polished, and include an onboarding checklist for new users."
           rows={6}
           disabled={isLoading}
-          className="w-full rounded-[26px] border border-slate-200 bg-white px-4 py-4 text-sm leading-7 text-slate-900 outline-none transition focus:border-orange-300 focus:ring-4 focus:ring-orange-100 disabled:cursor-not-allowed disabled:opacity-60"
+          className="theme-input w-full rounded-[26px] px-4 py-4 text-sm leading-7 disabled:cursor-not-allowed disabled:opacity-60"
         />
 
-        <div className="rounded-[24px] bg-slate-950 px-4 py-4 text-sm text-slate-200">
+        <div className="theme-dark-panel rounded-[24px] px-4 py-4 text-sm text-slate-200">
           <p className="font-semibold text-white">Works best when you mention:</p>
           <div className="mt-3 grid gap-2 text-sm text-slate-300 sm:grid-cols-2">
             <p>Specific screens or pages</p>
@@ -85,7 +85,7 @@ export default function FollowUpPrompt({
           <button
             type="submit"
             disabled={!prompt.trim() || isLoading}
-            className="inline-flex items-center justify-center gap-2 rounded-full bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-button-primary inline-flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isLoading ? 'Applying changes...' : 'Apply follow-up prompt'}
             <ArrowGlyph />
@@ -100,13 +100,13 @@ export default function FollowUpPrompt({
             type="button"
             disabled={isLoading}
             onClick={() => setPrompt(example.prompt)}
-            className="group flex w-full items-start justify-between gap-4 rounded-[24px] border border-slate-200 bg-white px-4 py-4 text-left transition hover:border-orange-300 hover:bg-orange-50/60 disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-card group flex w-full items-start justify-between gap-4 rounded-[24px] px-4 py-4 text-left transition hover:border-[rgba(83,119,153,0.34)] hover:bg-[rgba(241,246,250,0.94)] disabled:cursor-not-allowed disabled:opacity-60"
           >
             <div>
               <p className="text-sm font-semibold text-slate-900">{example.title}</p>
               <p className="mt-2 text-sm leading-7 text-slate-500">{example.prompt}</p>
             </div>
-            <ArrowGlyph className="mt-1 h-4 w-4 flex-shrink-0 text-slate-300 transition group-hover:text-orange-500" />
+            <ArrowGlyph className="mt-1 h-4 w-4 flex-shrink-0 text-slate-300 transition group-hover:text-[color:var(--brand-accent)]" />
           </button>
         ))}
       </div>

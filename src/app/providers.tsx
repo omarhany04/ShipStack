@@ -14,7 +14,7 @@ export default function Providers({
   session,
 }: {
   children: React.ReactNode;
-  session: Session | null;
+  session?: Session | null;
 }) {
   const [showAssistant, setShowAssistant] = useState(false);
 

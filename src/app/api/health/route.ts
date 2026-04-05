@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { aiLogger } from '@/ai/logger';
 import { aiOrchestrator } from '@/ai/orchestrator';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(): Promise<NextResponse> {
   const healthSnapshot = aiOrchestrator.getHealthSnapshot();
   const cacheStats = aiOrchestrator.getCacheStats();

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { aiOrchestrator } from '@/ai/orchestrator';
 import { UsageService } from '@/lib/services/usage.service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const { searchParams } = new URL(request.url);

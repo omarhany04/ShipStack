@@ -7,6 +7,9 @@ import {
   validatePassword,
 } from '@/lib/auth/password';
 
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 interface SignupRequest {
   name: string;
   email: string;

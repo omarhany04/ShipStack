@@ -134,7 +134,7 @@ export default function ProgressIndicator({
       </div>
 
       {error ? (
-        <div className="mt-5 rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm leading-7 text-rose-700">
+        <div className="mt-5 whitespace-pre-line rounded-[24px] border border-rose-200 bg-rose-50 px-5 py-4 text-sm leading-7 text-rose-700">
           {error}
         </div>
       ) : null}

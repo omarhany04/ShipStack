@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useMemo, useState } from 'react';
+import PhonePreviewFrame from './PhonePreviewFrame';
 
 interface StandalonePreviewProps {
   url: string | null;
@@ -88,18 +89,11 @@ export default function StandalonePreview({ url }: StandalonePreviewProps) {
           }`}
         >
           {viewMode === 'mobile' ? (
-            <div className="flex h-full max-h-full w-full max-w-[420px] flex-col rounded-[38px] border-[10px] border-slate-950 bg-slate-950 p-[6px] shadow-[0_32px_90px_rgba(15,23,42,0.25)]">
-              <div className="mx-auto my-1.5 h-1.5 w-20 rounded-full bg-slate-700" />
-              <div className="relative flex-1 overflow-hidden rounded-[24px] bg-white">
-                <iframe
-                  key={`${iframeKey}-${viewMode}`}
-                  src={url}
-                  title="Standalone generated app preview"
-                  className="h-full w-full border-0"
-                  sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
-                />
-              </div>
-            </div>
+            <PhonePreviewFrame
+              iframeKey={`${iframeKey}-${viewMode}`}
+              src={url}
+              title="Standalone generated app preview"
+            />
           ) : (
             <div className="h-full w-full overflow-hidden rounded-[28px] border border-slate-200 bg-white shadow-[0_22px_60px_rgba(15,23,42,0.08)]">
               <iframe

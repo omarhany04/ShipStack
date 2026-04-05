@@ -38,6 +38,8 @@ const OUTPUT_PREVIEWS = [
   'Saved workspace with database view, downloads, and follow-up prompting',
 ] as const;
 
+const IDEA_CHARACTER_LIMIT = 4000;
+
 export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInputProps) {
   const [idea, setIdea] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -148,7 +150,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
                 </p>
               </div>
               <span className="rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-500">
-                {idea.length}/2000
+                {idea.length}/{IDEA_CHARACTER_LIMIT}
               </span>
             </div>
 
@@ -158,7 +160,7 @@ export default function PromptInput({ onSubmit, isLoading, disabled }: PromptInp
               onChange={(event) => setIdea(event.target.value)}
               onKeyDown={handleKeyDown}
               rows={7}
-              maxLength={2000}
+              maxLength={IDEA_CHARACTER_LIMIT}
               disabled={isLoading || disabled}
               placeholder="Example: A modern CRM for boutique agencies with deal tracking, proposal approvals, client portals, invoice reminders, and a leadership dashboard for pipeline health."
               className="mt-5 min-h-[260px] w-full resize-none border-none bg-transparent text-base leading-8 text-slate-900 outline-none placeholder:text-slate-400"

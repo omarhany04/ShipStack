@@ -22,8 +22,9 @@ function generatePackageJson(blueprint: Blueprint): GeneratedFile {
     private: true,
     scripts: {
       dev: 'next dev',
-      build: 'next build',
+      build: 'prisma generate && next build',
       start: 'next start',
+      postinstall: 'prisma generate',
       lint: 'next lint',
       'db:generate': 'prisma generate',
       'db:push': 'prisma db push',

@@ -45,6 +45,7 @@ interface GenerateApiResponse {
     generation: ProjectStats;
   };
   error?: string;
+  details?: string[];
 }
 
 export interface GeneratedProject {
@@ -193,7 +194,13 @@ export function useProjectGenerator() {
 
       const data = (await response.json().catch(() => null)) as GenerateApiResponse | null;
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || `Request failed with status ${response.status}`);
+        const errorSummary = data?.error || `Request failed with status ${response.status}`;
+        const detailLines = data?.details?.filter(Boolean) ?? [];
+        const message =
+          detailLines.length > 0
+            ? `${errorSummary}\n${detailLines.map((detail) => `- ${detail}`).join('\n')}`
+            : errorSummary;
+        throw new Error(message);
       }
 
       setStage('generating_code');

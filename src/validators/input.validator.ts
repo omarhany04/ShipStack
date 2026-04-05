@@ -6,9 +6,9 @@ export interface InputValidationResult {
 
 const INPUT_CONSTRAINTS = {
   minLength: 10,
-  maxLength: 2000,
+  maxLength: 4000,
   minWords: 3,
-  maxWords: 300,
+  maxWords: 650,
 } as const;
 
 const INJECTION_PATTERNS: RegExp[] = [

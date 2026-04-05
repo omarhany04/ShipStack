@@ -47,6 +47,8 @@ const SUPPORT_IMPORT_PATTERN =
 const INTERNAL_IMPORT_PATTERN =
   /(?:import|export)\s+(?:[^'"]*?\sfrom\s+)?['"](@\/[^'"]+)['"]|import\(\s*['"](@\/[^'"]+)['"]\s*\)/g;
 
+const CODE_FILE_PATTERN = /\.(?:[cm]?[jt]sx?|css|scss|sass|less|json|mjs|cjs|prisma|html)$/i;
+
 const UNSPLASH_PORTRAIT_URLS = [
   'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
@@ -804,7 +806,7 @@ export function validateGeneratedFiles(files: GeneratedFile[]): ValidationIssue[
 }
 
 function normalizeFileContent(file: GeneratedFile, projectName: string) {
-  let content = file.content;
+  let content = stripMarkdownCodeWrappers(file.path, file.content);
 
   if (file.path === 'package.json') {
     try {
@@ -833,6 +835,36 @@ function normalizeFileContent(file: GeneratedFile, projectName: string) {
 
   content = replacePlaceholderImageUrls(content, projectName, file.path);
   content = replaceLocalDemoImageUrls(content, projectName, file.path);
+
+  return content;
+}
+
+function stripMarkdownCodeWrappers(filePath: string, content: string) {
+  if (!CODE_FILE_PATTERN.test(filePath)) {
+    return content;
+  }
+
+  const trimmed = content.trim();
+  if (!trimmed) {
+    return content;
+  }
+
+  const completeFenceMatch = trimmed.match(/^```(?:[\w.+-]+)?\s*\n([\s\S]*?)\n```$/);
+  if (completeFenceMatch) {
+    return completeFenceMatch[1].trim();
+  }
+
+  if (/^```(?:[\w.+-]+)?\s*\n/.test(trimmed)) {
+    return trimmed
+      .replace(/^```(?:[\w.+-]+)?\s*\n/, '')
+      .replace(/\n```[\t ]*$/, '')
+      .trim();
+  }
+
+  const fencedBlocks = [...trimmed.matchAll(/```(?:[\w.+-]+)?\s*\n([\s\S]*?)\n```/g)];
+  if (fencedBlocks.length === 1) {
+    return fencedBlocks[0][1].trim();
+  }
 
   return content;
 }

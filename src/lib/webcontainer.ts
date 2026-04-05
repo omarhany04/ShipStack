@@ -49,6 +49,10 @@ function createWebContainerPackageJson(files: FileSystemTree) {
       delete pkg.dependencies?.[dep];
       delete pkg.devDependencies?.[dep];
     }
+    delete pkg.scripts?.postinstall;
+    if (pkg.scripts?.build === 'prisma generate && next build') {
+      pkg.scripts.build = 'next build';
+    }
     delete pkg.scripts?.['db:generate'];
     delete pkg.scripts?.['db:push'];
     delete pkg.scripts?.['db:studio'];

@@ -222,9 +222,6 @@ export default function ProjectsLibraryClient({
                   >
                     Open workspace
                   </Link>
-                  <BuilderScrollLink className="inline-flex rounded-full border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50">
-                    Generate another
-                  </BuilderScrollLink>
                   <button
                     type="button"
                     onClick={() => void handleDelete(project)}

@@ -3,6 +3,8 @@ import BuilderBackLink from '@/app/components/BuilderBackLink';
 import AccountSettingsClient from './AccountSettingsClient';
 import { getCurrentUser } from '@/lib/services/session.service';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Account Settings | ShipStack',
   description: 'Manage your ShipStack profile, avatar, password, and sign-in options.',

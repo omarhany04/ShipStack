@@ -6,6 +6,8 @@ import { ProjectService } from '@/lib/services/project.service';
 import { getCurrentSessionUser } from '@/lib/services/session.service';
 import { Blueprint } from '@/validators/blueprint.validator';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'Project Workspace | ShipStack',
   description: 'Open a saved ShipStack project with its preview, files, and blueprint.',

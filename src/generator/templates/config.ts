@@ -112,7 +112,7 @@ function generateNextConfig(): GeneratedFile {
           remotePatterns: [
             {
               protocol: 'https',
-              hostname: 'picsum.photos',
+              hostname: 'images.unsplash.com',
             },
           ],
         },

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentSessionUser } from '@/lib/services/session.service';
 import { ProjectService } from '@/lib/services/project.service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest): Promise<NextResponse> {
   try {
     const user = await getCurrentSessionUser();

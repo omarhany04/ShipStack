@@ -162,7 +162,7 @@ Layout family: ${designProfile.homeVariant}
   - Use Tailwind CSS only
   - Use only built-in Next.js or React imports plus local modules that are guaranteed to exist in the generated app
   - If you use local UI imports, limit them to '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/components/ui/input', '@/components/ui/textarea', '@/components/ui/label', '@/components/ui/separator', '@/components/ui/sparkles-core', and '@/lib/utils'
-  - For any hero image, avatar, product card, testimonial, gallery, or illustration slot, use real seeded photo URLs from https://picsum.photos/seed/... or import getDemoImageUrl from '@/lib/demo-media'
+  - For any hero image, avatar, product card, testimonial, gallery, or illustration slot, use real Unsplash photo URLs from getDemoImageUrl(...) or direct images.unsplash.com links
   - Never reference missing local image files or leave src/image props empty
   - Do not import Aceternity UI, shadcn/ui modules outside that list, icon packages, animation libraries, or any package that is not already part of a default generated project
   - Prefer inline SVG, text treatments, and Tailwind styling instead of external icon or animation dependencies
@@ -185,7 +185,7 @@ function buildDashboardPrompt(blueprint: Blueprint, designProfile: DesignProfile
   - Match this design direction: ${summarizeDesignProfile(designProfile)}
   - Use only built-in Next.js or React imports plus local modules that are guaranteed to exist in the generated app
   - If you use local UI imports, limit them to '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/lib/demo-media', and '@/lib/utils'
-  - If the dashboard includes avatars, covers, or any image fields, populate them with real seeded photo URLs from getDemoImageUrl or https://picsum.photos/seed/...
+  - If the dashboard includes avatars, covers, or any image fields, populate them with real Unsplash photo URLs from getDemoImageUrl(...) or direct images.unsplash.com links
   - Do not import icon packs, chart libraries, animation libraries, or any package that is not already included in the generated project
 
   Return ONLY the component code.`;

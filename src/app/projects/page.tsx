@@ -3,6 +3,8 @@ import ProjectsLibraryClient from '@/app/components/ProjectsLibraryClient';
 import { getCurrentSessionUser } from '@/lib/services/session.service';
 import { ProjectService } from '@/lib/services/project.service';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'My Projects | ShipStack',
   description: 'Browse and reopen the projects you have generated with ShipStack.',

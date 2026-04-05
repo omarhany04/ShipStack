@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { ProjectService } from '@/lib/services/project.service';
 import { getCurrentSessionUser } from '@/lib/services/session.service';
 
+export const dynamic = 'force-dynamic';
+
 interface RouteParams {
   params: { id: string };
 }

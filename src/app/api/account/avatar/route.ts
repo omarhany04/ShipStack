@@ -3,6 +3,8 @@ import { parseAvatarDataUrl } from '@/lib/auth/avatar';
 import prisma from '@/lib/prisma';
 import { getCurrentSessionUser } from '@/lib/services/session.service';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(): Promise<NextResponse> {
   try {
     const sessionUser = await getCurrentSessionUser();

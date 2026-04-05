@@ -5,6 +5,8 @@ import { generateBlueprint, refineBlueprint } from '@/generator/blueprint';
 import { generateFullProject } from '@/generator/code-generator';
 import { validateBlueprint } from '@/validators/blueprint.validator';
 
+export const dynamic = 'force-dynamic';
+
 let ProjectService: typeof import('@/lib/services/project.service').ProjectService | null = null;
 let getCurrentUser: typeof import('@/lib/services/session.service').getCurrentUser | null = null;
 

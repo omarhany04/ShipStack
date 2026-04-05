@@ -3,6 +3,8 @@ import BuilderBackLink from '@/app/components/BuilderBackLink';
 import { getDatabaseExplorerData } from '@/lib/services/database-explorer.service';
 import { getCurrentUser } from '@/lib/services/session.service';
 
+export const dynamic = 'force-dynamic';
+
 export const metadata = {
   title: 'ShipStack Database Explorer',
   description:

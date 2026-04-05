@@ -3,6 +3,8 @@ import prisma from '@/lib/prisma';
 import { hashPassword, validateName, validatePassword, verifyPassword } from '@/lib/auth/password';
 import { getCurrentUser } from '@/lib/services/session.service';
 
+export const dynamic = 'force-dynamic';
+
 const ALLOWED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
 const MAX_COMPANY_LENGTH = 100;

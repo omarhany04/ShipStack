@@ -30,6 +30,21 @@ const FIELD_NAME_TYPE_OVERRIDES: Record<string, string> = {
   updatedAt: 'DateTime @updatedAt',
 };
 
+const UNSPLASH_PORTRAIT_URLS = [
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+];
+
+const UNSPLASH_LANDSCAPE_URLS = [
+  'https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+];
+
 export function generateDatabaseFiles(blueprint: Blueprint): GeneratedFile[] {
   return [
     generatePrismaSchema(blueprint),
@@ -236,9 +251,10 @@ function hasRelations(model: BlueprintDataModel) {
 }
 
 function buildDemoImagePath(modelName: string, fieldName: string) {
-  const seed = encodeURIComponent(`${modelName}-${fieldName}`.toLowerCase());
+  const seed = `${modelName}-${fieldName}`.toLowerCase();
   const { width, height } = getDemoImageSize(fieldName);
-  return `https://picsum.photos/seed/${seed}/${width}/${height}.jpg`;
+  const baseUrl = selectUnsplashDemoUrl(seed, fieldName);
+  return formatUnsplashDemoUrl(baseUrl, width, height);
 }
 
 function getDemoImageSize(fieldName: string) {
@@ -253,4 +269,35 @@ function getDemoImageSize(fieldName: string) {
   }
 
   return { width: 1200, height: 900 };
+}
+
+function selectUnsplashDemoUrl(seed: string, fieldName: string) {
+  const library = /(avatar|profile|author|user|member|team|person|testimonial)/.test(
+    fieldName.toLowerCase()
+  )
+    ? UNSPLASH_PORTRAIT_URLS
+    : UNSPLASH_LANDSCAPE_URLS;
+
+  return library[hashString(seed) % library.length];
+}
+
+function formatUnsplashDemoUrl(rawUrl: string, width: number, height: number) {
+  const url = new URL(rawUrl);
+  url.searchParams.set('auto', 'format');
+  url.searchParams.set('fit', 'crop');
+  url.searchParams.set('fm', 'jpg');
+  url.searchParams.set('q', '80');
+  url.searchParams.set('w', String(width));
+  url.searchParams.set('h', String(height));
+  return url.toString();
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
 }

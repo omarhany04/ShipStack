@@ -47,6 +47,21 @@ const SUPPORT_IMPORT_PATTERN =
 const INTERNAL_IMPORT_PATTERN =
   /(?:import|export)\s+(?:[^'"]*?\sfrom\s+)?['"](@\/[^'"]+)['"]|import\(\s*['"](@\/[^'"]+)['"]\s*\)/g;
 
+const UNSPLASH_PORTRAIT_URLS = [
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+];
+
+const UNSPLASH_LANDSCAPE_URLS = [
+  'https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+  'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
+];
+
 const GENERATED_SUPPORT_FILES: GeneratedFile[] = [
   {
     path: 'src/lib/utils.ts',
@@ -363,7 +378,11 @@ export function SparklesCore({
   },
   {
     path: 'src/lib/demo-media.ts',
-    content: `const SQUARE_IMAGE_HINTS = [
+    content: `const UNSPLASH_PORTRAIT_URLS = ${JSON.stringify(UNSPLASH_PORTRAIT_URLS, null, 2)};
+
+const UNSPLASH_LANDSCAPE_URLS = ${JSON.stringify(UNSPLASH_LANDSCAPE_URLS, null, 2)};
+
+const SQUARE_IMAGE_HINTS = [
   'avatar',
   'profile',
   'author',
@@ -416,15 +435,12 @@ export function normalizeDemoLabel(value: string, fallback = 'Demo Photo') {
 export function getDemoImageUrl(seed: string, label = 'Demo Photo', _variant?: string) {
   const normalizedSeed = normalizeDemoToken(seed);
   const normalizedLabel = normalizeDemoLabel(label).toLowerCase();
-  const size = pickDemoImageSize(normalizedSeed + ' ' + normalizedLabel);
+  const context = normalizedSeed + ' ' + normalizedLabel;
+  const size = pickDemoImageSize(context);
+  const library = pickUnsplashLibrary(context);
+  const baseUrl = library[hashString(context) % library.length];
 
-  return 'https://picsum.photos/seed/' +
-    encodeURIComponent(normalizedSeed) +
-    '/' +
-    size.width +
-    '/' +
-    size.height +
-    '.jpg';
+  return formatUnsplashUrl(baseUrl, size.width, size.height);
 }
 
 function pickDemoImageSize(context: string) {
@@ -437,6 +453,33 @@ function pickDemoImageSize(context: string) {
   }
 
   return { width: 1200, height: 900 };
+}
+
+function pickUnsplashLibrary(context: string) {
+  return SQUARE_IMAGE_HINTS.some((hint) => context.includes(hint))
+    ? UNSPLASH_PORTRAIT_URLS
+    : UNSPLASH_LANDSCAPE_URLS;
+}
+
+function hashString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+}
+
+function formatUnsplashUrl(rawUrl: string, width: number, height: number) {
+  const url = new URL(rawUrl);
+  url.searchParams.set('auto', 'format');
+  url.searchParams.set('fit', 'crop');
+  url.searchParams.set('fm', 'jpg');
+  url.searchParams.set('q', '80');
+  url.searchParams.set('w', String(width));
+  url.searchParams.set('h', String(height));
+  return url.toString();
 }
 `,
     source: 'template',
@@ -961,13 +1004,13 @@ const nextConfig = {
   reactStrictMode: true,
   images: {
     unoptimized: true,
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
+        remotePatterns: [
+          {
+            protocol: 'https',
+            hostname: 'images.unsplash.com',
+          },
+        ],
       },
-    ],
-  },
 };
 
 module.exports = nextConfig;
@@ -1116,16 +1159,12 @@ function buildStaticDemoImageUrl(seedSource: string, labelSource: string) {
   const seed = sanitizeProjectName(`${seedSource}-${labelSource}`);
   const context = `${seed} ${normalizeStaticLabel(labelSource).toLowerCase()}`;
   const size = pickStaticDemoImageSize(context);
+  const library = /(avatar|profile|author|user|member|team|person|testimonial)/i.test(context)
+    ? UNSPLASH_PORTRAIT_URLS
+    : UNSPLASH_LANDSCAPE_URLS;
+  const baseUrl = library[hashStaticString(context) % library.length];
 
-  return (
-    'https://picsum.photos/seed/' +
-    encodeURIComponent(seed) +
-    '/' +
-    size.width +
-    '/' +
-    size.height +
-    '.jpg'
-  );
+  return formatStaticUnsplashUrl(baseUrl, size.width, size.height);
 }
 
 function labelFromPath(filePath: string) {
@@ -1162,6 +1201,27 @@ function pickStaticDemoImageSize(context: string) {
   }
 
   return { width: 1200, height: 900 };
+}
+
+function hashStaticString(value: string) {
+  let hash = 0;
+
+  for (let index = 0; index < value.length; index += 1) {
+    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+  }
+
+  return hash;
+}
+
+function formatStaticUnsplashUrl(rawUrl: string, width: number, height: number) {
+  const url = new URL(rawUrl);
+  url.searchParams.set('auto', 'format');
+  url.searchParams.set('fit', 'crop');
+  url.searchParams.set('fm', 'jpg');
+  url.searchParams.set('q', '80');
+  url.searchParams.set('w', String(width));
+  url.searchParams.set('h', String(height));
+  return url.toString();
 }
 
 function collectMissingInternalImports(files: GeneratedFile[], paths: Set<string>) {

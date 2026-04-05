@@ -1,4 +1,5 @@
 import { aiLogger } from '@/ai/logger';
+import { prepareGeneratedFiles } from '@/builder/file-writer';
 import { selectDesignProfile, summarizeDesignProfile } from './design-system';
 import { Blueprint } from '@/validators/blueprint.validator';
 import { enhanceWithAI } from './ai-enhancer';
@@ -162,7 +163,8 @@ export async function generateFullProject(
     message: 'Generation complete',
   });
 
-  const stats = computeStats(allFiles, startedAt, stageTimings);
+  const preparedFiles = prepareGeneratedFiles(allFiles, blueprint.projectName);
+  const stats = computeStats(preparedFiles, startedAt, stageTimings);
   aiLogger.info('Project generation complete', undefined, undefined, {
     totalFiles: stats.totalFiles,
     totalSizeBytes: stats.totalSizeBytes,
@@ -171,7 +173,7 @@ export async function generateFullProject(
 
   return {
     success: errors.length === 0,
-    files: allFiles,
+    files: preparedFiles,
     stats,
     warnings,
     errors,

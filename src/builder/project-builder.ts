@@ -6,6 +6,7 @@ import {
   buildFlatFileMap,
   FileSystemTree,
   FlatFileMap,
+  prepareGeneratedFiles,
   TreeNode,
   validateGeneratedFiles,
   ValidationIssue,
@@ -33,8 +34,7 @@ export function buildProject(
   generationResult: GenerationResult,
   projectName: string
 ): ProjectBuildResult {
-  let files = patchGeneratedFiles(generationResult.files, projectName);
-  files = ensureCriticalFiles(files, projectName);
+  const files = prepareGeneratedFiles(generationResult.files, projectName);
 
   const validationIssues = validateGeneratedFiles(files);
   const hasErrors = validationIssues.some((issue) => issue.severity === 'error');
@@ -68,92 +68,4 @@ export function buildProject(
       generationStats: generationResult.stats,
     },
   };
-}
-
-function patchGeneratedFiles(files: GeneratedFile[], projectName: string) {
-  return files.map((file) => {
-    let content = file.content;
-
-    if (file.path === 'package.json') {
-      try {
-        const pkg = JSON.parse(content);
-        pkg.name = projectName;
-        content = JSON.stringify(pkg, null, 2);
-      } catch {}
-    }
-
-    if ((file.path.endsWith('.ts') || file.path.endsWith('.tsx')) && content.includes('use client')) {
-      if (!content.startsWith("'use client'") && !content.startsWith('"use client"')) {
-        content = content.replace(/['"]use client['"];?\s*/, '');
-        content = `'use client';\n\n${content}`;
-      }
-    }
-
-    return {
-      ...file,
-      content,
-    };
-  });
-}
-
-function ensureCriticalFiles(files: GeneratedFile[], projectName: string) {
-  const paths = new Set(files.map((file) => file.path));
-
-  if (!paths.has('package.json')) {
-    files.push({
-      path: 'package.json',
-      content: JSON.stringify(
-        {
-          name: projectName,
-          private: true,
-          scripts: {
-            dev: 'next dev',
-            build: 'next build',
-            start: 'next start',
-          },
-          dependencies: {
-            next: '^14.2.30',
-            react: '^18.3.1',
-            'react-dom': '^18.3.1',
-          },
-          devDependencies: {
-            typescript: '^5.8.3',
-          },
-        },
-        null,
-        2
-      ),
-      source: 'template',
-      description: 'Fallback package.json',
-    });
-  }
-
-  if (!paths.has('src/app/layout.tsx')) {
-    files.push({
-      path: 'src/app/layout.tsx',
-      content: `import './globals.css';\n\nexport default function RootLayout({ children }: { children: React.ReactNode }) {\n  return <html lang="en"><body>{children}</body></html>;\n}\n`,
-      source: 'template',
-      description: 'Fallback layout',
-    });
-  }
-
-  if (!paths.has('src/app/page.tsx')) {
-    files.push({
-      path: 'src/app/page.tsx',
-      content: `export default function HomePage() {\n  return <main><h1>${projectName}</h1></main>;\n}\n`,
-      source: 'template',
-      description: 'Fallback home page',
-    });
-  }
-
-  if (!paths.has('src/app/globals.css')) {
-    files.push({
-      path: 'src/app/globals.css',
-      content: '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n',
-      source: 'template',
-      description: 'Fallback global css',
-    });
-  }
-
-  return files;
 }

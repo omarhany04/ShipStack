@@ -105,6 +105,7 @@ function generateCollectionRouteFile(group: EndpointGroup): GeneratedFile {
       import { NextRequest } from 'next/server';
       import prisma from '@/lib/prisma';
       import { apiError, apiSuccess, handleApiError } from '@/lib/api-helpers';
+      import { getDemoImageUrl } from '@/lib/demo-media';
     `),
   ];
 
@@ -183,20 +184,25 @@ function generatePostHandler(
         `    if (${getValidationCheck(field)}) {\n      return apiError('Missing required field: ${field.name}', 400);\n    }`
     )
     .join('\n');
-
+  const demoImageDefaults = buildImageDefaultsObject(writableFields, modelName);
+  const destructureLine = destructure ? `        const { ${destructure} } = input;` : '';
   const dataBlock = writableFields.map((field) => `        ${field.name},`).join('\n');
 
   return dedent(`
     export async function POST(request: NextRequest) {
       try {
         const body = await request.json();
-        const { ${destructure} } = body;
+        const input = {
+          ...body,
+${demoImageDefaults || '          // No demo image defaults'}
+        };
+${destructureLine}
 
 ${validations || '        // No required fields to validate'}
 
         const item = await prisma.${modelNameLower}.create({
           data: {
-${dataBlock || '            ...body'}
+ ${dataBlock || '            ...input'}
           },
         });
 
@@ -215,6 +221,7 @@ function generateDynamicRouteFile(group: EndpointGroup): GeneratedFile {
       import { NextRequest } from 'next/server';
       import prisma from '@/lib/prisma';
       import { apiError, apiSuccess, handleApiError } from '@/lib/api-helpers';
+      import { getDemoImageUrl } from '@/lib/demo-media';
 
       interface RouteParams {
         params: { id: string };
@@ -270,10 +277,12 @@ function generatePutHandler(
       (field) =>
         !['id', 'createdAt', 'updatedAt'].includes(field.name) && field.type !== 'relation'
     ) ?? [];
+  const demoImageDefaults = buildImageDefaultsObject(writableFields, modelName);
 
   const dataSpread = writableFields
     .map(
-      (field) => `          ...(body.${field.name} !== undefined && { ${field.name}: body.${field.name} }),`
+      (field) =>
+        `          ...(normalizedBody.${field.name} !== undefined && { ${field.name}: normalizedBody.${field.name} }),`
     )
     .join('\n');
 
@@ -289,10 +298,14 @@ function generatePutHandler(
         }
 
         const body = await request.json();
+        const normalizedBody = {
+          ...body,
+${demoImageDefaults || '          // No demo image defaults'}
+        };
         const item = await prisma.${modelNameLower}.update({
           where: { id: params.id },
           data: {
-${dataSpread || '            ...body'}
+ ${dataSpread || '            ...normalizedBody'}
           },
         });
 
@@ -460,4 +473,46 @@ function getTypeCheck(field: BlueprintField) {
     default:
       return `data.${field.name} === undefined || data.${field.name} === null`;
   }
+}
+
+function buildImageDefaultsObject(fields: BlueprintField[], modelName: string) {
+  return fields
+    .filter((field) => isImageLikeField(field))
+    .map((field) => {
+      const seed = buildDemoImageSeed(modelName, field.name);
+      const label = buildDemoImageLabel(field.name);
+      return `          ...(typeof body.${field.name} === 'string' && body.${field.name}.trim()\n            ? {}\n            : { ${field.name}: getDemoImageUrl('${seed}', '${label}') }),`;
+    })
+    .join('\n');
+}
+
+function isImageLikeField(field: BlueprintField) {
+  const normalizedName = field.name.toLowerCase();
+  return (
+    field.type === 'string' &&
+    (normalizedName.includes('image') ||
+      normalizedName.includes('photo') ||
+      normalizedName.includes('avatar') ||
+      normalizedName.includes('thumbnail') ||
+      normalizedName.includes('cover') ||
+      normalizedName.includes('banner'))
+  );
+}
+
+function buildDemoImageSeed(modelName: string, fieldName: string) {
+  return `${modelName}-${fieldName}`
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/-+/g, '-')
+    .toLowerCase();
+}
+
+function buildDemoImageLabel(fieldName: string) {
+  return fieldName
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
 }

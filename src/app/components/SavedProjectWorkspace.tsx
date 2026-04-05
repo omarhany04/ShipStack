@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DownloadButton from './DownloadButton';
 import PreviewPanel from './PreviewPanel';
 import ProjectDatabasePanel from './ProjectDatabasePanel';
+import { prepareGeneratedFiles } from '@/builder/file-writer';
 
 export interface SavedProjectFile {
   path: string;
@@ -56,12 +57,26 @@ export default function SavedProjectWorkspace({
   const [logs, setLogs] = useState<string[]>([]);
   const [previewStatus, setPreviewStatus] = useState<PreviewStatus>('idle');
   const teardownRef = useRef<(() => Promise<void>) | null>(null);
+  const normalizedFiles = useMemo(() => {
+    if (files.length === 0) {
+      return [];
+    }
+
+    return prepareGeneratedFiles(
+      files.map((file) => ({
+        path: file.path,
+        content: file.content,
+        source: normalizeSource(file.source),
+      })),
+      projectName
+    );
+  }, [files, projectName]);
 
   useEffect(() => {
     let active = true;
 
     async function bootPreview() {
-      if (files.length === 0) {
+      if (normalizedFiles.length === 0) {
         setPreviewStatus('unavailable');
         setLogs((current) => [...current, 'No files were stored for this project.']);
         return;
@@ -76,12 +91,6 @@ export default function SavedProjectWorkspace({
       try {
         const { buildFileSystemTree } = await import('@/builder/file-writer');
         const { runInWebContainer } = await import('@/lib/webcontainer');
-
-        const normalizedFiles = files.map((file) => ({
-          path: file.path,
-          content: file.content,
-          source: normalizeSource(file.source),
-        }));
 
         const result = await runInWebContainer(buildFileSystemTree(normalizedFiles), {
           onStatus(nextStatus) {
@@ -146,10 +155,10 @@ export default function SavedProjectWorkspace({
         teardownRef.current = null;
       }
     };
-  }, [files]);
+  }, [normalizedFiles]);
 
   async function handleDownload() {
-    const payload = Object.fromEntries(files.map((file) => [file.path, file.content]));
+    const payload = Object.fromEntries(normalizedFiles.map((file) => [file.path, file.content]));
     const response = await fetch('/api/download', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -192,13 +201,13 @@ export default function SavedProjectWorkspace({
             <ProjectDatabasePanel
               projectName={projectName}
               blueprint={blueprint}
-              files={files}
+              files={normalizedFiles}
             />
             <DownloadButton
               onDownload={handleDownload}
               projectName={projectName}
-              fileCount={files.length}
-              disabled={files.length === 0}
+              fileCount={normalizedFiles.length}
+              disabled={normalizedFiles.length === 0}
             />
           </div>
         </div>
@@ -216,7 +225,7 @@ export default function SavedProjectWorkspace({
           url={previewUrl}
           logs={logs}
           isReady={previewStatus === 'ready' || previewStatus === 'unavailable'}
-          files={files}
+          files={normalizedFiles}
         />
       </div>
 

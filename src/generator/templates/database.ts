@@ -189,7 +189,7 @@ function generateSeedBlock(model: BlueprintDataModel) {
   const varName = model.name.charAt(0).toLowerCase() + model.name.slice(1);
   const sampleFields = model.fields
     .filter((field) => !['id', 'createdAt', 'updatedAt'].includes(field.name) && field.type !== 'relation')
-    .map((field) => `      ${field.name}: ${getSampleValue(field)},`)
+    .map((field) => `      ${field.name}: ${getSampleValue(field, model.name)},`)
     .join('\n');
 
   return dedent(`
@@ -202,7 +202,7 @@ function generateSeedBlock(model: BlueprintDataModel) {
   `);
 }
 
-function getSampleValue(field: BlueprintField) {
+function getSampleValue(field: BlueprintField, modelName: string) {
   const name = field.name.toLowerCase();
   if (name.includes('email')) return "'user@example.com'";
   if (name.includes('name')) return `'Sample ${field.name}'`;
@@ -210,7 +210,7 @@ function getSampleValue(field: BlueprintField) {
   if (name.includes('description') || name.includes('desc')) return "'A sample description'";
   if (name.includes('phone')) return "'+1234567890'";
   if (name.includes('url') || name.includes('image') || name.includes('avatar')) {
-    return "'https://via.placeholder.com/150'";
+    return `'${buildDemoImagePath(modelName, field.name)}'`;
   }
   if (name.includes('address')) return "'123 Main St'";
   if (name.includes('status')) return "'active'";
@@ -233,4 +233,20 @@ function getSampleValue(field: BlueprintField) {
 
 function hasRelations(model: BlueprintDataModel) {
   return model.fields.some((field) => field.type === 'relation');
+}
+
+function buildDemoImagePath(modelName: string, fieldName: string) {
+  const seed = encodeURIComponent(`${modelName}-${fieldName}`.toLowerCase());
+  const label = encodeURIComponent(toTitleCase(fieldName));
+  return `/api/demo-image?seed=${seed}&label=${label}`;
+}
+
+function toTitleCase(value: string) {
+  return value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[-_]/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
 }

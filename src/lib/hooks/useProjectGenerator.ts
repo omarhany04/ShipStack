@@ -1,7 +1,7 @@
 'use client';
 
 import { startTransition, useRef, useState, type Dispatch, type SetStateAction } from 'react';
-import { buildDisplayTree, buildFileSystemTree, TreeNode } from '@/builder/file-writer';
+import { buildDisplayTree, buildFileSystemTree, prepareGeneratedFiles, TreeNode } from '@/builder/file-writer';
 import { Blueprint } from '@/validators/blueprint.validator';
 
 export type PipelineStage =
@@ -206,18 +206,22 @@ export function useProjectGenerator() {
       setStage('building');
       addLog('Preparing file tree and preview state...');
 
-      const generatedFiles = data.project.files.map((file) => ({
+      const preparedFiles = prepareGeneratedFiles(
+        data.project.files.map((file) => ({
+          path: file.path,
+          content: file.content,
+          source: file.source as 'template' | 'ai' | 'hybrid',
+        })),
+        data.blueprint.projectName
+      );
+
+      const generatedFiles = preparedFiles.map((file) => ({
         path: file.path,
         content: file.content,
         source: file.source,
       }));
 
-      const normalizedFiles = generatedFiles.map((file) => ({
-        ...file,
-        source: file.source as 'template' | 'ai' | 'hybrid',
-      }));
-
-      const displayTree = buildDisplayTree(normalizedFiles);
+      const displayTree = buildDisplayTree(preparedFiles);
 
       startTransition(() => {
         setState((current) => ({
@@ -235,7 +239,7 @@ export function useProjectGenerator() {
 
       addLog('Launching live preview...');
 
-      const result = await runPreview(normalizedFiles, setStage, addLog, setState);
+      const result = await runPreview(preparedFiles, setStage, addLog, setState);
       teardownRef.current = result.teardown;
 
       setState((current) => ({
@@ -307,7 +311,15 @@ export function useProjectGenerator() {
     }
 
     addLog('Preparing zip download...');
-    const files = Object.fromEntries(state.project.files.map((file) => [file.path, file.content]));
+    const preparedFiles = prepareGeneratedFiles(
+      state.project.files.map((file) => ({
+        path: file.path,
+        content: file.content,
+        source: file.source as 'template' | 'ai' | 'hybrid',
+      })),
+      state.project.blueprint.projectName
+    );
+    const files = Object.fromEntries(preparedFiles.map((file) => [file.path, file.content]));
     const response = await fetch('/api/download', {
       method: 'POST',
       headers: {

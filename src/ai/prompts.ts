@@ -60,6 +60,10 @@ Focus on MVP scope. Generate 3-6 models, 8-15 endpoints, and 4-8 pages.`,
   - Use strict TypeScript
   - Follow Next.js App Router conventions
   - Use Tailwind CSS for styling
+  - Do not assume extra local modules or third-party UI libraries already exist unless the prompt explicitly allows them
+  - Avoid adding new npm dependencies unless they are clearly required and explicitly requested
+  - Never leave image slots empty or point them at missing local assets
+  - For demo content, prefer stable local demo image URLs such as /api/demo-image?seed=hero&label=Hero%20Image
   - Build polished, modern UI with a clear visual direction instead of generic boilerplate cards
   - Favor strong hierarchy, intentional typography, layered surfaces, and responsive layouts
   - Avoid repeating the same landing-page skeleton, spacing rhythm, or card layout across unrelated products

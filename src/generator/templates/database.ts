@@ -145,18 +145,31 @@ function generatePrismaClient(): GeneratedFile {
         prisma: PrismaClient | undefined;
       };
 
-      export const prisma =
-        globalForPrisma.prisma ??
-        new PrismaClient({
+      function createPrismaClient() {
+        return new PrismaClient({
           log:
             process.env.NODE_ENV === 'development'
               ? ['query', 'error', 'warn']
               : ['error'],
         });
-
-      if (process.env.NODE_ENV !== 'production') {
-        globalForPrisma.prisma = prisma;
       }
+
+      function getPrismaClient() {
+        if (!globalForPrisma.prisma) {
+          globalForPrisma.prisma = createPrismaClient();
+        }
+
+        return globalForPrisma.prisma;
+      }
+
+      export const prisma = new Proxy({} as PrismaClient, {
+        get(_target, property) {
+          const client = getPrismaClient();
+          const value = Reflect.get(client as object, property, client);
+
+          return typeof value === 'function' ? value.bind(client) : value;
+        },
+      }) as PrismaClient;
 
       export default prisma;
     `),

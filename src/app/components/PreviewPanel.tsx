@@ -87,7 +87,7 @@ export default function PreviewPanel({
                   icon={<RefreshIcon />}
                 />
                 <a
-                  href={url}
+                  href={`/preview?src=${encodeURIComponent(url)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex h-10 items-center justify-center rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 transition hover:border-slate-300 hover:bg-slate-50"

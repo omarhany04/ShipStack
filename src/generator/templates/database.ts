@@ -237,16 +237,20 @@ function hasRelations(model: BlueprintDataModel) {
 
 function buildDemoImagePath(modelName: string, fieldName: string) {
   const seed = encodeURIComponent(`${modelName}-${fieldName}`.toLowerCase());
-  const label = encodeURIComponent(toTitleCase(fieldName));
-  return `/api/demo-image?seed=${seed}&label=${label}`;
+  const { width, height } = getDemoImageSize(fieldName);
+  return `https://picsum.photos/seed/${seed}/${width}/${height}.jpg`;
 }
 
-function toTitleCase(value: string) {
-  return value
-    .replace(/([a-z])([A-Z])/g, '$1 $2')
-    .replace(/[-_]/g, ' ')
-    .split(' ')
-    .filter(Boolean)
-    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
-    .join(' ');
+function getDemoImageSize(fieldName: string) {
+  const normalized = fieldName.toLowerCase();
+
+  if (/(avatar|profile|author|user|member|team|person|testimonial)/.test(normalized)) {
+    return { width: 640, height: 640 };
+  }
+
+  if (/(hero|banner|cover|header|background|feature|landing|showcase)/.test(normalized)) {
+    return { width: 1600, height: 900 };
+  }
+
+  return { width: 1200, height: 900 };
 }

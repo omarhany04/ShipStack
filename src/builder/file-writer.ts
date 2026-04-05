@@ -363,50 +363,27 @@ export function SparklesCore({
   },
   {
     path: 'src/lib/demo-media.ts',
-    content: `const DEMO_TONES = [
-  {
-    id: 'sunrise',
-    backgroundTop: '#111827',
-    backgroundBottom: '#7c2d12',
-    accent: '#fb7185',
-    accentSoft: '#fdba74',
-    glow: '#fde68a',
-  },
-  {
-    id: 'lagoon',
-    backgroundTop: '#082f49',
-    backgroundBottom: '#164e63',
-    accent: '#22d3ee',
-    accentSoft: '#67e8f9',
-    glow: '#a5f3fc',
-  },
-  {
-    id: 'meadow',
-    backgroundTop: '#14532d',
-    backgroundBottom: '#365314',
-    accent: '#4ade80',
-    accentSoft: '#bef264',
-    glow: '#fef08a',
-  },
-  {
-    id: 'studio',
-    backgroundTop: '#312e81',
-    backgroundBottom: '#6d28d9',
-    accent: '#c084fc',
-    accentSoft: '#f0abfc',
-    glow: '#fde68a',
-  },
+    content: `const SQUARE_IMAGE_HINTS = [
+  'avatar',
+  'profile',
+  'author',
+  'user',
+  'member',
+  'team',
+  'person',
+  'testimonial',
 ];
 
-type DemoTone = (typeof DEMO_TONES)[number];
-
-export interface DemoImageSvgOptions {
-  seed: string;
-  label?: string;
-  tone?: string;
-  width?: number;
-  height?: number;
-}
+const WIDE_IMAGE_HINTS = [
+  'hero',
+  'banner',
+  'cover',
+  'header',
+  'background',
+  'feature',
+  'landing',
+  'showcase',
+];
 
 export function normalizeDemoToken(value: string, fallback = 'demo-photo') {
   const normalized = value
@@ -436,156 +413,30 @@ export function normalizeDemoLabel(value: string, fallback = 'Demo Photo') {
     .join(' ');
 }
 
-export function pickDemoTone(seed: string) {
+export function getDemoImageUrl(seed: string, label = 'Demo Photo', _variant?: string) {
   const normalizedSeed = normalizeDemoToken(seed);
-  return DEMO_TONES[hashString(normalizedSeed) % DEMO_TONES.length].id;
-}
+  const normalizedLabel = normalizeDemoLabel(label).toLowerCase();
+  const size = pickDemoImageSize(normalizedSeed + ' ' + normalizedLabel);
 
-export function getDemoImageUrl(seed: string, label = 'Demo Photo', tone?: string) {
-  const normalizedSeed = normalizeDemoToken(seed);
-  const normalizedLabel = normalizeDemoLabel(label);
-  const resolvedTone = tone
-    ? normalizeDemoToken(tone, pickDemoTone(normalizedSeed))
-    : pickDemoTone(normalizedSeed);
-
-  return '/api/demo-image?seed=' +
+  return 'https://picsum.photos/seed/' +
     encodeURIComponent(normalizedSeed) +
-    '&label=' +
-    encodeURIComponent(normalizedLabel) +
-    '&tone=' +
-    encodeURIComponent(resolvedTone);
+    '/' +
+    size.width +
+    '/' +
+    size.height +
+    '.jpg';
 }
 
-export function buildDemoImageSvg({
-  seed,
-  label = 'Demo Photo',
-  tone,
-  width = 1200,
-  height = 900,
-}: DemoImageSvgOptions) {
-  const resolvedSeed = normalizeDemoToken(seed);
-  const resolvedLabel = normalizeDemoLabel(label);
-  const resolvedTone = resolveDemoTone(tone ?? pickDemoTone(resolvedSeed));
-  const hash = hashString(resolvedSeed);
-  const orbOneX = 180 + (hash % 240);
-  const orbOneY = 160 + ((hash >> 3) % 220);
-  const orbTwoX = width - (220 + ((hash >> 5) % 260));
-  const orbTwoY = 220 + ((hash >> 7) % 260);
-  const waveHeight = 120 + (hash % 90);
-  const panelY = height - 190;
-
-  return (
-    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' +
-    width +
-    ' ' +
-    height +
-    '" role="img" aria-label="' +
-    escapeSvgText(resolvedLabel) +
-    '">' +
-    '<defs>' +
-    '<linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">' +
-    '<stop offset="0%" stop-color="' +
-    resolvedTone.backgroundTop +
-    '"/>' +
-    '<stop offset="100%" stop-color="' +
-    resolvedTone.backgroundBottom +
-    '"/>' +
-    '</linearGradient>' +
-    '<radialGradient id="glowA" cx="50%" cy="50%" r="50%">' +
-    '<stop offset="0%" stop-color="' +
-    resolvedTone.glow +
-    '" stop-opacity="0.95"/>' +
-    '<stop offset="100%" stop-color="' +
-    resolvedTone.glow +
-    '" stop-opacity="0"/>' +
-    '</radialGradient>' +
-    '<radialGradient id="glowB" cx="50%" cy="50%" r="50%">' +
-    '<stop offset="0%" stop-color="' +
-    resolvedTone.accentSoft +
-    '" stop-opacity="0.8"/>' +
-    '<stop offset="100%" stop-color="' +
-    resolvedTone.accentSoft +
-    '" stop-opacity="0"/>' +
-    '</radialGradient>' +
-    '</defs>' +
-    '<rect width="' +
-    width +
-    '" height="' +
-    height +
-    '" fill="url(#bg)"/>' +
-    '<circle cx="' +
-    orbOneX +
-    '" cy="' +
-    orbOneY +
-    '" r="220" fill="url(#glowA)"/>' +
-    '<circle cx="' +
-    orbTwoX +
-    '" cy="' +
-    orbTwoY +
-    '" r="260" fill="url(#glowB)"/>' +
-    '<rect x="74" y="74" width="' +
-    (width - 148) +
-    '" height="' +
-    (height - 148) +
-    '" rx="42" fill="rgba(255,255,255,0.08)" stroke="rgba(255,255,255,0.16)"/>' +
-    '<path d="M0 ' +
-    (height - waveHeight) +
-    ' C 160 ' +
-    (height - waveHeight - 36) +
-    ', 320 ' +
-    (height - waveHeight + 34) +
-    ', 480 ' +
-    (height - waveHeight - 18) +
-    ' S 820 ' +
-    (height - waveHeight + 44) +
-    ', ' +
-    width +
-    ' ' +
-    (height - waveHeight - 22) +
-    ' V ' +
-    height +
-    ' H 0 Z" fill="rgba(255,255,255,0.09)"/>' +
-    '<rect x="84" y="' +
-    panelY +
-    '" width="' +
-    (width - 168) +
-    '" height="116" rx="30" fill="rgba(17,24,39,0.38)" stroke="rgba(255,255,255,0.14)"/>' +
-    '<text x="126" y="' +
-    (panelY + 50) +
-    '" fill="#f8fafc" font-family="Arial, sans-serif" font-size="24" font-weight="700" letter-spacing="2">DEMO PHOTO</text>' +
-    '<text x="126" y="' +
-    (panelY + 92) +
-    '" fill="#ffffff" font-family="Arial, sans-serif" font-size="46" font-weight="700">' +
-    escapeSvgText(resolvedLabel) +
-    '</text>' +
-    '</svg>'
-  );
-}
-
-function resolveDemoTone(tone: string): DemoTone {
-  return (
-    DEMO_TONES.find((item) => item.id === normalizeDemoToken(tone, item.id)) ??
-    DEMO_TONES[0]
-  );
-}
-
-function hashString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
+function pickDemoImageSize(context: string) {
+  if (SQUARE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+    return { width: 640, height: 640 };
   }
 
-  return hash;
-}
+  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+    return { width: 1600, height: 900 };
+  }
 
-function escapeSvgText(value: string) {
-  return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
+  return { width: 1200, height: 900 };
 }
 `,
     source: 'template',
@@ -594,25 +445,15 @@ function escapeSvgText(value: string) {
   {
     path: 'src/app/api/demo-image/route.ts',
     content: `import { NextRequest, NextResponse } from 'next/server';
-import { buildDemoImageSvg, normalizeDemoLabel, normalizeDemoToken, pickDemoTone } from '@/lib/demo-media';
+import { getDemoImageUrl, normalizeDemoLabel, normalizeDemoToken } from '@/lib/demo-media';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const seed = normalizeDemoToken(searchParams.get('seed') ?? 'demo-photo');
   const label = normalizeDemoLabel(searchParams.get('label') ?? 'Demo Photo');
-  const tone = normalizeDemoToken(searchParams.get('tone') ?? pickDemoTone(seed), pickDemoTone(seed));
-  const svg = buildDemoImageSvg({
-    seed,
-    label,
-    tone,
-  });
-
-  return new NextResponse(svg, {
-    headers: {
-      'Content-Type': 'image/svg+xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=31536000, immutable',
-    },
-  });
+  const response = NextResponse.redirect(getDemoImageUrl(seed, label), 307);
+  response.headers.set('Cache-Control', 'public, max-age=86400, stale-while-revalidate=604800');
+  return response;
 }
 `,
     source: 'template',
@@ -948,6 +789,7 @@ function normalizeFileContent(file: GeneratedFile, projectName: string) {
   }
 
   content = replacePlaceholderImageUrls(content, projectName, file.path);
+  content = replaceLocalDemoImageUrls(content, projectName, file.path);
 
   return content;
 }
@@ -1004,8 +846,34 @@ function replacePlaceholderImageUrls(content: string, projectName: string, fileP
   }
 
   placeholderPattern.lastIndex = 0;
-  const demoUrl = buildStaticDemoImageUrl(`${projectName}-${filePath}`, labelFromPath(filePath));
-  return content.replace(placeholderPattern, demoUrl);
+  let replacementIndex = 0;
+  return content.replace(placeholderPattern, () => {
+    replacementIndex += 1;
+    return buildStaticDemoImageUrl(
+      `${projectName}-${filePath}-${replacementIndex}`,
+      labelFromPath(filePath)
+    );
+  });
+}
+
+function replaceLocalDemoImageUrls(content: string, projectName: string, filePath: string) {
+  const demoRoutePattern = /\/api\/demo-image\?[^'"`\s)]+/gi;
+
+  if (!demoRoutePattern.test(content)) {
+    return content;
+  }
+
+  demoRoutePattern.lastIndex = 0;
+  let replacementIndex = 0;
+
+  return content.replace(demoRoutePattern, (rawMatch) => {
+    replacementIndex += 1;
+    const query = rawMatch.split('?')[1] ?? '';
+    const params = new URLSearchParams(query);
+    const seed = params.get('seed') ?? `${projectName}-${filePath}-${replacementIndex}`;
+    const label = params.get('label') ?? labelFromPath(filePath);
+    return buildStaticDemoImageUrl(seed, label);
+  });
 }
 
 function ensureCriticalFiles(files: GeneratedFile[], projectName: string) {
@@ -1091,6 +959,15 @@ function ensureCriticalFiles(files: GeneratedFile[], projectName: string) {
       content: `/** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  images: {
+    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'picsum.photos',
+      },
+    ],
+  },
 };
 
 module.exports = nextConfig;
@@ -1236,13 +1113,18 @@ function sanitizeProjectName(projectName: string) {
 }
 
 function buildStaticDemoImageUrl(seedSource: string, labelSource: string) {
-  const seed = sanitizeProjectName(seedSource);
-  const label = normalizeStaticLabel(labelSource);
+  const seed = sanitizeProjectName(`${seedSource}-${labelSource}`);
+  const context = `${seed} ${normalizeStaticLabel(labelSource).toLowerCase()}`;
+  const size = pickStaticDemoImageSize(context);
+
   return (
-    '/api/demo-image?seed=' +
+    'https://picsum.photos/seed/' +
     encodeURIComponent(seed) +
-    '&label=' +
-    encodeURIComponent(label)
+    '/' +
+    size.width +
+    '/' +
+    size.height +
+    '.jpg'
   );
 }
 
@@ -1268,6 +1150,18 @@ function normalizeStaticLabel(value: string) {
     .slice(0, 4)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function pickStaticDemoImageSize(context: string) {
+  if (/(avatar|profile|author|user|member|team|person|testimonial)/i.test(context)) {
+    return { width: 640, height: 640 };
+  }
+
+  if (/(hero|banner|cover|header|background|feature|landing|showcase)/i.test(context)) {
+    return { width: 1600, height: 900 };
+  }
+
+  return { width: 1200, height: 900 };
 }
 
 function collectMissingInternalImports(files: GeneratedFile[], paths: Set<string>) {

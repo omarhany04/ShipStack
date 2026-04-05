@@ -107,6 +107,15 @@ function generateNextConfig(): GeneratedFile {
       /** @type {import('next').NextConfig} */
       const nextConfig = {
         reactStrictMode: true,
+        images: {
+          unoptimized: true,
+          remotePatterns: [
+            {
+              protocol: 'https',
+              hostname: 'picsum.photos',
+            },
+          ],
+        },
         experimental: {
           serverComponentsExternalPackages: ['@prisma/client'],
         },

@@ -1,3 +1,12 @@
+import {
+  buildDemoMediaModule,
+  buildStaticDemoImageUrl,
+  normalizeDemoLabel,
+  replaceLegacyDemoImageUrls,
+  resolveProjectImageContext,
+  type ProjectImageContextInput,
+  type ResolvedProjectImageContext,
+} from '@/generator/demo-media';
 import { GeneratedFile } from '@/generator/types';
 
 export interface FileNode {
@@ -49,22 +58,10 @@ const INTERNAL_IMPORT_PATTERN =
 
 const CODE_FILE_PATTERN = /\.(?:[cm]?[jt]sx?|css|scss|sass|less|json|mjs|cjs|prisma|html)$/i;
 
-const UNSPLASH_PORTRAIT_URLS = [
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-];
-
-const UNSPLASH_LANDSCAPE_URLS = [
-  'https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-];
-
-const GENERATED_SUPPORT_FILES: GeneratedFile[] = [
+function buildGeneratedSupportFiles(
+  projectContext: ResolvedProjectImageContext
+): GeneratedFile[] {
+  return [
   {
     path: 'src/lib/utils.ts',
     content: `import { clsx, type ClassValue } from 'clsx';
@@ -380,110 +377,7 @@ export function SparklesCore({
   },
   {
     path: 'src/lib/demo-media.ts',
-    content: `const UNSPLASH_PORTRAIT_URLS = ${JSON.stringify(UNSPLASH_PORTRAIT_URLS, null, 2)};
-
-const UNSPLASH_LANDSCAPE_URLS = ${JSON.stringify(UNSPLASH_LANDSCAPE_URLS, null, 2)};
-
-const SQUARE_IMAGE_HINTS = [
-  'avatar',
-  'profile',
-  'author',
-  'user',
-  'member',
-  'team',
-  'person',
-  'testimonial',
-];
-
-const WIDE_IMAGE_HINTS = [
-  'hero',
-  'banner',
-  'cover',
-  'header',
-  'background',
-  'feature',
-  'landing',
-  'showcase',
-];
-
-export function normalizeDemoToken(value: string, fallback = 'demo-photo') {
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-
-  return normalized || fallback;
-}
-
-export function normalizeDemoLabel(value: string, fallback = 'Demo Photo') {
-  const normalized = value
-    .replace(/[_-]+/g, ' ')
-    .replace(/\\s+/g, ' ')
-    .trim();
-
-  if (!normalized) {
-    return fallback;
-  }
-
-  return normalized
-    .split(' ')
-    .slice(0, 4)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-export function getDemoImageUrl(seed: string, label = 'Demo Photo', _variant?: string) {
-  const normalizedSeed = normalizeDemoToken(seed);
-  const normalizedLabel = normalizeDemoLabel(label).toLowerCase();
-  const context = normalizedSeed + ' ' + normalizedLabel;
-  const size = pickDemoImageSize(context);
-  const library = pickUnsplashLibrary(context);
-  const baseUrl = library[hashString(context) % library.length];
-
-  return formatUnsplashUrl(baseUrl, size.width, size.height);
-}
-
-function pickDemoImageSize(context: string) {
-  if (SQUARE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return { width: 640, height: 640 };
-  }
-
-  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return { width: 1600, height: 900 };
-  }
-
-  return { width: 1200, height: 900 };
-}
-
-function pickUnsplashLibrary(context: string) {
-  return SQUARE_IMAGE_HINTS.some((hint) => context.includes(hint))
-    ? UNSPLASH_PORTRAIT_URLS
-    : UNSPLASH_LANDSCAPE_URLS;
-}
-
-function hashString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
-}
-
-function formatUnsplashUrl(rawUrl: string, width: number, height: number) {
-  const url = new URL(rawUrl);
-  url.searchParams.set('auto', 'format');
-  url.searchParams.set('fit', 'crop');
-  url.searchParams.set('fm', 'jpg');
-  url.searchParams.set('q', '80');
-  url.searchParams.set('w', String(width));
-  url.searchParams.set('h', String(height));
-  return url.toString();
-}
-`,
+    content: buildDemoMediaModule(projectContext),
     source: 'template',
     description: 'Shared demo image utilities',
   },
@@ -612,30 +506,47 @@ function buildLabel(image: HTMLImageElement) {
     source: 'template',
     description: 'Global generated image fallback component',
   },
-];
+  ];
+}
 
 export function normalizeGeneratedFiles(
   files: GeneratedFile[],
-  projectName?: string
+  projectContextInput?: ProjectImageContextInput
 ): GeneratedFile[] {
-  const resolvedProjectName = sanitizeProjectName(projectName ?? inferProjectName(files) ?? 'generated-app');
+  const resolvedProjectContext = resolveProjectImageContext(
+    projectContextInput,
+    inferProjectName(files) ?? 'generated-app'
+  );
   const normalized = files.map((file) => ({
     ...file,
-    content: normalizeFileContent(file, resolvedProjectName),
+    content: normalizeFileContent(file, resolvedProjectContext),
   }));
 
-  return injectSupportFiles(normalized);
+  return injectSupportFiles(normalized, resolvedProjectContext);
 }
 
-export function prepareGeneratedFiles(files: GeneratedFile[], projectName?: string): GeneratedFile[] {
-  const resolvedProjectName = sanitizeProjectName(projectName ?? inferProjectName(files) ?? 'generated-app');
+export function prepareGeneratedFiles(
+  files: GeneratedFile[],
+  projectContextInput?: ProjectImageContextInput
+): GeneratedFile[] {
+  const resolvedProjectContext = resolveProjectImageContext(
+    projectContextInput,
+    inferProjectName(files) ?? 'generated-app'
+  );
   return injectSupportFiles(
-    ensureCriticalFiles(normalizeGeneratedFiles(files, resolvedProjectName), resolvedProjectName)
+    ensureCriticalFiles(
+      normalizeGeneratedFiles(files, resolvedProjectContext),
+      resolvedProjectContext.projectName
+    ),
+    resolvedProjectContext
   );
 }
 
-export function buildFileSystemTree(files: GeneratedFile[]): FileSystemTree {
-  const preparedFiles = prepareGeneratedFiles(files);
+export function buildFileSystemTree(
+  files: GeneratedFile[],
+  projectContextInput?: ProjectImageContextInput
+): FileSystemTree {
+  const preparedFiles = prepareGeneratedFiles(files, projectContextInput);
   const tree: FileSystemTree = {};
 
   for (const file of preparedFiles) {
@@ -670,16 +581,22 @@ function insertIntoTree(tree: FileSystemTree, segments: string[], content: strin
   }
 }
 
-export function buildFlatFileMap(files: GeneratedFile[]): FlatFileMap {
+export function buildFlatFileMap(
+  files: GeneratedFile[],
+  projectContextInput?: ProjectImageContextInput
+): FlatFileMap {
   const flat: FlatFileMap = {};
-  for (const file of prepareGeneratedFiles(files)) {
+  for (const file of prepareGeneratedFiles(files, projectContextInput)) {
     flat[file.path] = file.content;
   }
   return flat;
 }
 
-export function buildDisplayTree(files: GeneratedFile[]): TreeNode {
-  const preparedFiles = prepareGeneratedFiles(files);
+export function buildDisplayTree(
+  files: GeneratedFile[],
+  projectContextInput?: ProjectImageContextInput
+): TreeNode {
+  const preparedFiles = prepareGeneratedFiles(files, projectContextInput);
   const root: TreeNode = {
     name: '/',
     path: '/',
@@ -805,13 +722,16 @@ export function validateGeneratedFiles(files: GeneratedFile[]): ValidationIssue[
   return issues;
 }
 
-function normalizeFileContent(file: GeneratedFile, projectName: string) {
+function normalizeFileContent(
+  file: GeneratedFile,
+  projectContext: ResolvedProjectImageContext
+) {
   let content = stripMarkdownCodeWrappers(file.path, file.content);
 
   if (file.path === 'package.json') {
     try {
       const pkg = JSON.parse(content);
-      pkg.name = projectName;
+      pkg.name = projectContext.projectName;
       content = JSON.stringify(pkg, null, 2);
     } catch {}
   }
@@ -833,8 +753,14 @@ function normalizeFileContent(file: GeneratedFile, projectName: string) {
     content = ensureGeneratedImageFallbackLayout(content);
   }
 
-  content = replacePlaceholderImageUrls(content, projectName, file.path);
-  content = replaceLocalDemoImageUrls(content, projectName, file.path);
+  content = replacePlaceholderImageUrls(content, projectContext, file.path);
+  content = replaceLocalDemoImageUrls(content, projectContext, file.path);
+  content = replaceLegacyDemoImageUrls(
+    content,
+    projectContext,
+    `${projectContext.projectName}-${file.path}`,
+    labelFromPath(file.path)
+  );
 
   return content;
 }
@@ -869,7 +795,10 @@ function stripMarkdownCodeWrappers(filePath: string, content: string) {
   return content;
 }
 
-function injectSupportFiles(files: GeneratedFile[]) {
+function injectSupportFiles(
+  files: GeneratedFile[],
+  projectContext: ResolvedProjectImageContext
+) {
   const shouldInjectSupportFiles = files.some((file) => SUPPORT_IMPORT_PATTERN.test(file.content));
   if (!shouldInjectSupportFiles) {
     return files;
@@ -877,8 +806,9 @@ function injectSupportFiles(files: GeneratedFile[]) {
 
   const prepared = [...files];
   const paths = new Set(prepared.map((file) => file.path));
+  const supportFiles = buildGeneratedSupportFiles(projectContext);
 
-  for (const supportFile of GENERATED_SUPPORT_FILES) {
+  for (const supportFile of supportFiles) {
     if (paths.has(supportFile.path)) {
       continue;
     }
@@ -912,7 +842,11 @@ function ensureGeneratedImageFallbackLayout(content: string) {
   return updated;
 }
 
-function replacePlaceholderImageUrls(content: string, projectName: string, filePath: string) {
+function replacePlaceholderImageUrls(
+  content: string,
+  projectContext: ResolvedProjectImageContext,
+  filePath: string
+) {
   const placeholderPattern =
     /https?:\/\/(?:via\.placeholder\.com|placehold\.co|dummyimage\.com)[^'"`\s)]+/gi;
 
@@ -925,13 +859,18 @@ function replacePlaceholderImageUrls(content: string, projectName: string, fileP
   return content.replace(placeholderPattern, () => {
     replacementIndex += 1;
     return buildStaticDemoImageUrl(
-      `${projectName}-${filePath}-${replacementIndex}`,
-      labelFromPath(filePath)
+      `${projectContext.projectName}-${filePath}-${replacementIndex}`,
+      labelFromPath(filePath),
+      projectContext
     );
   });
 }
 
-function replaceLocalDemoImageUrls(content: string, projectName: string, filePath: string) {
+function replaceLocalDemoImageUrls(
+  content: string,
+  projectContext: ResolvedProjectImageContext,
+  filePath: string
+) {
   const demoRoutePattern = /\/api\/demo-image\?[^'"`\s)]+/gi;
 
   if (!demoRoutePattern.test(content)) {
@@ -945,9 +884,11 @@ function replaceLocalDemoImageUrls(content: string, projectName: string, filePat
     replacementIndex += 1;
     const query = rawMatch.split('?')[1] ?? '';
     const params = new URLSearchParams(query);
-    const seed = params.get('seed') ?? `${projectName}-${filePath}-${replacementIndex}`;
+    const seed =
+      params.get('seed') ??
+      `${projectContext.projectName}-${filePath}-${replacementIndex}`;
     const label = params.get('label') ?? labelFromPath(filePath);
-    return buildStaticDemoImageUrl(seed, label);
+    return buildStaticDemoImageUrl(seed, label, projectContext);
   });
 }
 
@@ -1176,84 +1117,11 @@ function inferProjectName(files: GeneratedFile[]) {
   }
 }
 
-function sanitizeProjectName(projectName: string) {
-  const cleaned = projectName
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-_]+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-
-  return cleaned || 'generated-app';
-}
-
-function buildStaticDemoImageUrl(seedSource: string, labelSource: string) {
-  const seed = sanitizeProjectName(`${seedSource}-${labelSource}`);
-  const context = `${seed} ${normalizeStaticLabel(labelSource).toLowerCase()}`;
-  const size = pickStaticDemoImageSize(context);
-  const library = /(avatar|profile|author|user|member|team|person|testimonial)/i.test(context)
-    ? UNSPLASH_PORTRAIT_URLS
-    : UNSPLASH_LANDSCAPE_URLS;
-  const baseUrl = library[hashStaticString(context) % library.length];
-
-  return formatStaticUnsplashUrl(baseUrl, size.width, size.height);
-}
-
 function labelFromPath(filePath: string) {
   const fileName = filePath.split('/').pop() ?? 'demo-photo';
   const baseName = fileName.replace(/\.[^.]+$/, '');
 
-  return normalizeStaticLabel(baseName);
-}
-
-function normalizeStaticLabel(value: string) {
-  const cleaned = value
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  if (!cleaned) {
-    return 'Demo Photo';
-  }
-
-  return cleaned
-    .split(' ')
-    .slice(0, 4)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
-}
-
-function pickStaticDemoImageSize(context: string) {
-  if (/(avatar|profile|author|user|member|team|person|testimonial)/i.test(context)) {
-    return { width: 640, height: 640 };
-  }
-
-  if (/(hero|banner|cover|header|background|feature|landing|showcase)/i.test(context)) {
-    return { width: 1600, height: 900 };
-  }
-
-  return { width: 1200, height: 900 };
-}
-
-function hashStaticString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
-}
-
-function formatStaticUnsplashUrl(rawUrl: string, width: number, height: number) {
-  const url = new URL(rawUrl);
-  url.searchParams.set('auto', 'format');
-  url.searchParams.set('fit', 'crop');
-  url.searchParams.set('fm', 'jpg');
-  url.searchParams.set('q', '80');
-  url.searchParams.set('w', String(width));
-  url.searchParams.set('h', String(height));
-  return url.toString();
+  return normalizeDemoLabel(baseName);
 }
 
 function collectMissingInternalImports(files: GeneratedFile[], paths: Set<string>) {

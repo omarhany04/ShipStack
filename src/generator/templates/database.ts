@@ -3,6 +3,7 @@ import {
   BlueprintDataModel,
   BlueprintField,
 } from '@/validators/blueprint.validator';
+import { buildStaticDemoImageUrl, resolveProjectImageContext } from '../demo-media';
 import { GeneratedFile } from '../types';
 import { dedent, joinBlocks } from '../template-engine';
 
@@ -29,21 +30,6 @@ const FIELD_NAME_TYPE_OVERRIDES: Record<string, string> = {
   createdAt: 'DateTime @default(now())',
   updatedAt: 'DateTime @updatedAt',
 };
-
-const UNSPLASH_PORTRAIT_URLS = [
-  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cG9ydHJhaXR8ZW58MHx8MHx8fDA%3D&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTB8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1521119989659-a83eee488004?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBvcnRyYWl0fGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-];
-
-const UNSPLASH_LANDSCAPE_URLS = [
-  'https://images.unsplash.com/photo-1497215842964-222b430dc094?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1568992687947-868a62a9f521?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1533090161767-e6ffed986c88?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-  'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?auto=format&fit=crop&fm=jpg&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8d29ya3NwYWNlfGVufDB8fDB8fHww&ixlib=rb-4.1.0&q=60&w=3000',
-];
 
 export function generateDatabaseFiles(blueprint: Blueprint): GeneratedFile[] {
   return [
@@ -180,10 +166,11 @@ function generatePrismaClient(): GeneratedFile {
 
 function generateSeedFile(blueprint: Blueprint): GeneratedFile {
   const imports = `import { PrismaClient } from '@prisma/client';\n\nconst prisma = new PrismaClient();`;
+  const projectContext = resolveProjectImageContext(blueprint);
   const seedBlocks = blueprint.dataModels
     .filter((model) => !hasRelations(model))
     .slice(0, 3)
-    .map((model) => generateSeedBlock(model));
+    .map((model) => generateSeedBlock(model, projectContext));
 
   const mainFn = dedent(`
     async function main() {
@@ -213,11 +200,14 @@ function generateSeedFile(blueprint: Blueprint): GeneratedFile {
   };
 }
 
-function generateSeedBlock(model: BlueprintDataModel) {
+function generateSeedBlock(
+  model: BlueprintDataModel,
+  projectContext: ReturnType<typeof resolveProjectImageContext>
+) {
   const varName = model.name.charAt(0).toLowerCase() + model.name.slice(1);
   const sampleFields = model.fields
     .filter((field) => !['id', 'createdAt', 'updatedAt'].includes(field.name) && field.type !== 'relation')
-    .map((field) => `      ${field.name}: ${getSampleValue(field, model.name)},`)
+    .map((field) => `      ${field.name}: ${getSampleValue(field, model.name, projectContext)},`)
     .join('\n');
 
   return dedent(`
@@ -230,7 +220,11 @@ function generateSeedBlock(model: BlueprintDataModel) {
   `);
 }
 
-function getSampleValue(field: BlueprintField, modelName: string) {
+function getSampleValue(
+  field: BlueprintField,
+  modelName: string,
+  projectContext: ReturnType<typeof resolveProjectImageContext>
+) {
   const name = field.name.toLowerCase();
   if (name.includes('email')) return "'user@example.com'";
   if (name.includes('name')) return `'Sample ${field.name}'`;
@@ -238,7 +232,7 @@ function getSampleValue(field: BlueprintField, modelName: string) {
   if (name.includes('description') || name.includes('desc')) return "'A sample description'";
   if (name.includes('phone')) return "'+1234567890'";
   if (name.includes('url') || name.includes('image') || name.includes('avatar')) {
-    return `'${buildDemoImagePath(modelName, field.name)}'`;
+    return `'${buildDemoImagePath(modelName, field.name, projectContext)}'`;
   }
   if (name.includes('address')) return "'123 Main St'";
   if (name.includes('status')) return "'active'";
@@ -263,54 +257,24 @@ function hasRelations(model: BlueprintDataModel) {
   return model.fields.some((field) => field.type === 'relation');
 }
 
-function buildDemoImagePath(modelName: string, fieldName: string) {
-  const seed = `${modelName}-${fieldName}`.toLowerCase();
-  const { width, height } = getDemoImageSize(fieldName);
-  const baseUrl = selectUnsplashDemoUrl(seed, fieldName);
-  return formatUnsplashDemoUrl(baseUrl, width, height);
+function buildDemoImagePath(
+  modelName: string,
+  fieldName: string,
+  projectContext: ReturnType<typeof resolveProjectImageContext>
+) {
+  return buildStaticDemoImageUrl(
+    `${projectContext.projectName}-${modelName}-${fieldName}`,
+    buildDemoImageLabel(fieldName),
+    projectContext
+  );
 }
 
-function getDemoImageSize(fieldName: string) {
-  const normalized = fieldName.toLowerCase();
-
-  if (/(avatar|profile|author|user|member|team|person|testimonial)/.test(normalized)) {
-    return { width: 640, height: 640 };
-  }
-
-  if (/(hero|banner|cover|header|background|feature|landing|showcase)/.test(normalized)) {
-    return { width: 1600, height: 900 };
-  }
-
-  return { width: 1200, height: 900 };
-}
-
-function selectUnsplashDemoUrl(seed: string, fieldName: string) {
-  const library = /(avatar|profile|author|user|member|team|person|testimonial)/.test(
-    fieldName.toLowerCase()
-  )
-    ? UNSPLASH_PORTRAIT_URLS
-    : UNSPLASH_LANDSCAPE_URLS;
-
-  return library[hashString(seed) % library.length];
-}
-
-function formatUnsplashDemoUrl(rawUrl: string, width: number, height: number) {
-  const url = new URL(rawUrl);
-  url.searchParams.set('auto', 'format');
-  url.searchParams.set('fit', 'crop');
-  url.searchParams.set('fm', 'jpg');
-  url.searchParams.set('q', '80');
-  url.searchParams.set('w', String(width));
-  url.searchParams.set('h', String(height));
-  return url.toString();
-}
-
-function hashString(value: string) {
-  let hash = 0;
-
-  for (let index = 0; index < value.length; index += 1) {
-    hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-  }
-
-  return hash;
+function buildDemoImageLabel(fieldName: string) {
+  return fieldName
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/[_-]+/g, ' ')
+    .split(' ')
+    .filter(Boolean)
+    .map((segment) => segment.charAt(0).toUpperCase() + segment.slice(1))
+    .join(' ');
 }

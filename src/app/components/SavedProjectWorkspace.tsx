@@ -57,6 +57,10 @@ export default function SavedProjectWorkspace({
   const [logs, setLogs] = useState<string[]>([]);
   const [previewStatus, setPreviewStatus] = useState<PreviewStatus>('idle');
   const teardownRef = useRef<(() => Promise<void>) | null>(null);
+  const previewContext = useMemo(
+    () => blueprint ?? { projectName, description },
+    [blueprint, description, projectName]
+  );
   const normalizedFiles = useMemo(() => {
     if (files.length === 0) {
       return [];
@@ -68,9 +72,9 @@ export default function SavedProjectWorkspace({
         content: file.content,
         source: normalizeSource(file.source),
       })),
-      projectName
+      previewContext
     );
-  }, [files, projectName]);
+  }, [files, previewContext]);
 
   useEffect(() => {
     let active = true;
@@ -92,40 +96,43 @@ export default function SavedProjectWorkspace({
         const { buildFileSystemTree } = await import('@/builder/file-writer');
         const { runInWebContainer } = await import('@/lib/webcontainer');
 
-        const result = await runInWebContainer(buildFileSystemTree(normalizedFiles), {
-          onStatus(nextStatus) {
-            if (!active) {
-              return;
-            }
+        const result = await runInWebContainer(
+          buildFileSystemTree(normalizedFiles, previewContext),
+          {
+            onStatus(nextStatus) {
+              if (!active) {
+                return;
+              }
 
-            if (nextStatus === 'booting') setPreviewStatus('booting');
-            if (nextStatus === 'installing') setPreviewStatus('installing');
-            if (nextStatus === 'starting') setPreviewStatus('starting');
-            if (nextStatus === 'ready') setPreviewStatus('ready');
-          },
-          onLog(message) {
-            if (!active) {
-              return;
-            }
+              if (nextStatus === 'booting') setPreviewStatus('booting');
+              if (nextStatus === 'installing') setPreviewStatus('installing');
+              if (nextStatus === 'starting') setPreviewStatus('starting');
+              if (nextStatus === 'ready') setPreviewStatus('ready');
+            },
+            onLog(message) {
+              if (!active) {
+                return;
+              }
 
-            setLogs((current) => [...current.slice(-199), message]);
-          },
-          onUrl(url) {
-            if (!active) {
-              return;
-            }
+              setLogs((current) => [...current.slice(-199), message]);
+            },
+            onUrl(url) {
+              if (!active) {
+                return;
+              }
 
-            setPreviewUrl(url);
-          },
-          onError(message) {
-            if (!active) {
-              return;
-            }
+              setPreviewUrl(url);
+            },
+            onError(message) {
+              if (!active) {
+                return;
+              }
 
-            setPreviewStatus('unavailable');
-            setLogs((current) => [...current.slice(-199), `Preview error: ${message}`]);
-          },
-        });
+              setPreviewStatus('unavailable');
+              setLogs((current) => [...current.slice(-199), `Preview error: ${message}`]);
+            },
+          }
+        );
 
         if (!active) {
           await result.teardown();
@@ -155,7 +162,7 @@ export default function SavedProjectWorkspace({
         teardownRef.current = null;
       }
     };
-  }, [normalizedFiles]);
+  }, [normalizedFiles, previewContext]);
 
   async function handleDownload() {
     const payload = Object.fromEntries(normalizedFiles.map((file) => [file.path, file.content]));

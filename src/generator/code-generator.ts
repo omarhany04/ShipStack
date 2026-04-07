@@ -163,7 +163,7 @@ export async function generateFullProject(
     message: 'Generation complete',
   });
 
-  const preparedFiles = prepareGeneratedFiles(allFiles, blueprint.projectName);
+  const preparedFiles = prepareGeneratedFiles(allFiles, blueprint);
   const stats = computeStats(preparedFiles, startedAt, stageTimings);
   aiLogger.info('Project generation complete', undefined, undefined, {
     totalFiles: stats.totalFiles,

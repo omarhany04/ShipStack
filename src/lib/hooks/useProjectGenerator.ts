@@ -219,7 +219,7 @@ export function useProjectGenerator() {
           content: file.content,
           source: file.source as 'template' | 'ai' | 'hybrid',
         })),
-        data.blueprint.projectName
+        data.blueprint
       );
 
       const generatedFiles = preparedFiles.map((file) => ({
@@ -228,7 +228,7 @@ export function useProjectGenerator() {
         source: file.source,
       }));
 
-      const displayTree = buildDisplayTree(preparedFiles);
+      const displayTree = buildDisplayTree(preparedFiles, data.blueprint);
 
       startTransition(() => {
         setState((current) => ({
@@ -246,7 +246,7 @@ export function useProjectGenerator() {
 
       addLog('Launching live preview...');
 
-      const result = await runPreview(preparedFiles, setStage, addLog, setState);
+      const result = await runPreview(preparedFiles, data.blueprint, setStage, addLog, setState);
       teardownRef.current = result.teardown;
 
       setState((current) => ({
@@ -324,7 +324,7 @@ export function useProjectGenerator() {
         content: file.content,
         source: file.source as 'template' | 'ai' | 'hybrid',
       })),
-      state.project.blueprint.projectName
+      state.project.blueprint
     );
     const files = Object.fromEntries(preparedFiles.map((file) => [file.path, file.content]));
     const response = await fetch('/api/download', {
@@ -385,12 +385,13 @@ export function useProjectGenerator() {
 
 async function runPreview(
   files: Array<{ path: string; content: string; source: 'template' | 'ai' | 'hybrid' }>,
+  blueprint: Blueprint,
   setStage: (stage: PipelineStage, message?: string) => void,
   addLog: (message: string) => void,
   setState: Dispatch<SetStateAction<PipelineState>>
 ) {
   const { runInWebContainer } = await import('@/lib/webcontainer');
-  const fsTree = buildFileSystemTree(files);
+  const fsTree = buildFileSystemTree(files, blueprint);
 
   return runInWebContainer(fsTree, {
     onStatus(status) {

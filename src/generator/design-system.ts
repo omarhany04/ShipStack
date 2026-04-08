@@ -209,6 +209,17 @@ export function selectDesignProfile(_blueprint: Blueprint) {
   return DESIGN_PROFILES[Math.floor(Math.random() * DESIGN_PROFILES.length)];
 }
 
+export function selectStableDesignProfile(blueprint: Blueprint) {
+  const key = `${blueprint.projectName}:${blueprint.description}`;
+  let hash = 0;
+
+  for (let index = 0; index < key.length; index += 1) {
+    hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
+  }
+
+  return DESIGN_PROFILES[hash % DESIGN_PROFILES.length];
+}
+
 export function summarizeDesignProfile(profile: DesignProfile) {
   return `${profile.label}: ${profile.summary}`;
 }

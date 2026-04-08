@@ -5,6 +5,9 @@ import { aiLogger } from '@/ai/logger';
 import { aiOrchestrator } from '@/ai/orchestrator';
 import { AITask } from '@/ai/types';
 import { Blueprint } from '@/validators/blueprint.validator';
+import { selectStableDesignProfile } from './design-system';
+import { generateFrontendFiles } from './templates/frontend';
+import { generateConfigFiles } from './templates/config';
 import { GeneratedFile } from './types';
 
 const REPAIRABLE_FILE_PATTERN = /\.(?:[cm]?[jt]sx?)$/i;
@@ -55,7 +58,11 @@ export async function repairGeneratedProject(
       }
 
       const fileIssues = syntaxIssues.filter((issue) => issue.path === targetPath);
-      const repairedContent = await repairSingleFile(targetFile, blueprint, fileIssues, errorContext);
+      let repairedContent = attemptLocalRepair(targetFile, blueprint, fileIssues, errorContext);
+
+      if (!repairedContent) {
+        repairedContent = await repairSingleFile(targetFile, blueprint, fileIssues, errorContext);
+      }
 
       if (!repairedContent || repairedContent.trim() === targetFile.content.trim()) {
         continue;
@@ -123,14 +130,19 @@ function collectFileSyntaxIssues(path: string, content: string): FileSyntaxIssue
     return [];
   }
 
+  const compilerOptions: ts.CompilerOptions = {
+    target: ts.ScriptTarget.ES2022,
+    module: ts.ModuleKind.ESNext,
+  };
+
+  if (path.endsWith('.tsx') || path.endsWith('.jsx')) {
+    compilerOptions.jsx = ts.JsxEmit.Preserve;
+  }
+
   const result = ts.transpileModule(content, {
     fileName: path,
     reportDiagnostics: true,
-    compilerOptions: {
-      target: ts.ScriptTarget.ES2022,
-      module: ts.ModuleKind.ESNext,
-      jsx: path.endsWith('.tsx') || path.endsWith('.jsx') ? ts.JsxEmit.Preserve : ts.JsxEmit.None,
-    },
+    compilerOptions,
   });
   const sourceFile = ts.createSourceFile(path, content, ts.ScriptTarget.Latest, true, getScriptKind(path));
 
@@ -150,27 +162,51 @@ function collectFileSyntaxIssues(path: string, content: string): FileSyntaxIssue
   });
 }
 
+function attemptLocalRepair(
+  file: GeneratedFile,
+  blueprint: Blueprint,
+  issues: FileSyntaxIssue[],
+  errorContext?: string
+) {
+  const fallbackContent = buildTemplateFallback(file.path, blueprint);
+  if (!fallbackContent) {
+    return null;
+  }
+
+  const fallbackIssues = collectFileSyntaxIssues(file.path, fallbackContent);
+  if (fallbackIssues.length > 0) {
+    return null;
+  }
+
+  aiLogger.info('Applied local fallback repair', undefined, AITask.CODE_FIX, {
+    file: file.path,
+    originalIssues: issues.map((issue) => issue.message).slice(0, 3),
+    hadErrorContext: Boolean(errorContext),
+  });
+  return fallbackContent;
+}
+
 function pickRepairTargets(
   files: GeneratedFile[],
   syntaxIssues: FileSyntaxIssue[],
   errorContext?: string
 ) {
+  const filePaths = new Set(files.map((file) => file.path));
   const candidates = new Set<string>();
 
   for (const path of extractPathsFromErrorContext(errorContext)) {
-    if (files.some((file) => file.path === path)) {
+    if (filePaths.has(path)) {
       candidates.add(path);
     }
   }
 
   for (const issue of syntaxIssues) {
     candidates.add(issue.path);
-    if (candidates.size >= MAX_REPAIR_FILES_PER_PASS) {
-      break;
-    }
   }
 
-  return [...candidates].slice(0, MAX_REPAIR_FILES_PER_PASS);
+  return [...candidates]
+    .sort((left, right) => scoreRepairPath(right, errorContext) - scoreRepairPath(left, errorContext))
+    .slice(0, MAX_REPAIR_FILES_PER_PASS);
 }
 
 async function repairSingleFile(
@@ -210,20 +246,22 @@ function buildRepairPrompt(
     issues.length > 0
       ? issues.map((issue) => `- ${issue.path}:${issue.line}:${issue.column} ${issue.message}`).join('\n')
       : '- Build failed but no parser diagnostics were available.';
-  const runtimeText = errorContext?.trim()
-    ? `\nPreview/build error context:\n${errorContext.trim().slice(-4000)}\n`
+  const runtimeContext = summarizeErrorContext(errorContext, file.path);
+  const runtimeText = runtimeContext
+    ? `\nPreview/build error context:\n${runtimeContext}\n`
     : '';
+  const projectSummary = [blueprint.projectName, blueprint.description]
+    .filter(Boolean)
+    .join(' - ')
+    .slice(0, 220);
 
-  return `Fix this generated file so the Next.js project builds successfully.
+  return `Fix this generated Next.js file so it builds successfully.
 
-Project: ${blueprint.projectName}
-Description: ${blueprint.description}
-Pages: ${blueprint.pages.map((page) => `${page.name} (${page.route})`).join(', ')}
-Features: ${blueprint.features.slice(0, 8).map((feature) => feature.name).join(', ')}
+Project: ${projectSummary}
 
 Target file: ${file.path}
 
-Detected syntax/build issues:
+Build issues:
 ${issueText}
 ${runtimeText}
 Rules:
@@ -235,7 +273,7 @@ Rules:
 
 Current file:
 \`\`\`
-${file.content}
+${compactPromptSource(file.content)}
 \`\`\``;
 }
 
@@ -246,6 +284,69 @@ function extractPathsFromErrorContext(errorContext?: string) {
 
   const matches = errorContext.match(/(?:\.\/)?src\/[^\s\]]+\.(?:tsx?|jsx?)/g) ?? [];
   return matches.map((match) => match.replace(/^\.\//, ''));
+}
+
+function buildTemplateFallback(path: string, blueprint: Blueprint) {
+  const configFallback = generateConfigFiles(blueprint).find((file) => file.path === path);
+  if (configFallback) {
+    return configFallback.content;
+  }
+
+  const designProfile = selectStableDesignProfile(blueprint);
+  const frontendFallback = generateFrontendFiles(blueprint, designProfile).find(
+    (file) => file.path === path
+  );
+
+  return frontendFallback?.content ?? null;
+}
+
+function summarizeErrorContext(errorContext: string | undefined, targetPath: string) {
+  if (!errorContext) {
+    return '';
+  }
+
+  const lines = errorContext
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const focused = lines.filter((line) => line.includes(targetPath) || /unexpected token|syntax error|failed to compile/i.test(line));
+  const selected = focused.length > 0 ? focused.slice(-12) : lines.slice(-12);
+  return selected.join('\n').slice(-1400);
+}
+
+function compactPromptSource(content: string) {
+  return content
+    .replace(/\r\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .slice(0, 16000);
+}
+
+function scoreRepairPath(path: string, errorContext?: string) {
+  let score = 0;
+
+  if (errorContext?.includes(path)) {
+    score += 100;
+  }
+
+  if (path === 'src/app/page.tsx') {
+    score += 90;
+  } else if (path.startsWith('src/app/')) {
+    score += 70;
+  } else if (path.startsWith('src/components/')) {
+    score += 55;
+  } else if (path.startsWith('src/lib/')) {
+    score += 40;
+  } else if (path.startsWith('src/')) {
+    score += 25;
+  } else {
+    score += 5;
+  }
+
+  if (/\.(tsx|jsx)$/.test(path)) {
+    score += 20;
+  }
+
+  return score;
 }
 
 function getScriptKind(path: string) {

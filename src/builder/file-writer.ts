@@ -53,6 +53,12 @@ const REQUIRED_FILES = [
 const SUPPORT_IMPORT_PATTERN =
   /@\/components\/ui\/|@\/components\/GeneratedImageFallback|@\/lib\/(?:utils|demo-media)/;
 
+const REFRESHABLE_SUPPORT_FILE_PATHS = new Set([
+  'src/lib/demo-media.ts',
+  'src/app/api/demo-image/route.ts',
+  'src/components/GeneratedImageFallback.tsx',
+]);
+
 const INTERNAL_IMPORT_PATTERN =
   /(?:import|export)\s+(?:[^'"]*?\sfrom\s+)?['"](@\/[^'"]+)['"]|import\(\s*['"](@\/[^'"]+)['"]\s*\)/g;
 
@@ -809,6 +815,12 @@ function injectSupportFiles(
   const supportFiles = buildGeneratedSupportFiles(projectContext);
 
   for (const supportFile of supportFiles) {
+    const existingIndex = prepared.findIndex((file) => file.path === supportFile.path);
+    if (existingIndex >= 0 && REFRESHABLE_SUPPORT_FILE_PATHS.has(supportFile.path)) {
+      prepared[existingIndex] = supportFile;
+      continue;
+    }
+
     if (paths.has(supportFile.path)) {
       continue;
     }

@@ -175,12 +175,7 @@ class AIOrchestrator {
   }
 
   private resolveProviderOrder(task: AITask) {
-    const rule = ROUTING_RULES.find((item) => item.task === task);
-    if (!rule) {
-      return healthManager.getAvailableProviders();
-    }
-
-    const ordered = [rule.primary, ...rule.fallbacks];
+    const ordered = this.getOrderedProviders(task);
     const available = ordered.filter((provider) => healthManager.isAvailable(provider));
     aiLogger.debug(
       `Provider order for ${task}: [${ordered.join(', ')}] -> [${available.join(', ')}]`,
@@ -197,17 +192,16 @@ class AIOrchestrator {
     const config = getEnvConfig();
 
     for (let attempt = 1; attempt <= config.orchestrator.maxGlobalRetries; attempt += 1) {
-      let shortestWait = Infinity;
-      for (const provider of Object.values(AIProvider)) {
-        shortestWait = Math.min(shortestWait, healthManager.getCooldownRemaining(provider));
-      }
+      const shortestWait = this.getShortestCooldownForTask(request.task);
+      const waitMs =
+        shortestWait > 0
+          ? shortestWait + 500
+          : config.orchestrator.retryDelayMs * attempt;
 
-      const waitMs = Math.min(
-        shortestWait > 0 ? shortestWait + 500 : config.orchestrator.retryDelayMs,
-        config.orchestrator.retryDelayMs * attempt
-      );
-
-      aiLogger.warn(`Global retry attempt ${attempt}`, undefined, request.task, { waitMs });
+      aiLogger.warn(`Global retry attempt ${attempt}`, undefined, request.task, {
+        waitMs,
+        shortestCooldownMs: shortestWait,
+      });
       await this.sleep(waitMs);
 
       const providers = this.resolveProviderOrder(request.task);
@@ -277,6 +271,24 @@ class AIOrchestrator {
 
   private getPrimaryProvider(task: AITask) {
     return ROUTING_RULES.find((rule) => rule.task === task)?.primary ?? AIProvider.GEMINI;
+  }
+
+  private getOrderedProviders(task: AITask) {
+    const rule = ROUTING_RULES.find((item) => item.task === task);
+    return rule ? [rule.primary, ...rule.fallbacks] : Object.values(AIProvider);
+  }
+
+  private getShortestCooldownForTask(task: AITask) {
+    let shortestWait = Infinity;
+
+    for (const provider of this.getOrderedProviders(task)) {
+      const waitMs = healthManager.getCooldownRemaining(provider);
+      if (waitMs > 0) {
+        shortestWait = Math.min(shortestWait, waitMs);
+      }
+    }
+
+    return Number.isFinite(shortestWait) ? shortestWait : 0;
   }
 
   private sleep(ms: number) {

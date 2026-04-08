@@ -304,8 +304,8 @@ export function sanitizeProjectName(projectName: string) {
   return cleaned || 'generated-app';
 }
 
-export function normalizeDemoToken(value: string, fallback = 'demo-photo') {
-  const normalized = value
+export function normalizeDemoToken(value: unknown, fallback = 'demo-photo') {
+  const normalized = coerceDemoString(value)
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -315,8 +315,8 @@ export function normalizeDemoToken(value: string, fallback = 'demo-photo') {
   return normalized || fallback;
 }
 
-export function normalizeDemoLabel(value: string, fallback = 'Demo Photo') {
-  const normalized = value
+export function normalizeDemoLabel(value: unknown, fallback = 'Demo Photo') {
+  const normalized = coerceDemoString(value)
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -328,7 +328,7 @@ export function normalizeDemoLabel(value: string, fallback = 'Demo Photo') {
   return normalized
     .split(' ')
     .slice(0, 6)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .map((part: string) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 }
 
@@ -453,8 +453,40 @@ const UNSPLASH_PORTRAIT_URLS = ${JSON.stringify(UNSPLASH_PORTRAIT_URLS, null, 2)
 
 const THEMED_UNSPLASH_LIBRARIES = ${JSON.stringify(THEMED_UNSPLASH_LIBRARIES, null, 2)};
 
-export function normalizeDemoToken(value: string, fallback = 'demo-photo') {
-  const normalized = value
+function coerceDemoString(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => coerceDemoString(entry))
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  if (typeof value === 'object') {
+    try {
+      const serialized = JSON.stringify(value);
+      return typeof serialized === 'string' ? serialized : '';
+    } catch {
+      return '';
+    }
+  }
+
+  return '';
+}
+
+export function normalizeDemoToken(value: unknown, fallback = 'demo-photo') {
+  const normalized = coerceDemoString(value)
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -464,8 +496,8 @@ export function normalizeDemoToken(value: string, fallback = 'demo-photo') {
   return normalized || fallback;
 }
 
-export function normalizeDemoLabel(value: string, fallback = 'Demo Photo') {
-  const normalized = value
+export function normalizeDemoLabel(value: unknown, fallback = 'Demo Photo') {
+  const normalized = coerceDemoString(value)
     .replace(/[_-]+/g, ' ')
     .replace(/\\s+/g, ' ')
     .trim();
@@ -553,6 +585,38 @@ function normalizeHintText(value: string) {
     .replace(/[_-]+/g, ' ')
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function coerceDemoString(value: unknown): string {
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  if (value === null || value === undefined) {
+    return '';
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean' || typeof value === 'bigint') {
+    return String(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => coerceDemoString(entry))
+      .filter(Boolean)
+      .join(' ');
+  }
+
+  if (typeof value === 'object') {
+    try {
+      const serialized = JSON.stringify(value);
+      return typeof serialized === 'string' ? serialized : '';
+    } catch {
+      return '';
+    }
+  }
+
+  return '';
 }
 
 function pickDemoImageSize(context: string) {

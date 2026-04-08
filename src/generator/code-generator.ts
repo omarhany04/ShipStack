@@ -1,6 +1,7 @@
 import { aiLogger } from '@/ai/logger';
 import { prepareGeneratedFiles } from '@/builder/file-writer';
 import { selectDesignProfile, summarizeDesignProfile } from './design-system';
+import { repairGeneratedProject } from './project-repair';
 import { Blueprint } from '@/validators/blueprint.validator';
 import { enhanceWithAI } from './ai-enhancer';
 import { generateConfigFiles } from './templates/config';
@@ -163,7 +164,14 @@ export async function generateFullProject(
     message: 'Generation complete',
   });
 
-  const preparedFiles = prepareGeneratedFiles(allFiles, blueprint);
+  let preparedFiles = prepareGeneratedFiles(allFiles, blueprint);
+  const repairResult = await repairGeneratedProject(preparedFiles, blueprint);
+  if (repairResult.repairedPaths.length > 0) {
+    preparedFiles = prepareGeneratedFiles(repairResult.files, blueprint);
+  } else {
+    preparedFiles = repairResult.files;
+  }
+  warnings.push(...repairResult.warnings);
   const stats = computeStats(preparedFiles, startedAt, stageTimings);
   aiLogger.info('Project generation complete', undefined, undefined, {
     totalFiles: stats.totalFiles,

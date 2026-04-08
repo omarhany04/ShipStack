@@ -141,6 +141,12 @@ export async function runInWebContainer(
   callbacks: WebContainerCallbacks = {}
 ) {
   const log = (message: string) => callbacks.onLog?.(message);
+  let installProcess:
+    | Awaited<ReturnType<WebContainer['spawn']>>
+    | null = null;
+  let devProcess:
+    | Awaited<ReturnType<WebContainer['spawn']>>
+    | null = null;
 
   try {
     callbacks.onStatus?.('booting');
@@ -155,7 +161,7 @@ export async function runInWebContainer(
 
     callbacks.onStatus?.('installing');
     log('Installing dependencies...');
-    const installProcess = await container.spawn('npm', ['install', '--legacy-peer-deps']);
+    installProcess = await container.spawn('npm', ['install', '--legacy-peer-deps']);
     installProcess.output.pipeTo(
       new WritableStream({
         write(chunk) {
@@ -170,7 +176,7 @@ export async function runInWebContainer(
 
     callbacks.onStatus?.('starting');
     log('Starting development server...');
-    const devProcess = await container.spawn('npm', ['run', 'dev']);
+    devProcess = await container.spawn('npm', ['run', 'dev']);
     devProcess.output.pipeTo(
       new WritableStream({
         write(chunk) {
@@ -197,11 +203,17 @@ export async function runInWebContainer(
       url,
       teardown: async () => {
         try {
-          devProcess.kill();
+          devProcess?.kill();
         } catch {}
       },
     };
   } catch (error) {
+    try {
+      devProcess?.kill();
+    } catch {}
+    try {
+      installProcess?.kill();
+    } catch {}
     const message = error instanceof Error ? error.message : 'WebContainer error';
     callbacks.onStatus?.('error');
     callbacks.onError?.(message);

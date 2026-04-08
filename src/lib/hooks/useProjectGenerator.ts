@@ -391,32 +391,90 @@ async function runPreview(
   setState: Dispatch<SetStateAction<PipelineState>>
 ) {
   const { runInWebContainer } = await import('@/lib/webcontainer');
-  const fsTree = buildFileSystemTree(files, blueprint);
+  const { requestPreviewRepair } = await import('@/lib/preview-repair');
+  let recentLogs: string[] = [];
+  let currentFiles = files;
+  let lastErrorMessage = '';
 
-  return runInWebContainer(fsTree, {
-    onStatus(status) {
-      if (status === 'booting') setStage('preview_booting');
-      if (status === 'installing') setStage('preview_installing');
-      if (status === 'starting') setStage('preview_starting');
-      if (status === 'ready') setStage('ready');
-    },
-    onLog(message) {
-      addLog(message);
-    },
-    onUrl(url) {
-      setState((current) => ({
-        ...current,
-        previewUrl: url,
-      }));
-    },
-    onError(message) {
-      addLog(`Preview error: ${message}`);
+  const executePreview = async (
+    previewFiles: Array<{ path: string; content: string; source: 'template' | 'ai' | 'hybrid' }>
+  ) =>
+    runInWebContainer(buildFileSystemTree(previewFiles, blueprint), {
+      onStatus(status) {
+        if (status === 'booting') setStage('preview_booting');
+        if (status === 'installing') setStage('preview_installing');
+        if (status === 'starting') setStage('preview_starting');
+        if (status === 'ready') setStage('ready');
+      },
+      onLog(message) {
+        recentLogs = [...recentLogs.slice(-199), message];
+        addLog(message);
+      },
+      onUrl(url) {
+        setState((current) => ({
+          ...current,
+          previewUrl: url,
+        }));
+      },
+      onError(message) {
+        lastErrorMessage = message;
+        addLog(`Preview error: ${message}`);
+      },
+    });
+
+  try {
+    return await executePreview(currentFiles);
+  } catch (error) {
+    const failureMessage = error instanceof Error ? error.message : 'Preview failed';
+    const repairResult = await requestPreviewRepair(
+      currentFiles,
+      blueprint,
+      recentLogs,
+      lastErrorMessage || failureMessage
+    );
+
+    if (!repairResult) {
       setState((current) => ({
         ...current,
         stage: 'ready',
         progress: 100,
         message: 'Project generated (preview unavailable)',
       }));
-    },
-  });
+      throw error;
+    }
+
+    currentFiles = repairResult.files;
+    recentLogs = [];
+    lastErrorMessage = '';
+    addLog(
+      `Automatic repair updated ${repairResult.repairedPaths.length} file${
+        repairResult.repairedPaths.length === 1 ? '' : 's'
+      }. Retrying preview...`
+    );
+    repairResult.warnings.forEach((warning) => addLog(`Repair note: ${warning}`));
+    setState((current) => ({
+      ...current,
+      project: current.project
+        ? {
+            ...current.project,
+            files: currentFiles,
+            displayTree: buildDisplayTree(currentFiles, blueprint),
+            warnings: [...current.project.warnings, ...repairResult.warnings],
+          }
+        : current.project,
+      previewUrl: null,
+    }));
+
+    try {
+      return await executePreview(currentFiles);
+    } catch (retryError) {
+      setState((current) => ({
+        ...current,
+        stage: 'ready',
+        progress: 100,
+        message: 'Project generated (preview unavailable)',
+      }));
+      throw retryError;
+    }
+  }
 }

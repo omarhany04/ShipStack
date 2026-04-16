@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
+import { useEffect, useRef } from 'react';
 import { useAuth } from '@/lib/auth/useAuth';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
 import logoImage from './icon.png';
@@ -15,6 +16,10 @@ const FollowUpPrompt = dynamic(() => import('./components/FollowUpPrompt'));
 const PreviewPanel = dynamic(() => import('./components/PreviewPanel'));
 const ProgressIndicator = dynamic(() => import('./components/ProgressIndicator'));
 const ProjectDatabasePanel = dynamic(() => import('./components/ProjectDatabasePanel'));
+
+const APP_TITLE = 'ShipStack — Build Apps with AI';
+const BADGE_FALLBACK_DOT =
+  'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22%3E%3Ccircle cx=%2250%22 cy=%2214%22 r=%229%22 fill=%22%23ef4444%22 /%3E%3C/svg%3E';
 
 export default function HomePage() {
   const {
@@ -32,6 +37,230 @@ export default function HomePage() {
   const isLoading = !['idle', 'ready', 'error'].includes(state.stage);
   const showResults = state.stage === 'ready' && state.project;
   const showProgress = isLoading || state.stage === 'error';
+  const previousStageRef = useRef(state.stage);
+  const hasTabNotificationRef = useRef(false);
+  const faviconStateRef = useRef<{
+    link: HTMLLinkElement | null;
+    originalHref: string;
+    originalType: string;
+    badgeHref: string | null;
+  }>({
+    link: null,
+    originalHref: '',
+    originalType: '',
+    badgeHref: null,
+  });
+
+  useEffect(() => {
+    document.title = APP_TITLE;
+
+    function getFaviconLink() {
+      let link =
+        (document.querySelector('link[rel="icon"]') as HTMLLinkElement | null) ??
+        (document.querySelector('link[rel="shortcut icon"]') as HTMLLinkElement | null);
+
+      if (!link) {
+        link = document.createElement('link');
+        link.rel = 'icon';
+        document.head.appendChild(link);
+      }
+
+      return link;
+    }
+
+    async function createBadgedFavicon(sourceUrl: string) {
+      return new Promise<string>((resolve) => {
+        const image = new window.Image();
+        image.crossOrigin = 'anonymous';
+        image.decoding = 'async';
+
+        image.onload = () => {
+          const size = 64;
+          const canvas = document.createElement('canvas');
+          canvas.width = size;
+          canvas.height = size;
+          const context = canvas.getContext('2d');
+
+          if (!context) {
+            resolve(BADGE_FALLBACK_DOT);
+            return;
+          }
+
+          context.clearRect(0, 0, size, size);
+          context.drawImage(image, 0, 0, size, size);
+
+          const outerRadius = size * 0.16;
+          const innerRadius = size * 0.125;
+          const centerX = size * 0.78;
+          const centerY = size * 0.22;
+
+          context.fillStyle = 'rgba(255,255,255,0.96)';
+          context.beginPath();
+          context.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+          context.fill();
+
+          context.fillStyle = '#ef4444';
+          context.beginPath();
+          context.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+          context.fill();
+
+          resolve(canvas.toDataURL('image/png'));
+        };
+
+        image.onerror = () => resolve(BADGE_FALLBACK_DOT);
+        image.src = sourceUrl || logoImage.src;
+      });
+    }
+
+    async function syncFaviconNotification() {
+      const link = getFaviconLink();
+      const faviconState = faviconStateRef.current;
+
+      if (!faviconState.link) {
+        faviconState.link = link;
+        faviconState.originalHref = link.href || logoImage.src;
+        faviconState.originalType = link.type || 'image/png';
+      } else if (faviconState.link !== link) {
+        faviconState.link = link;
+      }
+
+      if (!hasTabNotificationRef.current) {
+        link.href = faviconState.originalHref || logoImage.src;
+        link.type = faviconState.originalType || 'image/png';
+        return;
+      }
+
+      if (!faviconState.badgeHref) {
+        faviconState.badgeHref = await createBadgedFavicon(
+          faviconState.originalHref || logoImage.src
+        );
+      }
+
+      if (hasTabNotificationRef.current) {
+        link.href = faviconState.badgeHref;
+        link.type = 'image/png';
+      }
+    }
+
+    function clearTabNotification() {
+      if (document.visibilityState !== 'visible' || !hasTabNotificationRef.current) {
+        return;
+      }
+
+      hasTabNotificationRef.current = false;
+      document.title = APP_TITLE;
+      void syncFaviconNotification();
+    }
+
+    window.addEventListener('focus', clearTabNotification);
+    document.addEventListener('visibilitychange', clearTabNotification);
+    void syncFaviconNotification();
+
+    const faviconState = faviconStateRef.current;
+
+    return () => {
+      window.removeEventListener('focus', clearTabNotification);
+      document.removeEventListener('visibilitychange', clearTabNotification);
+      hasTabNotificationRef.current = false;
+      if (faviconState.link) {
+        faviconState.link.href = faviconState.originalHref || logoImage.src;
+        faviconState.link.type = faviconState.originalType || 'image/png';
+      }
+      document.title = APP_TITLE;
+    };
+  }, []);
+
+  useEffect(() => {
+    const previousStage = previousStageRef.current;
+    const generationFinished =
+      state.stage === 'ready' &&
+      previousStage !== 'ready' &&
+      previousStage !== 'idle' &&
+      !state.message.toLowerCase().includes('canceled');
+
+    if (
+      generationFinished &&
+      (document.visibilityState === 'hidden' || !document.hasFocus())
+    ) {
+      hasTabNotificationRef.current = true;
+    }
+
+    if (state.stage !== 'ready') {
+      hasTabNotificationRef.current = false;
+    }
+
+    const faviconState = faviconStateRef.current;
+
+    async function syncStageNotificationFavicon() {
+      if (!faviconState.link) {
+        return;
+      }
+
+      if (!hasTabNotificationRef.current) {
+        faviconState.link.href = faviconState.originalHref || logoImage.src;
+        faviconState.link.type = faviconState.originalType || 'image/png';
+        return;
+      }
+
+      if (!faviconState.badgeHref) {
+        faviconState.badgeHref = await new Promise<string>((resolve) => {
+          const image = new window.Image();
+          image.crossOrigin = 'anonymous';
+          image.decoding = 'async';
+
+          image.onload = () => {
+            const size = 64;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const context = canvas.getContext('2d');
+
+            if (!context) {
+              resolve(BADGE_FALLBACK_DOT);
+              return;
+            }
+
+            context.clearRect(0, 0, size, size);
+            context.drawImage(image, 0, 0, size, size);
+
+            const outerRadius = size * 0.16;
+            const innerRadius = size * 0.125;
+            const centerX = size * 0.78;
+            const centerY = size * 0.22;
+
+            context.fillStyle = 'rgba(255,255,255,0.96)';
+            context.beginPath();
+            context.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
+            context.fill();
+
+            context.fillStyle = '#ef4444';
+            context.beginPath();
+            context.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
+            context.fill();
+
+            resolve(canvas.toDataURL('image/png'));
+          };
+
+          image.onerror = () => resolve(BADGE_FALLBACK_DOT);
+          image.src = faviconState.originalHref || logoImage.src;
+        });
+      }
+
+      if (hasTabNotificationRef.current) {
+        faviconState.link.href = faviconState.badgeHref;
+        faviconState.link.type = 'image/png';
+      }
+    }
+
+    void syncStageNotificationFavicon();
+
+    document.title = APP_TITLE;
+    previousStageRef.current = state.stage;
+
+    return () => {
+      document.title = APP_TITLE;
+    };
+  }, [state.message, state.stage]);
 
   return (
     <div className="relative min-h-screen overflow-hidden">

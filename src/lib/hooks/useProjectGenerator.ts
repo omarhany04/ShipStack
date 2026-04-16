@@ -126,7 +126,7 @@ export function useProjectGenerator() {
   function addLog(message: string) {
     setState((current) => ({
       ...current,
-      logs: [...current.logs.slice(-199), message],
+      logs: [...current.logs, message],
     }));
   }
 
@@ -407,7 +407,7 @@ export function useProjectGenerator() {
         previewUrl: null,
         logs: hasProject
           ? [
-              ...current.logs.slice(-198),
+              ...current.logs,
               'Generation canceled. The latest generated files remain available.',
             ]
           : [],

@@ -386,7 +386,7 @@ export default function HomePage() {
                   <p className="mt-1 text-xs text-slate-400">Recent orchestration and preview events</p>
                 </div>
                 <div className="max-h-[260px] overflow-y-auto bg-slate-950 px-4 py-4 text-xs text-slate-300">
-                  {state.logs.slice(-18).map((log, index) => (
+                  {state.logs.map((log, index) => (
                     <p key={`${index}-${log}`} className="py-1 font-mono leading-6">
                       {log}
                     </p>

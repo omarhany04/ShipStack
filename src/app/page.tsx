@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth/useAuth';
 import { useProjectGenerator } from '@/lib/hooks/useProjectGenerator';
 import logoImage from './icon.png';
 import PromptInput from './components/PromptInput';
+import SideAmbientMotion from './components/SideAmbientMotion';
 import UserMenu from './components/UserMenu';
 
 const BlueprintEditor = dynamic(() => import('./components/BlueprintEditor'));
@@ -72,7 +73,9 @@ export default function HomePage() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
+      <main className="relative mx-auto max-w-7xl px-4 pb-12 pt-8 sm:px-6 lg:px-8">
+        {showProgress ? <SideAmbientMotion progress={state.progress} /> : null}
+
         {(state.stage === 'idle' || state.stage === 'error') ? (
           <section className="animate-fade-up">
             <div className="grid gap-8 xl:grid-cols-[1.12fr_0.88fr] xl:items-start">

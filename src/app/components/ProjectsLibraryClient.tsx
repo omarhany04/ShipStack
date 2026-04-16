@@ -1,7 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import BuilderScrollLink from './BuilderScrollLink';
 
 interface ProjectSummary {
@@ -35,21 +36,69 @@ type FeedbackState =
 export default function ProjectsLibraryClient({
   initialProjects,
 }: ProjectsLibraryClientProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [projects, setProjects] = useState(initialProjects);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<ProjectSummary | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [feedback, setFeedback] = useState<FeedbackState>(null);
 
-  async function handleDelete(project: ProjectSummary) {
-    const confirmed = window.confirm(
-      `Delete "${project.displayName}"?\n\nThis permanently removes the saved preview, generated files, blueprint snapshot, and project history for this workspace.`
-    );
+  useEffect(() => {
+    setIsMounted(true);
 
-    if (!confirmed) {
+    return () => {
+      setIsMounted(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!projectToDelete) {
       return;
     }
 
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape' && !deletingId) {
+        setProjectToDelete(null);
+        setDeleteError(null);
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [deletingId, projectToDelete]);
+
+  function openDeleteDialog(project: ProjectSummary) {
+    setProjectToDelete(project);
+    setDeleteError(null);
+    setFeedback(null);
+  }
+
+  function closeDeleteDialog() {
+    if (deletingId) {
+      return;
+    }
+
+    setProjectToDelete(null);
+    setDeleteError(null);
+  }
+
+  async function confirmDelete() {
+    if (!projectToDelete) {
+      return;
+    }
+
+    const project = projectToDelete;
+
     setDeletingId(project.id);
     setFeedback(null);
+    setDeleteError(null);
 
     try {
       const response = await fetch(`/api/projects/${project.id}`, {
@@ -72,14 +121,11 @@ export default function ProjectsLibraryClient({
         tone: 'success',
         message: `"${project.displayName}" was deleted.`,
       });
+      setProjectToDelete(null);
     } catch (error) {
-      setFeedback({
-        tone: 'error',
-        message:
-          error instanceof Error
-            ? error.message
-            : 'Failed to delete project.',
-      });
+      setDeleteError(
+        error instanceof Error ? error.message : 'Failed to delete project.'
+      );
     } finally {
       setDeletingId(null);
     }
@@ -224,7 +270,7 @@ export default function ProjectsLibraryClient({
                   </Link>
                   <button
                     type="button"
-                    onClick={() => void handleDelete(project)}
+                    onClick={() => openDeleteDialog(project)}
                     disabled={isDeleting}
                     className="theme-status-danger inline-flex rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5 hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
                   >
@@ -236,6 +282,19 @@ export default function ProjectsLibraryClient({
           })}
         </section>
       )}
+
+      {projectToDelete && isMounted
+        ? createPortal(
+            <DeleteProjectDialog
+              projectName={projectToDelete.displayName}
+              isDeleting={deletingId === projectToDelete.id}
+              error={deleteError}
+              onClose={closeDeleteDialog}
+              onConfirm={() => void confirmDelete()}
+            />,
+            document.body
+          )
+        : null}
     </>
   );
 }
@@ -311,6 +370,103 @@ function ProjectsGlyph() {
   );
 }
 
+function DeleteProjectDialog({
+  projectName,
+  isDeleting,
+  error,
+  onClose,
+  onConfirm,
+}: {
+  projectName: string;
+  isDeleting: boolean;
+  error: string | null;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[120]">
+      <button
+        type="button"
+        aria-label="Close delete project dialog"
+        onClick={onClose}
+        disabled={isDeleting}
+        className="absolute inset-0 bg-slate-950/42 backdrop-blur-[3px] disabled:cursor-not-allowed"
+      />
+
+      <div className="absolute inset-0 flex items-center justify-center p-4 sm:p-6">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-project-title"
+          aria-describedby="delete-project-description"
+          className="w-full max-w-xl overflow-hidden rounded-[32px] border border-white/65 bg-[linear-gradient(180deg,_rgba(255,255,255,0.98),_rgba(244,247,250,0.98))] shadow-[0_28px_90px_rgba(15,23,42,0.18)]"
+        >
+          <div className="theme-dark-panel px-6 py-6 text-white sm:px-7">
+            <div className="flex items-start justify-between gap-4">
+              <div className="max-w-lg">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#eadbcb]">
+                  Confirm deletion
+                </div>
+                <h2 id="delete-project-title" className="mt-4 text-2xl font-bold tracking-tight">
+                  Delete this workspace?
+                </h2>
+                <p
+                  id="delete-project-description"
+                  className="mt-3 text-sm leading-7 text-slate-200"
+                >
+                  <span className="font-semibold text-white">{projectName}</span> will be removed
+                  along with its saved preview, generated files, blueprint snapshot, and project
+                  history.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isDeleting}
+                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/10 text-slate-200 transition hover:bg-white/15 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <CloseGlyph />
+              </button>
+            </div>
+          </div>
+
+          <div className="space-y-5 px-6 py-6 sm:px-7">
+            <div className="theme-status-danger rounded-[24px] px-5 py-4 text-sm leading-7">
+              This action cannot be undone.
+            </div>
+
+            {error ? (
+              <div className="theme-status-danger rounded-[24px] px-5 py-4 text-sm">
+                {error}
+              </div>
+            ) : null}
+
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isDeleting}
+                className="theme-button-secondary inline-flex justify-center rounded-full px-5 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Keep project
+              </button>
+              <button
+                type="button"
+                onClick={onConfirm}
+                disabled={isDeleting}
+                className="theme-status-danger inline-flex justify-center rounded-full px-5 py-3 text-sm font-semibold transition hover:border-rose-300 hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete project'}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function formatBytes(value: number) {
   if (!value) {
     return '0 KB';
@@ -353,4 +509,12 @@ function truncate(value: string, maxLength: number) {
   }
 
   return `${value.slice(0, maxLength - 1)}...`;
+}
+
+function CloseGlyph() {
+  return (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth="1.8" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+    </svg>
+  );
 }

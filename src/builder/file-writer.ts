@@ -63,6 +63,39 @@ const INTERNAL_IMPORT_PATTERN =
   /(?:import|export)\s+(?:[^'"]*?\sfrom\s+)?['"](@\/[^'"]+)['"]|import\(\s*['"](@\/[^'"]+)['"]\s*\)/g;
 
 const CODE_FILE_PATTERN = /\.(?:[cm]?[jt]sx?|css|scss|sass|less|json|mjs|cjs|prisma|html)$/i;
+const ROUTE_REFERENCE_FILE_PATTERN = /\.(?:[cm]?[jt]sx?|html)$/i;
+
+const STATIC_ROUTE_REFERENCE_PATTERNS = [
+  {
+    kind: 'href',
+    regex: /\bhref\s*=\s*(?:["'`](\/[^"'`]+)["'`]|{["'`](\/[^"'`]+)["'`]})/g,
+  },
+  {
+    kind: 'action',
+    regex: /\baction\s*=\s*(?:["'`](\/[^"'`]+)["'`]|{["'`](\/[^"'`]+)["'`]})/g,
+  },
+  {
+    kind: 'fetch',
+    regex: /\bfetch\(\s*(?:["'`](\/[^"'`]+)["'`]|{["'`](\/[^"'`]+)["'`]})/g,
+  },
+  {
+    kind: 'navigation',
+    regex:
+      /\b(?:router\.(?:push|replace)|redirect)\(\s*(?:["'`](\/[^"'`]+)["'`]|{["'`](\/[^"'`]+)["'`]})/g,
+  },
+] as const;
+
+const PLACEHOLDER_ROUTE_REFERENCE_PATTERNS = [
+  {
+    kind: 'href',
+    regex: /\bhref\s*=\s*(?:["'`](#|javascript:void\(0\))["'`]|{["'`](#|javascript:void\(0\))["'`]})/gi,
+  },
+  {
+    kind: 'action',
+    regex:
+      /\baction\s*=\s*(?:["'`](#|javascript:void\(0\))["'`]|{["'`](#|javascript:void\(0\))["'`]})/gi,
+  },
+] as const;
 
 function buildGeneratedSupportFiles(
   projectContext: ResolvedProjectImageContext
@@ -725,6 +758,8 @@ export function validateGeneratedFiles(files: GeneratedFile[]): ValidationIssue[
     });
   }
 
+  issues.push(...collectBrokenRouteReferences(normalizedFiles));
+
   return issues;
 }
 
@@ -1184,4 +1219,188 @@ function resolveAliasCandidates(specifier: string) {
     `${basePath}/index.js`,
     `${basePath}/index.jsx`,
   ];
+}
+
+function collectBrokenRouteReferences(files: GeneratedFile[]): ValidationIssue[] {
+  const issues = new Map<string, ValidationIssue>();
+  const appRoutes = collectGeneratedRouteMatchers(files, 'page');
+  const apiRoutes = collectGeneratedRouteMatchers(files, 'route');
+
+  for (const file of files) {
+    if (!ROUTE_REFERENCE_FILE_PATTERN.test(file.path)) {
+      continue;
+    }
+
+    for (const placeholder of extractPlaceholderRouteReferences(file.content)) {
+      const key = `${file.path}:placeholder:${placeholder.kind}:${placeholder.value}`;
+      issues.set(key, {
+        severity: 'error',
+        file: file.path,
+        message: `Placeholder ${placeholder.kind} reference is not functional: ${placeholder.value}`,
+      });
+    }
+
+    for (const reference of extractStaticRouteReferences(file.content)) {
+      const normalizedPath = normalizeReferencedPath(reference.value);
+
+      if (!normalizedPath || shouldIgnoreRouteReference(normalizedPath)) {
+        continue;
+      }
+
+      if (containsDynamicRoutePlaceholder(normalizedPath)) {
+        const key = `${file.path}:dynamic:${reference.kind}:${normalizedPath}`;
+        issues.set(key, {
+          severity: 'error',
+          file: file.path,
+          message: `Direct ${reference.kind} reference uses an unresolved dynamic path: ${reference.value}`,
+        });
+        continue;
+      }
+
+      const candidates = normalizedPath.startsWith('/api/') ? apiRoutes : appRoutes;
+      if (hasMatchingRoute(candidates, normalizedPath)) {
+        continue;
+      }
+
+      const key = `${file.path}:missing:${reference.kind}:${normalizedPath}`;
+      issues.set(key, {
+        severity: 'error',
+        file: file.path,
+        message: `Referenced ${reference.kind} path does not exist in generated output: ${reference.value}`,
+      });
+    }
+  }
+
+  return [...issues.values()];
+}
+
+function extractPlaceholderRouteReferences(content: string) {
+  const matches: Array<{ kind: string; value: string }> = [];
+
+  for (const pattern of PLACEHOLDER_ROUTE_REFERENCE_PATTERNS) {
+    pattern.regex.lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.regex.exec(content)) !== null) {
+      const value = match[1] ?? match[2];
+      if (value) {
+        matches.push({
+          kind: pattern.kind,
+          value,
+        });
+      }
+    }
+  }
+
+  return matches;
+}
+
+function extractStaticRouteReferences(content: string) {
+  const matches: Array<{ kind: string; value: string }> = [];
+
+  for (const pattern of STATIC_ROUTE_REFERENCE_PATTERNS) {
+    pattern.regex.lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = pattern.regex.exec(content)) !== null) {
+      const value = match[1] ?? match[2];
+      if (value) {
+        matches.push({
+          kind: pattern.kind,
+          value,
+        });
+      }
+    }
+  }
+
+  return matches;
+}
+
+function collectGeneratedRouteMatchers(files: GeneratedFile[], kind: 'page' | 'route') {
+  return files
+    .map((file) => getGeneratedRoutePattern(file.path, kind))
+    .filter((value): value is string => Boolean(value))
+    .map((pattern) => ({
+      pattern,
+      regex: routePatternToRegex(pattern),
+    }));
+}
+
+function getGeneratedRoutePattern(path: string, kind: 'page' | 'route') {
+  const matcher =
+    kind === 'page'
+      ? /^src\/app(?:\/(.*))?\/page\.(?:[cm]?[jt]sx?)$/i
+      : /^src\/app(?:\/(.*))?\/route\.(?:[cm]?[jt]sx?)$/i;
+  const match = path.match(matcher);
+
+  if (!match) {
+    return null;
+  }
+
+  const rawSegments = (match[1] ?? '')
+    .split('/')
+    .filter(Boolean)
+    .filter((segment) => !(segment.startsWith('(') && segment.endsWith(')')))
+    .filter((segment) => !segment.startsWith('@'));
+
+  return rawSegments.length > 0 ? `/${rawSegments.join('/')}` : '/';
+}
+
+function routePatternToRegex(pattern: string) {
+  const segments = normalizeReferencedPath(pattern).split('/').filter(Boolean);
+
+  if (segments.length === 0) {
+    return /^\/$/;
+  }
+
+  const source =
+    '^/' +
+    segments
+      .map((segment) => {
+        if (/^\[\[\.\.\.[^\]]+\]\]$/.test(segment)) {
+          return '.*';
+        }
+
+        if (/^\[\.\.\.[^\]]+\]$/.test(segment)) {
+          return '.+';
+        }
+
+        if (/^\[[^\]]+\]$/.test(segment)) {
+          return '[^/]+';
+        }
+
+        return escapeRegex(segment);
+      })
+      .join('/') +
+    '/?$';
+
+  return new RegExp(source);
+}
+
+function hasMatchingRoute(
+  routes: Array<{ pattern: string; regex: RegExp }>,
+  referencedPath: string
+) {
+  return routes.some((route) => route.regex.test(referencedPath));
+}
+
+function normalizeReferencedPath(path: string) {
+  return path.split(/[?#]/, 1)[0]?.replace(/\/+$/, '') || '/';
+}
+
+function shouldIgnoreRouteReference(path: string) {
+  return path.startsWith('/_next/') || isStaticAssetPath(path);
+}
+
+function isStaticAssetPath(path: string) {
+  const lastSegment = path.split('/').pop() ?? '';
+  return /\.[a-z0-9]+$/i.test(lastSegment);
+}
+
+function containsDynamicRoutePlaceholder(path: string) {
+  return /(^|\/)(?:\[\[?\.\.\.[^\]/]+\]\]|\[[^\]/]+\]|:[^/]+)(?=$|\/)/.test(path);
+}
+
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }

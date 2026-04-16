@@ -16,7 +16,16 @@ const ProgressIndicator = dynamic(() => import('./components/ProgressIndicator')
 const ProjectDatabasePanel = dynamic(() => import('./components/ProjectDatabasePanel'));
 
 export default function HomePage() {
-  const { state, generate, refineWithPrompt, regenerateFromBlueprint, download, reset } =
+  const {
+    state,
+    generate,
+    refineWithPrompt,
+    regenerateFromBlueprint,
+    cancelGeneration,
+    fixPreview,
+    download,
+    reset,
+  } =
     useProjectGenerator();
   const { user } = useAuth();
   const isLoading = !['idle', 'ready', 'error'].includes(state.stage);
@@ -49,11 +58,10 @@ export default function HomePage() {
           </div>
 
           <div className="flex items-center gap-3">
-            {state.stage !== 'idle' ? (
+            {state.stage !== 'idle' && !isLoading ? (
               <button
                 type="button"
                 onClick={() => void reset()}
-                disabled={isLoading}
                 className="theme-button-secondary rounded-full px-4 py-2 text-xs font-semibold transition hover:-translate-y-0.5 disabled:opacity-50"
               >
                 New project
@@ -136,6 +144,7 @@ export default function HomePage() {
               progress={state.progress}
               message={state.message}
               error={state.error}
+              onCancel={isLoading ? cancelGeneration : undefined}
             />
 
             {state.logs.length > 0 ? (
@@ -245,6 +254,7 @@ export default function HomePage() {
                 logs={state.logs}
                 isReady={state.stage === 'ready'}
                 files={state.project.files}
+                onFix={fixPreview}
               />
             </div>
 

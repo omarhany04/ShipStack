@@ -40,10 +40,6 @@ export async function repairGeneratedProject(
   let syntaxIssues = collectSyntaxIssues(workingFiles);
 
   for (let pass = 1; pass <= MAX_REPAIR_PASSES; pass += 1) {
-    if (syntaxIssues.length === 0) {
-      break;
-    }
-
     const targetPaths = pickRepairTargets(workingFiles, syntaxIssues, errorContext);
     if (targetPaths.length === 0) {
       break;
@@ -58,7 +54,8 @@ export async function repairGeneratedProject(
       }
 
       const fileIssues = syntaxIssues.filter((issue) => issue.path === targetPath);
-      let repairedContent = attemptLocalRepair(targetFile, blueprint, fileIssues, errorContext);
+      let repairedContent =
+        fileIssues.length > 0 ? attemptLocalRepair(targetFile, blueprint, fileIssues, errorContext) : null;
 
       if (!repairedContent) {
         repairedContent = await repairSingleFile(targetFile, blueprint, fileIssues, errorContext);
@@ -245,7 +242,7 @@ function buildRepairPrompt(
   const issueText =
     issues.length > 0
       ? issues.map((issue) => `- ${issue.path}:${issue.line}:${issue.column} ${issue.message}`).join('\n')
-      : '- Build failed but no parser diagnostics were available.';
+      : '- Preview/build/runtime errors were reported, but parser diagnostics were not available for this file.';
   const runtimeContext = summarizeErrorContext(errorContext, file.path);
   const runtimeText = runtimeContext
     ? `\nPreview/build error context:\n${runtimeContext}\n`
@@ -268,6 +265,8 @@ Rules:
 - Return the full corrected file content only.
 - Preserve the page's intent, layout, and styling as much as possible.
 - Fix malformed JSX, missing braces/parentheses, and broken props/imports caused by generation mistakes.
+- Fix runtime, routing, interaction, hydration, and client/server boundary issues when they appear in the error context.
+- Prefer sturdy, boring implementations over clever ones if that is what makes the page fully functional.
 - Do not add new dependencies.
 - Keep imports compatible with a default Next.js App Router project.
 
@@ -309,7 +308,13 @@ function summarizeErrorContext(errorContext: string | undefined, targetPath: str
     .split('\n')
     .map((line) => line.trim())
     .filter(Boolean);
-  const focused = lines.filter((line) => line.includes(targetPath) || /unexpected token|syntax error|failed to compile/i.test(line));
+  const focused = lines.filter(
+    (line) =>
+      line.includes(targetPath) ||
+      /unexpected token|syntax error|failed to compile|build error|runtime error|referenceerror|typeerror|hydration|module not found|cannot resolve|nonerroremittederror|expression expected|cannot read|is not defined|is not a function/i.test(
+        line
+      )
+  );
   const selected = focused.length > 0 ? focused.slice(-12) : lines.slice(-12);
   return selected.join('\n').slice(-1400);
 }

@@ -64,11 +64,19 @@ Focus on MVP scope. Generate 3-6 models, 8-15 endpoints, and 4-8 pages.`,
   - Avoid adding new npm dependencies unless they are clearly required and explicitly requested
   - Never leave image slots empty or point them at missing local assets
   - For demo content, prefer stable real Unsplash photo URLs such as getDemoImageUrl(...) or direct images.unsplash.com links
+  - When using getDemoImageUrl(...), pass a highly specific label derived from the product prompt, such as the real subject, setting, or item shown
+  - Do not use generic image labels like "demo photo", "placeholder image", or unrelated stock-photo subjects
   - Build polished, modern UI with a clear visual direction instead of generic boilerplate cards
   - Favor strong hierarchy, intentional typography, layered surfaces, and responsive layouts
+  - Use modern motion intentionally: staggered entrances, premium hover depth, animated metrics, and ambient visual movement when it strengthens the product
+  - Keep animations performant and purposeful, and always respect reduced-motion preferences
+  - Prefer simple, dependable implementations over ambitious abstractions whenever there is any risk of hydration or runtime errors
+  - The generated app must stay stable during initial render, navigation, scrolling, resizing, and common user interactions
   - Avoid repeating the same landing-page skeleton, spacing rhythm, or card layout across unrelated products
   - When given a design direction, commit to it and make the composition feel intentionally different
   - Keep interactions useful and working, not placeholder-only
+  - Every visible button, link, tab, and form control must map to a real route, real submission, or real state change
+  - Never use "#", "javascript:void(0)", or unresolved dynamic paths like "/items/[id]" as user-facing actions
   - Return complete runnable code
   - Include imports and error handling
   - Return ONLY code, with no markdown fences or explanation.`,

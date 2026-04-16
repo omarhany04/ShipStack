@@ -3,17 +3,32 @@ import { Blueprint } from '@/validators/blueprint.validator';
 export type ProjectImageContextInput =
   | string
   | ResolvedProjectImageContext
-  | Pick<Blueprint, 'projectName' | 'description' | 'features'>
+  | (Pick<Blueprint, 'projectName' | 'description' | 'features'> & {
+      resolvedImages?: ProjectImageSearchResult[];
+    })
   | {
       projectName?: string;
       description?: string;
       featureNames?: string[];
       themeHint?: string;
+      resolvedImages?: ProjectImageSearchResult[];
     };
+
+export type DemoImageOrientation = 'landscape' | 'portrait' | 'squarish';
+
+export type ProjectImageSlot = 'generic' | 'hero' | 'portrait' | 'gallery';
+
+export interface ProjectImageSearchResult {
+  slot: ProjectImageSlot;
+  query: string;
+  orientation: DemoImageOrientation;
+  urls: string[];
+}
 
 export interface ResolvedProjectImageContext {
   projectName: string;
   themeHint: string;
+  resolvedImages: ProjectImageSearchResult[];
 }
 
 const PORTRAIT_IMAGE_HINTS = [
@@ -216,7 +231,7 @@ const DEMO_IMAGE_CATEGORY_KEYWORDS = [
   },
 ] as const;
 
-type DemoImageCategory =
+export type DemoImageCategory =
   | (typeof DEMO_IMAGE_CATEGORY_KEYWORDS)[number]['category']
   | 'workspace';
 
@@ -288,7 +303,7 @@ const THEMED_UNSPLASH_LIBRARIES: Record<DemoImageCategory, string[]> = {
 };
 
 const LEGACY_DEMO_IMAGE_PATHS = new Set(
-  [...UNSPLASH_PORTRAIT_URLS, ...THEMED_UNSPLASH_LIBRARIES.workspace].map(
+  [...UNSPLASH_PORTRAIT_URLS, ...Object.values(THEMED_UNSPLASH_LIBRARIES).flat()].map(
     (url) => new URL(url).pathname
   )
 );
@@ -332,6 +347,50 @@ export function normalizeDemoLabel(value: unknown, fallback = 'Demo Photo') {
     .join(' ');
 }
 
+function normalizeResolvedProjectImages(input: unknown): ProjectImageSearchResult[] {
+  if (!Array.isArray(input)) {
+    return [];
+  }
+
+  return input
+    .map((entry): ProjectImageSearchResult | null => {
+      if (!entry || typeof entry !== 'object') {
+        return null;
+      }
+
+      const slot =
+        'slot' in entry && typeof entry.slot === 'string' ? entry.slot.toLowerCase() : 'generic';
+      const query = 'query' in entry && typeof entry.query === 'string' ? entry.query.trim() : '';
+      const orientation =
+        'orientation' in entry && typeof entry.orientation === 'string'
+          ? entry.orientation.toLowerCase()
+          : 'landscape';
+      const urls =
+        'urls' in entry && Array.isArray(entry.urls)
+          ? entry.urls.filter(
+              (value: unknown): value is string =>
+                typeof value === 'string' && value.trim().length > 0
+            )
+          : [];
+
+      if (
+        !isProjectImageSlot(slot) ||
+        !isDemoImageOrientation(orientation) ||
+        urls.length === 0
+      ) {
+        return null;
+      }
+
+      return {
+        slot,
+        query,
+        orientation,
+        urls,
+      };
+    })
+    .filter((entry): entry is ProjectImageSearchResult => Boolean(entry));
+}
+
 export function resolveProjectImageContext(
   input?: ProjectImageContextInput,
   fallbackProjectName = 'generated-app'
@@ -341,6 +400,7 @@ export function resolveProjectImageContext(
     return {
       projectName: sanitizeProjectName(normalizedName),
       themeHint: normalizeHintText(normalizedName) || 'modern product website',
+      resolvedImages: [],
     };
   }
 
@@ -357,6 +417,8 @@ export function resolveProjectImageContext(
           ? sanitizeProjectName(input.projectName.trim() || fallbackProjectName)
           : sanitizeProjectName(fallbackProjectName),
       themeHint: normalizeHintText(input.themeHint) || 'modern product website',
+      resolvedImages:
+        'resolvedImages' in input ? normalizeResolvedProjectImages(input.resolvedImages) : [],
     };
   }
 
@@ -391,6 +453,10 @@ export function resolveProjectImageContext(
   return {
     projectName: sanitizeProjectName(projectName),
     themeHint: themeHint || normalizeHintText(projectName) || 'modern product website',
+    resolvedImages:
+      input && typeof input === 'object' && 'resolvedImages' in input
+        ? normalizeResolvedProjectImages(input.resolvedImages)
+        : [],
   };
 }
 
@@ -408,7 +474,7 @@ export function buildStaticDemoImageUrl(
     [projectContext.themeHint, seed, normalizeDemoLabel(labelSource).toLowerCase()].join(' ')
   );
   const size = pickDemoImageSize(context);
-  const baseUrl = pickDemoImageBaseUrl(context);
+  const baseUrl = pickResolvedProjectImageUrl(context, projectContext) ?? pickDemoImageBaseUrl(context);
 
   return formatUnsplashUrl(baseUrl, size.width, size.height);
 }
@@ -441,17 +507,52 @@ export function replaceLegacyDemoImageUrls(
 }
 
 export function buildDemoMediaModule(projectContext: ResolvedProjectImageContext) {
-  return `const PROJECT_THEME_HINT = ${JSON.stringify(projectContext.themeHint)};
+  return `type DemoImageOrientation = 'landscape' | 'portrait' | 'squarish';
+type DemoImageCategory =
+  | 'food'
+  | 'travel'
+  | 'wellness'
+  | 'real-estate'
+  | 'retail'
+  | 'technology'
+  | 'healthcare'
+  | 'education'
+  | 'automotive'
+  | 'events'
+  | 'workspace';
+type ProjectImageSlot = 'generic' | 'hero' | 'portrait' | 'gallery';
+type ProjectImageSearchResult = {
+  slot: ProjectImageSlot;
+  query: string;
+  orientation: DemoImageOrientation;
+  urls: string[];
+};
 
-const PORTRAIT_IMAGE_HINTS = ${JSON.stringify(PORTRAIT_IMAGE_HINTS, null, 2)};
+const PROJECT_THEME_HINT = ${JSON.stringify(projectContext.themeHint)};
 
-const WIDE_IMAGE_HINTS = ${JSON.stringify(WIDE_IMAGE_HINTS, null, 2)};
+const PORTRAIT_IMAGE_HINTS: string[] = ${JSON.stringify(PORTRAIT_IMAGE_HINTS, null, 2)};
 
-const DEMO_IMAGE_CATEGORY_KEYWORDS = ${JSON.stringify(DEMO_IMAGE_CATEGORY_KEYWORDS, null, 2)};
+const WIDE_IMAGE_HINTS: string[] = ${JSON.stringify(WIDE_IMAGE_HINTS, null, 2)};
 
-const UNSPLASH_PORTRAIT_URLS = ${JSON.stringify(UNSPLASH_PORTRAIT_URLS, null, 2)};
+const DEMO_IMAGE_CATEGORY_KEYWORDS: Array<{ category: DemoImageCategory; keywords: string[] }> = ${JSON.stringify(
+    DEMO_IMAGE_CATEGORY_KEYWORDS,
+    null,
+    2
+  )};
 
-const THEMED_UNSPLASH_LIBRARIES = ${JSON.stringify(THEMED_UNSPLASH_LIBRARIES, null, 2)};
+const UNSPLASH_PORTRAIT_URLS: string[] = ${JSON.stringify(UNSPLASH_PORTRAIT_URLS, null, 2)};
+
+const THEMED_UNSPLASH_LIBRARIES: Record<DemoImageCategory, string[]> = ${JSON.stringify(
+    THEMED_UNSPLASH_LIBRARIES,
+    null,
+    2
+  )};
+
+const RESOLVED_PROJECT_IMAGES: ProjectImageSearchResult[] = ${JSON.stringify(
+    projectContext.resolvedImages,
+    null,
+    2
+  )};
 
 function coerceDemoString(value: unknown): string {
   if (typeof value === 'string') {
@@ -518,7 +619,7 @@ export function getDemoImageUrl(seed: string, label = 'Demo Photo', _variant?: s
   const normalizedLabel = normalizeDemoLabel(label).toLowerCase();
   const context = [PROJECT_THEME_HINT, normalizedSeed, normalizedLabel].filter(Boolean).join(' ');
   const size = pickDemoImageSize(context);
-  const baseUrl = pickDemoImageBaseUrl(context);
+  const baseUrl = pickResolvedProjectImageUrl(context) ?? pickDemoImageBaseUrl(context);
 
   return formatUnsplashUrl(baseUrl, size.width, size.height);
 }
@@ -546,14 +647,92 @@ function pickDemoImageBaseUrl(context: string) {
   return library[hashString(context) % library.length];
 }
 
-function detectDemoImageCategory(context: string) {
+function pickResolvedProjectImageUrl(context: string) {
+  if (!Array.isArray(RESOLVED_PROJECT_IMAGES) || RESOLVED_PROJECT_IMAGES.length === 0) {
+    return null;
+  }
+
+  const slot = detectProjectImageSlot(context);
+  const slotOrder = getResolvedImageSlotOrder(slot);
+
+  for (const nextSlot of slotOrder) {
+    const matches = RESOLVED_PROJECT_IMAGES.filter((entry) => entry.slot === nextSlot);
+    if (matches.length === 0) {
+      continue;
+    }
+
+    const urls = matches.flatMap((entry) => Array.isArray(entry.urls) ? entry.urls : []).filter(Boolean);
+    if (urls.length === 0) {
+      continue;
+    }
+
+    return urls[hashString(context + ':' + nextSlot) % urls.length];
+  }
+
+  return null;
+}
+
+function detectProjectImageSlot(context: string) {
+  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+    return 'portrait';
+  }
+
+  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+    return 'hero';
+  }
+
+  if (
+    [
+      'gallery',
+      'product',
+      'menu',
+      'listing',
+      'thumbnail',
+      'card',
+      'detail',
+      'interior',
+      'vehicle',
+      'property',
+      'dish',
+    ].some((hint) => context.includes(hint))
+  ) {
+    return 'gallery';
+  }
+
+  return 'generic';
+}
+
+function getResolvedImageSlotOrder(slot: ProjectImageSlot): ProjectImageSlot[] {
+  switch (slot) {
+    case 'hero':
+      return ['hero', 'gallery', 'generic'];
+    case 'portrait':
+      return ['portrait', 'generic', 'hero'];
+    case 'gallery':
+      return ['gallery', 'hero', 'generic'];
+    case 'generic':
+    default:
+      return ['generic', 'hero', 'gallery'];
+  }
+}
+
+function detectDemoImageCategory(context: string): DemoImageCategory {
+  const normalizedContext = normalizeHintText(context);
   for (const entry of DEMO_IMAGE_CATEGORY_KEYWORDS) {
-    if (entry.keywords.some((keyword) => context.includes(keyword))) {
+    if (entry.keywords.some((keyword) => normalizedContext.includes(keyword))) {
       return entry.category;
     }
   }
 
   return 'workspace';
+}
+
+function normalizeHintText(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/[_-]+/g, ' ')
+    .replace(/\\s+/g, ' ')
+    .trim();
 }
 
 function hashString(value: string) {
@@ -642,14 +821,95 @@ function pickDemoImageBaseUrl(context: string) {
   return library[hashString(context) % library.length];
 }
 
-function detectDemoImageCategory(context: string): DemoImageCategory {
+function pickResolvedProjectImageUrl(
+  context: string,
+  projectContext: ResolvedProjectImageContext
+) {
+  if (projectContext.resolvedImages.length === 0) {
+    return null;
+  }
+
+  const slot = detectProjectImageSlot(context);
+  const slotOrder = getResolvedImageSlotOrder(slot);
+
+  for (const nextSlot of slotOrder) {
+    const matches = projectContext.resolvedImages.filter((entry) => entry.slot === nextSlot);
+    if (matches.length === 0) {
+      continue;
+    }
+
+    const urls = matches.flatMap((entry) => entry.urls).filter(Boolean);
+    if (urls.length === 0) {
+      continue;
+    }
+
+    return urls[hashString(`${context}:${nextSlot}`) % urls.length];
+  }
+
+  return null;
+}
+
+function detectProjectImageSlot(context: string): ProjectImageSlot {
+  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+    return 'portrait';
+  }
+
+  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+    return 'hero';
+  }
+
+  if (
+    [
+      'gallery',
+      'product',
+      'menu',
+      'listing',
+      'thumbnail',
+      'card',
+      'detail',
+      'interior',
+      'vehicle',
+      'property',
+      'dish',
+    ].some((hint) => context.includes(hint))
+  ) {
+    return 'gallery';
+  }
+
+  return 'generic';
+}
+
+function getResolvedImageSlotOrder(slot: ProjectImageSlot): ProjectImageSlot[] {
+  switch (slot) {
+    case 'hero':
+      return ['hero', 'gallery', 'generic'];
+    case 'portrait':
+      return ['portrait', 'generic', 'hero'];
+    case 'gallery':
+      return ['gallery', 'hero', 'generic'];
+    case 'generic':
+    default:
+      return ['generic', 'hero', 'gallery'];
+  }
+}
+
+export function detectDemoImageCategory(context: string): DemoImageCategory {
+  const normalizedContext = normalizeHintText(context);
   for (const entry of DEMO_IMAGE_CATEGORY_KEYWORDS) {
-    if (entry.keywords.some((keyword) => context.includes(keyword))) {
+    if (entry.keywords.some((keyword) => normalizedContext.includes(keyword))) {
       return entry.category;
     }
   }
 
   return 'workspace';
+}
+
+function isProjectImageSlot(value: string): value is ProjectImageSlot {
+  return ['generic', 'hero', 'portrait', 'gallery'].includes(value);
+}
+
+function isDemoImageOrientation(value: string): value is DemoImageOrientation {
+  return ['landscape', 'portrait', 'squarish'].includes(value);
 }
 
 function formatUnsplashUrl(rawUrl: string, width: number, height: number) {

@@ -7,6 +7,7 @@ interface ProgressIndicatorProps {
   progress: number;
   message: string;
   error: string | null;
+  onCancel?: () => void | Promise<void>;
 }
 
 const PIPELINE_STEPS: Array<{
@@ -46,6 +47,7 @@ export default function ProgressIndicator({
   progress,
   message,
   error,
+  onCancel,
 }: ProgressIndicatorProps) {
   if (stage === 'idle') {
     return null;
@@ -53,6 +55,7 @@ export default function ProgressIndicator({
 
   const currentStepIndex = PIPELINE_STEPS.findIndex((step) => step.stages.includes(stage));
   const currentStep = PIPELINE_STEPS[currentStepIndex] ?? PIPELINE_STEPS[0];
+  const showCancelButton = !error && stage !== 'ready' && Boolean(onCancel);
 
   return (
     <div className="glass-panel-strong mx-auto w-full max-w-5xl animate-fade-up overflow-hidden rounded-[32px] p-5 shadow-[0_28px_100px_rgba(15,23,42,0.12)] sm:p-6">
@@ -69,10 +72,24 @@ export default function ProgressIndicator({
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          <StatusChip label="Progress" value={`${Math.round(progress)}%`} tone="accent" />
-          <StatusChip label="Current stage" value={currentStep.label} />
-          <StatusChip label="State" value={error ? 'Needs attention' : 'Running'} tone={error ? 'danger' : 'success'} />
+        <div className="flex flex-col gap-3 sm:items-end">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <StatusChip label="Progress" value={`${Math.round(progress)}%`} tone="accent" />
+            <StatusChip label="Current stage" value={currentStep.label} />
+            <StatusChip label="State" value={error ? 'Needs attention' : 'Running'} tone={error ? 'danger' : 'success'} />
+          </div>
+
+          {showCancelButton ? (
+            <button
+              type="button"
+              onClick={() => {
+                void onCancel?.();
+              }}
+              className="theme-status-danger inline-flex rounded-full px-4 py-2 text-sm font-semibold transition hover:bg-rose-100"
+            >
+              Cancel operation
+            </button>
+          ) : null}
         </div>
       </div>
 

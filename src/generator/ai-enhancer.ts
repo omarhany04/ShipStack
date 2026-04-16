@@ -163,10 +163,16 @@ Image theme: ${imageTheme}
   - Include a strong hero, quick navigation/actions, product highlights, and operational credibility sections
   - Use a layout composition that feels distinct for this design direction instead of a safe default hero + three cards pattern
   - Vary the information architecture, spacing, and section rhythm so different runs can look meaningfully different
+  - Include richer motion direction using the generated global classes when useful, such as scroll-reveal entrances, route-card depth, hero-stat-card surfaces, nav-chip navigation, and animated metrics
+  - Keep motion professional and restrained: premium hover behavior, staggered reveals, and layered ambient movement instead of gimmicks
+  - Respect reduced-motion users and avoid animations that block reading or interaction
+  - Keep the implementation resilient: no fragile browser-only code during render, no hydration traps, and no interactions that break during scroll or navigation
   - Use Tailwind CSS only
   - Use only built-in Next.js or React imports plus local modules that are guaranteed to exist in the generated app
-  - If you use local UI imports, limit them to '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/components/ui/input', '@/components/ui/textarea', '@/components/ui/label', '@/components/ui/separator', '@/components/ui/sparkles-core', '@/lib/demo-media', and '@/lib/utils'
+  - If you use local UI imports, limit them to '@/components/AnimatedNumber', '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/components/ui/input', '@/components/ui/textarea', '@/components/ui/label', '@/components/ui/separator', '@/components/ui/sparkles-core', '@/lib/demo-media', and '@/lib/utils'
   - Prefer importing getDemoImageUrl from '@/lib/demo-media' instead of hardcoding image URLs
+  - When you call getDemoImageUrl, use descriptive prompt-aware labels like "vegan meal hero", "boutique hotel suite", or "trainer portrait" rather than generic labels
+  - ShipStack can resolve those labels to prompt-aware internet photo URLs, so make the subject matter explicit
   - For any hero image, avatar, product card, testimonial, gallery, or illustration slot, use theme-specific real photos that match this product domain: ${imageTheme}
   - Avoid corporate office, desk, laptop, or workspace photography unless the product itself is clearly about B2B software, offices, or developer tools
   - Never reference missing local image files or leave src/image props empty
@@ -174,6 +180,7 @@ Image theme: ${imageTheme}
   - Prefer inline SVG, text treatments, and Tailwind styling instead of external icon or animation dependencies
   - Keep it fully responsive
   - Use real sections and working links to the generated routes
+  - Do not include placeholder buttons, "#" links, or unresolved dynamic URLs like "/products/[id]"
   - Return ONLY the complete file code.`;
 }
 
@@ -191,11 +198,16 @@ function buildDashboardPrompt(blueprint: Blueprint, designProfile: DesignProfile
   - Use Tailwind CSS
   - Include loading and error states
   - Match this design direction: ${summarizeDesignProfile(designProfile)}
+  - Use premium motion patterns that fit dashboards: animated counters, staggered card entrances, hover depth, and restrained ambient polish
+  - Reuse the generated motion-friendly classes where helpful, including scroll-reveal, route-card, hero-stat-card, and nav-chip
+  - Respect reduced-motion users and keep motion fast and readable
   - Use only built-in Next.js or React imports plus local modules that are guaranteed to exist in the generated app
-  - If you use local UI imports, limit them to '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/lib/demo-media', and '@/lib/utils'
+  - If you use local UI imports, limit them to '@/components/AnimatedNumber', '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/lib/demo-media', and '@/lib/utils'
   - If the dashboard includes avatars, covers, or any image fields, populate them with product-appropriate photos for this domain: ${imageTheme}
+  - Prefer getDemoImageUrl with explicit subject labels so ShipStack can resolve prompt-aware internet photos for each image slot
   - Avoid office/workspace stock photography unless this product is explicitly about business software or operations
   - Do not import icon packs, chart libraries, animation libraries, or any package that is not already included in the generated project
+  - Keep every dashboard action wired to a real route or a real state change; no dead buttons or placeholder links
 
   Return ONLY the component code.`;
 }

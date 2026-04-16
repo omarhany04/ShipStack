@@ -55,6 +55,7 @@ export function generateFrontendFiles(
     generateSharedTypes(blueprint),
     generateLoadingStateComponent(),
     generateEmptyStateComponent(),
+    generateAnimatedNumberComponent(),
     generateCollectionExplorerComponent(),
     generateDashboardComponent(blueprint, designProfile),
   ];
@@ -81,6 +82,7 @@ function generateRootLayout(blueprint: Blueprint, designProfile: DesignProfile):
     path: 'src/app/layout.tsx',
     content: dedent(`
       import type { Metadata } from 'next';
+      import Link from 'next/link';
       import { ${headingFont.importName}, ${bodyFont.importName} } from 'next/font/google';
       import '@/app/globals.css';
       import { Navigation } from '@/components/Navigation';
@@ -105,11 +107,38 @@ function generateRootLayout(blueprint: Blueprint, designProfile: DesignProfile):
             <body
               className={[${headingFont.constName}.variable, ${bodyFont.constName}.variable, 'app-shell'].join(' ')}
             >
-              <div className="pointer-events-none fixed inset-0 -z-10 soft-grid opacity-[0.16]" />
+              <div aria-hidden="true" className="pointer-events-none fixed inset-0 -z-20 overflow-hidden">
+                <div
+                  className="absolute left-[-8rem] top-[-7rem] h-[26rem] w-[26rem] rounded-full blur-3xl opacity-70"
+                  style={{
+                    background: 'radial-gradient(circle, rgba(255,255,255,0.34), transparent 68%)',
+                    animation: 'drift-orb 22s ease-in-out infinite',
+                  }}
+                />
+                <div
+                  className="absolute right-[-6rem] top-[10%] h-[22rem] w-[22rem] rounded-full blur-3xl opacity-60"
+                  style={{
+                    background: 'radial-gradient(circle, var(--glow-b), transparent 70%)',
+                    animation: 'drift-orb 19s ease-in-out infinite reverse',
+                  }}
+                />
+                <div
+                  className="absolute bottom-[-8rem] left-[18%] h-[24rem] w-[24rem] rounded-full blur-3xl opacity-55"
+                  style={{
+                    background: 'radial-gradient(circle, var(--glow-a), transparent 68%)',
+                    animation: 'drift-orb 24s ease-in-out infinite',
+                  }}
+                />
+                <div className="ambient-noise absolute inset-0" />
+              </div>
+              <div
+                className="pointer-events-none fixed inset-0 -z-10 soft-grid opacity-[0.14]"
+                style={{ maskImage: 'radial-gradient(circle at center, black, transparent 82%)' }}
+              />
               <Navigation />
               <main className="shell-container">{children}</main>
               <footer className="px-4 pb-12 sm:px-6 lg:px-8">
-                <div className="mx-auto flex max-w-7xl flex-col gap-5 rounded-[30px] border border-white/60 bg-white/72 px-6 py-6 shadow-[0_18px_60px_rgba(15,23,42,0.07)] backdrop-blur xl:flex-row xl:items-center xl:justify-between">
+                <div className="glass-bar scroll-reveal motion-delay-4 mx-auto flex max-w-7xl flex-col gap-5 rounded-[30px] px-6 py-6 xl:flex-row xl:items-center xl:justify-between">
                   <div className="space-y-2">
                     <p className="card-label">${designProfile.accentLabel}</p>
                     <h2 className="text-xl font-semibold text-slate-950">${toTitleCase(blueprint.projectName)}</h2>
@@ -118,14 +147,15 @@ function generateRootLayout(blueprint: Blueprint, designProfile: DesignProfile):
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {footerLinks.map((item: { name: string; route: string }) => (
-                      <a
+                    {footerLinks.map((item: { name: string; route: string }, index: number) => (
+                      <Link
                         key={item.route}
                         href={item.route}
-                        className="rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950"
+                        className="nav-chip scroll-reveal"
+                        style={{ animationDelay: \`\${index * 80}ms\` }}
                       >
                         {item.name}
-                      </a>
+                      </Link>
                     ))}
                   </div>
                 </div>
@@ -148,16 +178,21 @@ function generateNavigation(blueprint: Blueprint, designProfile: DesignProfile):
   return {
     path: 'src/components/Navigation.tsx',
     content: dedent(`
+      'use client';
+
       import Link from 'next/link';
+      import { usePathname } from 'next/navigation';
 
       const navigationLinks = ${navigationLinks};
 
       export function Navigation() {
+        const pathname = usePathname();
+
         return (
           <header className="px-4 pt-4 sm:px-6 lg:px-8">
-            <div className="mx-auto flex max-w-7xl flex-col gap-4 rounded-[34px] border border-white/70 bg-white/70 px-4 py-4 shadow-[0_24px_80px_rgba(15,23,42,0.08)] backdrop-blur xl:flex-row xl:items-center xl:justify-between xl:px-6">
+            <div className="glass-bar fade-in-up motion-delay-1 mx-auto flex max-w-7xl flex-col gap-4 rounded-[34px] px-4 py-4 xl:flex-row xl:items-center xl:justify-between xl:px-6">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center">
-                <Link href="/" className="flex items-center gap-3">
+                <Link href="/" className="flex items-center gap-3 transition duration-300 hover:-translate-y-0.5">
                   <span className="flex h-11 w-11 items-center justify-center rounded-2xl text-sm font-bold text-white shadow-[0_14px_30px_rgba(15,23,42,0.2)]" style={{ background: 'linear-gradient(135deg, var(--accent), var(--secondary))' }}>
                     ${getMonogram(blueprint.projectName)}
                   </span>
@@ -168,15 +203,23 @@ function generateNavigation(blueprint: Blueprint, designProfile: DesignProfile):
                 </Link>
 
                 <nav className="flex gap-2 overflow-x-auto pb-1 xl:pb-0 xl:pl-6">
-                  {navigationLinks.map((item: { name: string; route: string }) => (
-                    <Link
-                      key={item.route}
-                      href={item.route}
-                      className="whitespace-nowrap rounded-full border border-slate-200/80 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:-translate-y-0.5 hover:border-slate-300 hover:text-slate-950"
-                    >
-                      {item.name}
-                    </Link>
-                  ))}
+                  {navigationLinks.map((item: { name: string; route: string }, index: number) => {
+                    const isActive =
+                      item.route === '/'
+                        ? pathname === '/'
+                        : pathname === item.route || pathname.startsWith(item.route + '/');
+
+                    return (
+                      <Link
+                        key={item.route}
+                        href={item.route}
+                        className={isActive ? 'nav-chip nav-chip-active fade-in-up' : 'nav-chip fade-in-up'}
+                        style={{ animationDelay: \`\${120 + index * 70}ms\` }}
+                      >
+                        {item.name}
+                      </Link>
+                    );
+                  })}
                 </nav>
               </div>
 
@@ -266,7 +309,7 @@ function generateLoadingStateComponent(): GeneratedFile {
         return (
           <div
             className={[
-              'surface-panel rounded-[28px] border border-white/70 text-center',
+              'surface-panel scroll-reveal rounded-[28px] border border-white/70 text-center',
               compact ? 'px-5 py-6' : 'px-6 py-10',
             ].join(' ')}
           >
@@ -304,7 +347,7 @@ function generateEmptyStateComponent(): GeneratedFile {
         actionHref,
       }: EmptyStateProps) {
         return (
-          <div className="empty-panel">
+          <div className="empty-panel scroll-reveal">
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent-strong)]">
               0
             </div>
@@ -326,6 +369,81 @@ function generateEmptyStateComponent(): GeneratedFile {
   };
 }
 
+function generateAnimatedNumberComponent(): GeneratedFile {
+  return {
+    path: 'src/components/AnimatedNumber.tsx',
+    content: dedent(`
+      'use client';
+
+      import { useEffect, useRef, useState } from 'react';
+
+      interface AnimatedNumberProps {
+        value: number;
+        className?: string;
+        durationMs?: number;
+        compact?: boolean;
+      }
+
+      export function AnimatedNumber({
+        value,
+        className,
+        durationMs = 900,
+        compact = false,
+      }: AnimatedNumberProps) {
+        const [displayValue, setDisplayValue] = useState(0);
+        const previousValueRef = useRef(0);
+
+        useEffect(() => {
+          if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            previousValueRef.current = value;
+            setDisplayValue(value);
+            return;
+          }
+
+          const startValue = previousValueRef.current;
+          const delta = value - startValue;
+          if (delta === 0) {
+            setDisplayValue(value);
+            return;
+          }
+
+          const startTime = performance.now();
+          let frameId = 0;
+
+          const step = (now: number) => {
+            const progress = Math.min((now - startTime) / durationMs, 1);
+            const eased = 1 - Math.pow(1 - progress, 4);
+            const nextValue = Math.round(startValue + delta * eased);
+
+            setDisplayValue(nextValue);
+
+            if (progress < 1) {
+              frameId = window.requestAnimationFrame(step);
+            } else {
+              previousValueRef.current = value;
+            }
+          };
+
+          frameId = window.requestAnimationFrame(step);
+
+          return () => {
+            window.cancelAnimationFrame(frameId);
+          };
+        }, [durationMs, value]);
+
+        const formatter = new Intl.NumberFormat(
+          undefined,
+          compact ? { notation: 'compact', maximumFractionDigits: 1 } : undefined
+        );
+
+        return <span className={className}>{formatter.format(displayValue)}</span>;
+      }
+    `),
+    source: 'template',
+    description: 'Generated animated number component',
+  };
+}
+
 function generateCollectionExplorerComponent(): GeneratedFile {
   return {
     path: 'src/components/CollectionExplorer.tsx',
@@ -334,7 +452,8 @@ function generateCollectionExplorerComponent(): GeneratedFile {
 
       import Link from 'next/link';
       import { startTransition, useDeferredValue, useEffect, useState } from 'react';
-      import { EmptyState } from '@/components/EmptyState';
+      import type { FormEvent } from 'react';
+      import { AnimatedNumber } from '@/components/AnimatedNumber';
       import { LoadingState } from '@/components/LoadingState';
       import type { CollectionFieldMeta } from '@/types';
 
@@ -343,11 +462,17 @@ function generateCollectionExplorerComponent(): GeneratedFile {
         description: string;
         endpoint: string;
         fields: CollectionFieldMeta[];
+        formFields?: CollectionFieldMeta[];
         primaryField: string;
         secondaryField?: string;
         accentLabel?: string;
         searchPlaceholder?: string;
         relatedRoutes?: Array<{ name: string; route: string }>;
+        recordEndpointBase?: string | null;
+        canCreate?: boolean;
+        canUpdate?: boolean;
+        canDelete?: boolean;
+        updateMethod?: 'PUT' | 'PATCH';
       }
 
       interface ExplorerMeta {
@@ -369,11 +494,17 @@ function generateCollectionExplorerComponent(): GeneratedFile {
         description,
         endpoint,
         fields,
+        formFields = [],
         primaryField,
         secondaryField,
         accentLabel = 'Live collection',
         searchPlaceholder = 'Search records',
         relatedRoutes = [],
+        recordEndpointBase = null,
+        canCreate = false,
+        canUpdate = false,
+        canDelete = false,
+        updateMethod = 'PUT',
       }: CollectionExplorerProps) {
         const [search, setSearch] = useState('');
         const deferredSearch = useDeferredValue(search);
@@ -383,6 +514,14 @@ function generateCollectionExplorerComponent(): GeneratedFile {
         const [meta, setMeta] = useState<ExplorerMeta>(INITIAL_META);
         const [isLoading, setIsLoading] = useState(true);
         const [error, setError] = useState<string | null>(null);
+        const [isFormOpen, setIsFormOpen] = useState(false);
+        const [formMode, setFormMode] = useState<'create' | 'edit'>('create');
+        const [activeId, setActiveId] = useState<string | null>(null);
+        const [draft, setDraft] = useState<Record<string, unknown>>(() => createDraft(formFields));
+        const [isSubmitting, setIsSubmitting] = useState(false);
+        const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+        const [submitError, setSubmitError] = useState<string | null>(null);
+        const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
         useEffect(() => {
           const controller = new AbortController();
@@ -440,10 +579,157 @@ function generateCollectionExplorerComponent(): GeneratedFile {
           return () => controller.abort();
         }, [endpoint, deferredSearch, page, reloadKey]);
 
+        useEffect(() => {
+          setDraft(createDraft(formFields));
+        }, [formFields]);
+
         const visibleFields = fields.slice(0, 5);
+        const hasRecordActions = Boolean(recordEndpointBase) && (canUpdate || canDelete);
+        const actionSummary = describeAvailableActions(canCreate, canUpdate, canDelete);
+
+        function openCreateForm() {
+          setFormMode('create');
+          setActiveId(null);
+          setDraft(createDraft(formFields));
+          setSubmitError(null);
+          setSuccessMessage(null);
+          setIsFormOpen(true);
+        }
+
+        function openEditForm(row: Record<string, unknown>) {
+          const rowId = getRowId(row);
+          if (!rowId) {
+            setSubmitError('This record cannot be edited because it is missing an id.');
+            return;
+          }
+
+          setFormMode('edit');
+          setActiveId(rowId);
+          setDraft(createDraft(formFields, row));
+          setSubmitError(null);
+          setSuccessMessage(null);
+          setIsFormOpen(true);
+        }
+
+        function closeForm() {
+          setFormMode('create');
+          setActiveId(null);
+          setDraft(createDraft(formFields));
+          setSubmitError(null);
+          setIsFormOpen(false);
+        }
+
+        function updateDraftValue(fieldName: string, value: unknown) {
+          setDraft((current) => ({
+            ...current,
+            [fieldName]: value,
+          }));
+        }
+
+        async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+          event.preventDefault();
+
+          const isEditing = formMode === 'edit';
+          if ((!isEditing && !canCreate) || (isEditing && !canUpdate)) {
+            return;
+          }
+
+          const requestUrl =
+            isEditing && recordEndpointBase && activeId
+              ? buildRecordUrl(recordEndpointBase, activeId)
+              : endpoint;
+
+          if (!requestUrl) {
+            setSubmitError('This collection is missing a writable endpoint.');
+            return;
+          }
+
+          setIsSubmitting(true);
+          setSubmitError(null);
+          setSuccessMessage(null);
+
+          try {
+            const response = await fetch(requestUrl, {
+              method: isEditing ? updateMethod : 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(buildPayload(draft, formFields)),
+            });
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+              throw new Error(
+                typeof payload?.error === 'string'
+                  ? payload.error
+                  : isEditing
+                    ? 'Failed to update record.'
+                    : 'Failed to create record.'
+              );
+            }
+
+            closeForm();
+            setSuccessMessage(isEditing ? 'Record updated successfully.' : 'Record created successfully.');
+            startTransition(() => {
+              setPage(1);
+              setReloadKey((current) => current + 1);
+            });
+          } catch (submitIssue) {
+            setSubmitError(
+              submitIssue instanceof Error ? submitIssue.message : 'Could not save this record.'
+            );
+          } finally {
+            setIsSubmitting(false);
+          }
+        }
+
+        async function handleDelete(row: Record<string, unknown>) {
+          if (!canDelete || !recordEndpointBase) {
+            return;
+          }
+
+          const rowId = getRowId(row);
+          if (!rowId) {
+            setSubmitError('This record cannot be deleted because it is missing an id.');
+            return;
+          }
+
+          const confirmed = window.confirm('Delete this record? This action cannot be undone.');
+          if (!confirmed) {
+            return;
+          }
+
+          setPendingDeleteId(rowId);
+          setSubmitError(null);
+          setSuccessMessage(null);
+
+          try {
+            const response = await fetch(buildRecordUrl(recordEndpointBase, rowId), {
+              method: 'DELETE',
+            });
+            const payload = await response.json().catch(() => null);
+
+            if (!response.ok || payload?.success === false) {
+              throw new Error(
+                typeof payload?.error === 'string' ? payload.error : 'Failed to delete record.'
+              );
+            }
+
+            setSuccessMessage('Record deleted successfully.');
+            startTransition(() => {
+              setReloadKey((current) => current + 1);
+            });
+          } catch (deleteIssue) {
+            setSubmitError(
+              deleteIssue instanceof Error ? deleteIssue.message : 'Could not delete this record.'
+            );
+          } finally {
+            setPendingDeleteId(null);
+          }
+        }
 
         return (
-          <section className="surface-panel-strong rounded-[32px] px-5 py-5 sm:px-6">
+          <section className="surface-panel-strong scroll-reveal rounded-[32px] px-5 py-5 sm:px-6">
             <div className="flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-3">
                 <span className="stat-pill">{accentLabel}</span>
@@ -478,29 +764,43 @@ function generateCollectionExplorerComponent(): GeneratedFile {
                 >
                   Refresh
                 </button>
+                {canCreate ? (
+                  <button type="button" onClick={openCreateForm} className="primary-action">
+                    Add record
+                  </button>
+                ) : null}
               </div>
             </div>
 
             <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1.4fr)_minmax(280px,0.75fr)]">
               <div className="grid gap-4 sm:grid-cols-3">
-                <div className="metric-card">
+                <div className="metric-card scroll-reveal motion-delay-1">
                   <p className="card-label">Records</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-950">{formatNumber(meta.total)}</p>
+                  <p className="mt-3 text-3xl font-bold text-slate-950">
+                    <AnimatedNumber value={meta.total} />
+                  </p>
                   <p className="mt-2 text-sm text-slate-500">Live records fetched from the generated API.</p>
                 </div>
-                <div className="metric-card">
+                <div className="metric-card scroll-reveal motion-delay-2">
                   <p className="card-label">Endpoint</p>
                   <p className="mt-3 text-lg font-semibold text-slate-950">{endpoint}</p>
                   <p className="mt-2 text-sm text-slate-500">Search, pagination, and create/update support stay connected.</p>
                 </div>
-                <div className="metric-card">
+                <div className="metric-card scroll-reveal motion-delay-3">
                   <p className="card-label">Fields shown</p>
-                  <p className="mt-3 text-3xl font-bold text-slate-950">{visibleFields.length}</p>
+                  <p className="mt-3 text-3xl font-bold text-slate-950">
+                    <AnimatedNumber value={visibleFields.length} />
+                  </p>
                   <p className="mt-2 text-sm text-slate-500">Optimized for fast scanning on desktop and mobile.</p>
+                </div>
+                <div className="metric-card scroll-reveal motion-delay-4">
+                  <p className="card-label">Workflow</p>
+                  <p className="mt-3 text-lg font-semibold text-slate-950">{actionSummary}</p>
+                  <p className="mt-2 text-sm text-slate-500">Generated controls stay wired to real API routes.</p>
                 </div>
               </div>
 
-              <div className="feature-card">
+              <div className="feature-card scroll-reveal motion-delay-5">
                 <p className="card-label">Related routes</p>
                 <div className="mt-4 flex flex-wrap gap-2">
                   {relatedRoutes.length > 0 ? (
@@ -508,7 +808,7 @@ function generateCollectionExplorerComponent(): GeneratedFile {
                       <Link
                         key={route.route}
                         href={route.route}
-                        className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-600 transition hover:-translate-y-0.5 hover:text-slate-950"
+                        className="nav-chip"
                       >
                         {route.name}
                       </Link>
@@ -520,11 +820,77 @@ function generateCollectionExplorerComponent(): GeneratedFile {
               </div>
             </div>
 
+            {successMessage ? (
+              <div className="mt-6 rounded-[24px] border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 scroll-reveal motion-delay-1">
+                {successMessage}
+              </div>
+            ) : null}
+
+            {submitError ? (
+              <div className="mt-6 rounded-[24px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700 scroll-reveal motion-delay-2">
+                {submitError}
+              </div>
+            ) : null}
+
+            {isFormOpen ? (
+              <div className="detail-card scroll-reveal motion-delay-2 mt-6 px-5 py-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="card-label">{formMode === 'edit' ? 'Editing record' : 'Create record'}</p>
+                    <h3 className="mt-2 text-xl font-semibold text-slate-950">
+                      {formMode === 'edit' ? 'Update the selected row' : 'Add a new row to this collection'}
+                    </h3>
+                    <p className="mt-2 text-sm leading-7 text-slate-500">
+                      {formFields.length > 0
+                        ? 'The generated form mirrors the writable fields from the API route.'
+                        : 'This endpoint does not expose editable fields, so ShipStack will send an empty payload.'}
+                    </p>
+                  </div>
+                  <button type="button" onClick={closeForm} className="secondary-action">
+                    Close
+                  </button>
+                </div>
+
+                <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                  {formFields.length > 0 ? (
+                    <div className="grid gap-4 md:grid-cols-2">
+                      {formFields.map((field) => (
+                        <label key={field.name} className="space-y-2">
+                          <span className="text-sm font-semibold text-slate-700">
+                            {field.label}
+                            {field.required ? ' *' : ''}
+                          </span>
+                          {renderFieldEditor(field, draft[field.name], (value) => {
+                            updateDraftValue(field.name, value);
+                          })}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+
+                  <div className="flex flex-wrap gap-3">
+                    <button type="submit" disabled={isSubmitting} className="primary-action disabled:cursor-not-allowed disabled:opacity-60">
+                      {isSubmitting
+                        ? formMode === 'edit'
+                          ? 'Saving changes...'
+                          : 'Creating record...'
+                        : formMode === 'edit'
+                          ? 'Save changes'
+                          : 'Create record'}
+                    </button>
+                    <button type="button" onClick={closeForm} className="secondary-action" disabled={isSubmitting}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            ) : null}
+
             <div className="mt-6">
               {isLoading ? (
                 <LoadingState compact title="Loading live collection" description="Querying the generated API route and preparing responsive table rows." />
               ) : error ? (
-                <div className="empty-panel !text-left">
+                <div className="empty-panel !text-left scroll-reveal motion-delay-3">
                   <h3 className="text-lg font-semibold text-slate-950">Connection issue</h3>
                   <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">{error}</p>
                   <button
@@ -540,24 +906,35 @@ function generateCollectionExplorerComponent(): GeneratedFile {
                   </button>
                 </div>
               ) : rows.length === 0 ? (
-                <EmptyState
-                  title="No records yet"
-                  description="This collection is ready, but it does not have rows yet. Seed some data or create a record through the generated API."
-                />
+                <div className="empty-panel !text-left scroll-reveal motion-delay-3">
+                  <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[var(--accent-soft)] text-sm font-semibold text-[var(--accent-strong)]">
+                    0
+                  </div>
+                  <h3 className="mt-4 text-lg font-semibold text-slate-950">No records yet</h3>
+                  <p className="mx-auto mt-2 max-w-2xl text-sm leading-7 text-slate-500">
+                    This collection is ready and connected to its generated API routes. Add a record to verify the full create, read, update, and delete flow.
+                  </p>
+                  {canCreate ? (
+                    <button type="button" onClick={openCreateForm} className="primary-action mt-6">
+                      Create the first record
+                    </button>
+                  ) : null}
+                </div>
               ) : (
                 <div className="space-y-5">
-                  <div className="table-shell hidden overflow-x-auto lg:block">
+                  <div className="table-shell scroll-reveal hidden overflow-x-auto lg:block">
                     <table className="data-table">
                       <thead>
                         <tr>
                           {visibleFields.map((field) => (
                             <th key={field.name}>{field.label}</th>
                           ))}
+                          {hasRecordActions ? <th className="text-right">Actions</th> : null}
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-200/80">
                         {rows.map((row, rowIndex) => (
-                          <tr key={String(row.id ?? rowIndex)}>
+                          <tr key={String(row.id ?? rowIndex)} className="transition duration-300 hover:bg-slate-50/85">
                             {visibleFields.map((field) => (
                               <td key={field.name}>
                                 <div className="font-medium text-slate-700">
@@ -565,6 +942,33 @@ function generateCollectionExplorerComponent(): GeneratedFile {
                                 </div>
                               </td>
                             ))}
+                            {hasRecordActions ? (
+                              <td>
+                                <div className="flex justify-end gap-2">
+                                  {canUpdate ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => openEditForm(row)}
+                                      className="secondary-action !px-4 !py-2"
+                                    >
+                                      Edit
+                                    </button>
+                                  ) : null}
+                                  {canDelete ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        void handleDelete(row);
+                                      }}
+                                      disabled={pendingDeleteId === getRowId(row)}
+                                      className="secondary-action !px-4 !py-2 text-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+                                    >
+                                      {pendingDeleteId === getRowId(row) ? 'Deleting...' : 'Delete'}
+                                    </button>
+                                  ) : null}
+                                </div>
+                              </td>
+                            ) : null}
                           </tr>
                         ))}
                       </tbody>
@@ -573,7 +977,7 @@ function generateCollectionExplorerComponent(): GeneratedFile {
 
                   <div className="grid gap-4 lg:hidden">
                     {rows.map((row, rowIndex) => (
-                      <article key={String(row.id ?? rowIndex)} className="record-card">
+                      <article key={String(row.id ?? rowIndex)} className="record-card scroll-reveal" style={{ animationDelay: \`\${rowIndex * 70}ms\` }}>
                         <div className="flex items-start justify-between gap-4">
                           <div>
                             <p className="text-base font-semibold text-slate-950">
@@ -599,6 +1003,31 @@ function generateCollectionExplorerComponent(): GeneratedFile {
                             </div>
                           ))}
                         </dl>
+                        {hasRecordActions ? (
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {canUpdate ? (
+                              <button
+                                type="button"
+                                onClick={() => openEditForm(row)}
+                                className="secondary-action !px-4 !py-2"
+                              >
+                                Edit record
+                              </button>
+                            ) : null}
+                            {canDelete ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  void handleDelete(row);
+                                }}
+                                disabled={pendingDeleteId === getRowId(row)}
+                                className="secondary-action !px-4 !py-2 text-rose-600 disabled:cursor-not-allowed disabled:opacity-60"
+                              >
+                                {pendingDeleteId === getRowId(row) ? 'Deleting...' : 'Delete record'}
+                              </button>
+                            ) : null}
+                          </div>
+                        ) : null}
                       </article>
                     ))}
                   </div>
@@ -677,6 +1106,170 @@ function generateCollectionExplorerComponent(): GeneratedFile {
       function formatNumber(value: number) {
         return new Intl.NumberFormat().format(value);
       }
+
+      function describeAvailableActions(canCreate: boolean, canUpdate: boolean, canDelete: boolean) {
+        const actions: string[] = ['Browse'];
+
+        if (canCreate) {
+          actions.push('create');
+        }
+        if (canUpdate) {
+          actions.push('edit');
+        }
+        if (canDelete) {
+          actions.push('delete');
+        }
+
+        return actions.join(', ');
+      }
+
+      function createDraft(
+        fields: CollectionFieldMeta[],
+        source: Record<string, unknown> = {}
+      ): Record<string, unknown> {
+        return Object.fromEntries(
+          fields.map((field) => [field.name, getDraftValue(source[field.name], field)])
+        );
+      }
+
+      function getDraftValue(value: unknown, field: CollectionFieldMeta) {
+        if (field.type === 'boolean') {
+          return Boolean(value);
+        }
+
+        if (field.type === 'date') {
+          return toDateInputValue(value);
+        }
+
+        return value === null || value === undefined ? '' : String(value);
+      }
+
+      function buildPayload(draft: Record<string, unknown>, fields: CollectionFieldMeta[]) {
+        const payload: Record<string, unknown> = {};
+
+        fields.forEach((field) => {
+          const value = normalizeDraftValue(draft[field.name], field);
+          if (value !== undefined) {
+            payload[field.name] = value;
+          }
+        });
+
+        return payload;
+      }
+
+      function normalizeDraftValue(value: unknown, field: CollectionFieldMeta) {
+        if (field.type === 'boolean') {
+          return Boolean(value);
+        }
+
+        if (typeof value !== 'string') {
+          return value ?? undefined;
+        }
+
+        const trimmed = value.trim();
+        if (!trimmed) {
+          return undefined;
+        }
+
+        if (field.type === 'number') {
+          const nextValue = Number(trimmed);
+          return Number.isFinite(nextValue) ? nextValue : undefined;
+        }
+
+        if (field.type === 'date') {
+          const parsed = new Date(trimmed);
+          return Number.isNaN(parsed.getTime()) ? undefined : parsed.toISOString();
+        }
+
+        return trimmed;
+      }
+
+      function renderFieldEditor(
+        field: CollectionFieldMeta,
+        value: unknown,
+        onChange: (nextValue: unknown) => void
+      ) {
+        if (field.type === 'boolean') {
+          return (
+            <label className="flex items-center gap-3 rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-700">
+              <input
+                type="checkbox"
+                checked={Boolean(value)}
+                onChange={(event) => onChange(event.target.checked)}
+                className="h-4 w-4 rounded border-slate-300 text-slate-950"
+              />
+              <span>Enabled</span>
+            </label>
+          );
+        }
+
+        return (
+          <input
+            type={getInputType(field)}
+            value={typeof value === 'string' ? value : ''}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder={field.required ? 'Required' : 'Optional'}
+            className="w-full rounded-[18px] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-300 focus:bg-white focus:ring-2 focus:ring-slate-200"
+          />
+        );
+      }
+
+      function getInputType(field: CollectionFieldMeta) {
+        const lowerName = field.name.toLowerCase();
+
+        if (field.type === 'number') {
+          return 'number';
+        }
+
+        if (field.type === 'date') {
+          return 'datetime-local';
+        }
+
+        if (lowerName.includes('email')) {
+          return 'email';
+        }
+
+        if (lowerName.includes('password')) {
+          return 'password';
+        }
+
+        if (lowerName.includes('phone')) {
+          return 'tel';
+        }
+
+        if (lowerName.includes('url') || lowerName.includes('image') || lowerName.includes('avatar')) {
+          return 'url';
+        }
+
+        return 'text';
+      }
+
+      function getRowId(row: Record<string, unknown>) {
+        const value = row.id;
+        if (value === null || value === undefined || value === '') {
+          return null;
+        }
+
+        return String(value);
+      }
+
+      function buildRecordUrl(basePath: string, id: string) {
+        return basePath.replace(/\/+$/, '') + '/' + encodeURIComponent(id);
+      }
+
+      function toDateInputValue(value: unknown) {
+        if (value === null || value === undefined || value === '') {
+          return '';
+        }
+
+        const date = new Date(String(value));
+        if (Number.isNaN(date.getTime())) {
+          return '';
+        }
+
+        const offsetMs = date.getTimezoneOffset() * 60_000;
+        return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+      }
     `),
     source: 'template',
     description: 'Generated live collection explorer',
@@ -708,6 +1301,7 @@ function generateDashboardComponent(
 
       import Link from 'next/link';
       import { startTransition, useEffect, useState } from 'react';
+      import { AnimatedNumber } from '@/components/AnimatedNumber';
       import { LoadingState } from '@/components/LoadingState';
 
       const metrics = ${metrics};
@@ -776,7 +1370,7 @@ function generateDashboardComponent(
 
         return (
           <div className="space-y-6">
-            <section className="hero-shell fade-in-up">
+            <section className="hero-shell scroll-reveal">
               <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
                 <div className="max-w-3xl space-y-4">
                   <span className="eyebrow">${designProfile.accentLabel}</span>
@@ -802,18 +1396,22 @@ function generateDashboardComponent(
             </section>
 
             {error ? (
-              <div className="empty-panel !text-left">
+              <div className="empty-panel !text-left scroll-reveal motion-delay-2">
                 <h2 className="text-lg font-semibold text-slate-950">Could not load dashboard metrics</h2>
                 <p className="mt-2 max-w-2xl text-sm leading-7 text-slate-500">{error}</p>
               </div>
             ) : null}
 
             <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-              {metrics.map((metric: { title: string; endpoint: string; description: string; route: string }) => (
-                <article key={metric.title} className="metric-card">
+              {metrics.map((metric: { title: string; endpoint: string; description: string; route: string }, index: number) => (
+                <article
+                  key={metric.title}
+                  className="metric-card scroll-reveal"
+                  style={{ animationDelay: \`\${80 + index * 70}ms\` }}
+                >
                   <p className="card-label">{metric.title}</p>
                   <p className="mt-3 text-4xl font-bold text-slate-950">
-                    {new Intl.NumberFormat().format(counts[metric.title] ?? 0)}
+                    <AnimatedNumber value={counts[metric.title] ?? 0} />
                   </p>
                   <p className="mt-2 text-sm leading-7 text-slate-500">{metric.description}</p>
                   <div className="mt-5 flex flex-wrap gap-2">
@@ -829,7 +1427,7 @@ function generateDashboardComponent(
             </section>
 
             <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
-              <section className="surface-panel rounded-[32px] px-6 py-6">
+              <section className="surface-panel scroll-reveal motion-delay-3 rounded-[32px] px-6 py-6">
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="card-label">Operational focus</p>
@@ -838,8 +1436,12 @@ function generateDashboardComponent(
                   <span className="stat-pill">${blueprint.features.length} capabilities</span>
                 </div>
                 <div className="mt-6 grid gap-4 md:grid-cols-2">
-                  {featureCards.map((feature: { name: string; description: string; priority: string }) => (
-                    <article key={feature.name} className="feature-card">
+                  {featureCards.map((feature: { name: string; description: string; priority: string }, index: number) => (
+                    <article
+                      key={feature.name}
+                      className="feature-card scroll-reveal"
+                      style={{ animationDelay: \`\${140 + index * 80}ms\` }}
+                    >
                       <p className="card-label">{feature.priority}</p>
                       <h3 className="mt-3 text-lg font-semibold text-slate-950">{feature.name}</h3>
                       <p className="mt-2 text-sm leading-7 text-slate-500">{feature.description}</p>
@@ -848,7 +1450,7 @@ function generateDashboardComponent(
                 </div>
               </section>
 
-              <section className="surface-panel-strong rounded-[32px] px-6 py-6">
+              <section className="surface-panel-strong scroll-reveal motion-delay-4 rounded-[32px] px-6 py-6">
                 <p className="card-label">Workspace routes</p>
                 <h2 className="mt-3 text-2xl font-semibold text-slate-950">Move through the generated experience</h2>
                 <div className="mt-6 space-y-3">
@@ -856,7 +1458,8 @@ function generateDashboardComponent(
                     <Link
                       key={route.route}
                       href={route.route}
-                      className="flex items-start justify-between rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300"
+                      className="route-card scroll-reveal flex items-start justify-between"
+                      style={{ animationDelay: \`\${200 + index * 70}ms\` }}
                     >
                       <div>
                         <p className="text-sm font-semibold text-slate-950">{route.name}</p>
@@ -921,6 +1524,7 @@ function generateHomePage(
 
   return dedent(`
     import Link from 'next/link';
+    import { AnimatedNumber } from '@/components/AnimatedNumber';
 
     const pageLinks = ${pageLinks};
     const featureCards = ${featureCards};
@@ -929,7 +1533,7 @@ function generateHomePage(
 
     export default function HomePage() {
       return (
-        <div className="page-shell fade-in-up">
+        <div className="page-shell">
           ${generateHomeLayout(
             designProfile.homeVariant,
             blueprint,
@@ -957,14 +1561,14 @@ function generateDashboardPage(page: BlueprintPage, blueprint: Blueprint) {
 
     export default function ${getPageComponentName(page)}Page() {
       return (
-        <div className="page-shell fade-in-up">
-          <section className="page-header">
+        <div className="page-shell">
+          <section className="page-header scroll-reveal">
             <p className="card-label">Command center</p>
             <h1 className="page-title">${escapeForTemplate(page.name)}</h1>
             <p className="page-description">${escapeForTemplate(page.description)}</p>
             <div className="mt-6 flex flex-wrap gap-2">
               {siblingPages.map((item: { name: string; route: string }) => (
-                <Link key={item.route} href={item.route} className="secondary-action !px-4 !py-2">
+                <Link key={item.route} href={item.route} className="nav-chip">
                   {item.name}
                 </Link>
               ))}
@@ -984,6 +1588,7 @@ function generateCollectionPage(
   designProfile: DesignProfile
 ) {
   const fields = serializeValue(serializeCollectionFields(model));
+  const formFields = serializeValue(serializeEditableFields(model));
   const relatedRoutes = serializeValue(
     getPreferredPageLinks(blueprint.pages)
       .filter(
@@ -1000,6 +1605,12 @@ function generateCollectionPage(
     serializeFeatureCards(getRelatedFeatures(model, blueprint.features)).slice(0, 4)
   );
   const collectionApiPath = getCollectionApiPath(model, blueprint);
+  const recordEndpointBase = getRecordApiBasePath(model, blueprint);
+  const modelEndpoints = getEndpointsForModel(model, blueprint);
+  const canCreate = modelEndpoints.some((endpoint) => endpoint.method === 'POST');
+  const canUpdate = Boolean(recordEndpointBase) && modelEndpoints.some((endpoint) => ['PUT', 'PATCH'].includes(endpoint.method));
+  const canDelete = Boolean(recordEndpointBase) && modelEndpoints.some((endpoint) => endpoint.method === 'DELETE');
+  const updateMethod = modelEndpoints.some((endpoint) => endpoint.method === 'PUT') ? 'PUT' : 'PATCH';
   const primaryField = getPrimaryFieldName(model);
   const secondaryField = getSecondaryFieldName(model, primaryField);
   const searchPlaceholder = buildSearchPlaceholder(model, primaryField);
@@ -1009,21 +1620,22 @@ function generateCollectionPage(
     import { CollectionExplorer } from '@/components/CollectionExplorer';
 
     const fields = ${fields};
+    const formFields = ${formFields};
     const relatedRoutes = ${relatedRoutes};
     const endpointCards = ${endpointCards};
     const relatedFeatures = ${relatedFeatures};
 
     export default function ${getPageComponentName(page)}Page() {
       return (
-        <div className="page-shell fade-in-up">
-          <section className="page-header">
+        <div className="page-shell">
+          <section className="page-header scroll-reveal">
             <p className="card-label">${designProfile.accentLabel}</p>
             <h1 className="page-title">${escapeForTemplate(page.name)}</h1>
             <p className="page-description">${escapeForTemplate(page.description)}</p>
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(320px,0.85fr)]">
-            <div className="surface-panel rounded-[32px] px-6 py-6">
+            <div className="surface-panel scroll-reveal motion-delay-2 rounded-[32px] px-6 py-6">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="card-label">Experience focus</p>
@@ -1032,8 +1644,12 @@ function generateCollectionPage(
                 <span className="stat-pill">${model.name}</span>
               </div>
               <div className="mt-6 grid gap-4 md:grid-cols-2">
-                {relatedFeatures.map((feature: { name: string; description: string; priority: string }) => (
-                  <article key={feature.name} className="feature-card">
+                {relatedFeatures.map((feature: { name: string; description: string; priority: string }, index: number) => (
+                  <article
+                    key={feature.name}
+                    className="feature-card scroll-reveal"
+                    style={{ animationDelay: \`\${80 + index * 80}ms\` }}
+                  >
                     <p className="card-label">{feature.priority}</p>
                     <h3 className="mt-3 text-lg font-semibold text-slate-950">{feature.name}</h3>
                     <p className="mt-2 text-sm leading-7 text-slate-500">{feature.description}</p>
@@ -1042,14 +1658,28 @@ function generateCollectionPage(
               </div>
             </div>
 
-            <aside className="surface-panel-strong rounded-[32px] px-6 py-6">
+            <aside className="surface-panel-strong scroll-reveal motion-delay-3 rounded-[32px] px-6 py-6">
               <p className="card-label">Connected endpoints</p>
               <div className="mt-5 space-y-3">
                 {endpointCards.map((endpoint: { method: string; path: string; description: string }, index: number) => (
-                  <div key={endpoint.path + index} className="rounded-[24px] border border-slate-200/80 bg-white px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="stat-pill">{endpoint.method}</span>
-                      <p className="text-sm font-semibold text-slate-950">{endpoint.path}</p>
+                  <div
+                    key={endpoint.path + index}
+                    className="detail-card scroll-reveal"
+                    style={{ animationDelay: \`\${140 + index * 80}ms\` }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="stat-pill">{endpoint.method}</span>
+                        <p className="text-sm font-semibold text-slate-950">{endpoint.path}</p>
+                      </div>
+                      <a
+                        href={endpoint.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="secondary-action !px-4 !py-2"
+                      >
+                        Open
+                      </a>
                     </div>
                     <p className="mt-2 text-sm leading-7 text-slate-500">{endpoint.description}</p>
                   </div>
@@ -1057,7 +1687,7 @@ function generateCollectionPage(
               </div>
               <div className="mt-6 flex flex-wrap gap-2">
                 {relatedRoutes.map((item: { name: string; route: string }) => (
-                  <Link key={item.route} href={item.route} className="secondary-action !px-4 !py-2">
+                  <Link key={item.route} href={item.route} className="nav-chip">
                     {item.name}
                   </Link>
                 ))}
@@ -1070,11 +1700,17 @@ function generateCollectionPage(
             description="${escapeForTemplate(buildCollectionDescription(page, model))}"
             endpoint="${collectionApiPath}"
             fields={fields}
+            formFields={formFields}
             primaryField="${primaryField}"
             ${secondaryField ? `secondaryField="${secondaryField}"` : ''}
             accentLabel="${escapeForTemplate(model.name + ' collection')}"
             searchPlaceholder="${escapeForTemplate(searchPlaceholder)}"
             relatedRoutes={relatedRoutes}
+            recordEndpointBase=${recordEndpointBase ? `"${recordEndpointBase}"` : '{null}'}
+            canCreate={${canCreate}}
+            canUpdate={${canUpdate}}
+            canDelete={${canDelete}}
+            updateMethod="${updateMethod}"
           />
         </div>
       );
@@ -1110,19 +1746,23 @@ function generateGenericPage(
 
     export default function ${getPageComponentName(page)}Page() {
       return (
-        <div className="page-shell fade-in-up">
-          <section className="page-header">
+        <div className="page-shell">
+          <section className="page-header scroll-reveal">
             <p className="card-label">${designProfile.accentLabel}</p>
             <h1 className="page-title">${escapeForTemplate(page.name)}</h1>
             <p className="page-description">${escapeForTemplate(page.description)}</p>
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(320px,0.85fr)]">
-            <div className="surface-panel rounded-[32px] px-6 py-6">
+            <div className="surface-panel scroll-reveal motion-delay-2 rounded-[32px] px-6 py-6">
               <p className="card-label">What ships on this screen</p>
               <div className="mt-5 grid gap-4 md:grid-cols-2">
-                {relevantFeatures.map((feature: { name: string; description: string; priority: string }) => (
-                  <article key={feature.name} className="feature-card">
+                {relevantFeatures.map((feature: { name: string; description: string; priority: string }, index: number) => (
+                  <article
+                    key={feature.name}
+                    className="feature-card scroll-reveal"
+                    style={{ animationDelay: \`\${80 + index * 80}ms\` }}
+                  >
                     <p className="card-label">{feature.priority}</p>
                     <h2 className="mt-3 text-xl font-semibold text-slate-950">{feature.name}</h2>
                     <p className="mt-2 text-sm leading-7 text-slate-500">{feature.description}</p>
@@ -1142,14 +1782,28 @@ function generateGenericPage(
               </div>
             </div>
 
-            <aside className="surface-panel-strong rounded-[32px] px-6 py-6">
+            <aside className="surface-panel-strong scroll-reveal motion-delay-3 rounded-[32px] px-6 py-6">
               <p className="card-label">Connected routes and APIs</p>
               <div className="mt-5 space-y-3">
                 {relevantEndpoints.map((endpoint: { method: string; path: string; description: string }, index: number) => (
-                  <div key={endpoint.path + index} className="rounded-[24px] border border-slate-200/80 bg-white px-4 py-4">
-                    <div className="flex items-center gap-3">
-                      <span className="stat-pill">{endpoint.method}</span>
-                      <p className="text-sm font-semibold text-slate-950">{endpoint.path}</p>
+                  <div
+                    key={endpoint.path + index}
+                    className="detail-card scroll-reveal"
+                    style={{ animationDelay: \`\${140 + index * 80}ms\` }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        <span className="stat-pill">{endpoint.method}</span>
+                        <p className="text-sm font-semibold text-slate-950">{endpoint.path}</p>
+                      </div>
+                      <a
+                        href={endpoint.path}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="secondary-action !px-4 !py-2"
+                      >
+                        Open
+                      </a>
                     </div>
                     <p className="mt-2 text-sm leading-7 text-slate-500">{endpoint.description}</p>
                   </div>
@@ -1158,7 +1812,7 @@ function generateGenericPage(
 
               <div className="mt-6 flex flex-wrap gap-2">
                 {siblingPages.map((item: { name: string; route: string }) => (
-                  <Link key={item.route} href={item.route} className="secondary-action !px-4 !py-2">
+                  <Link key={item.route} href={item.route} className="nav-chip">
                     {item.name}
                   </Link>
                 ))}
@@ -1203,7 +1857,7 @@ function generateEditorialHomeLayout(
   return dedent(`
     <>
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <div className="surface-panel-strong rounded-[34px] px-6 py-8 sm:px-8">
+        <div className="surface-panel-strong scroll-reveal rounded-[34px] px-6 py-8 sm:px-8">
           <span className="stat-pill">Editorial product layout</span>
           <h1 className="mt-5 max-w-4xl text-balance text-4xl font-bold tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">
             ${headline}
@@ -1214,32 +1868,33 @@ function generateEditorialHomeLayout(
             <Link href="${secondaryAction.route}" className="secondary-action">${secondaryAction.label}</Link>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
-            <article className="feature-card">
+            <article className="feature-card scroll-reveal motion-delay-2">
               <p className="card-label">Features</p>
-              <p className="mt-3 text-4xl font-bold text-slate-950">${blueprint.features.length}</p>
+              <p className="mt-3 text-4xl font-bold text-slate-950"><AnimatedNumber value={${blueprint.features.length}} /></p>
               <p className="mt-2 text-sm leading-7 text-slate-500">Core product capabilities already mapped into the workspace.</p>
             </article>
-            <article className="feature-card">
+            <article className="feature-card scroll-reveal motion-delay-3">
               <p className="card-label">Pages</p>
-              <p className="mt-3 text-4xl font-bold text-slate-950">${blueprint.pages.length}</p>
+              <p className="mt-3 text-4xl font-bold text-slate-950"><AnimatedNumber value={${blueprint.pages.length}} /></p>
               <p className="mt-2 text-sm leading-7 text-slate-500">Purpose-built screens that connect product flow, data, and operations.</p>
             </article>
-            <article className="feature-card">
+            <article className="feature-card scroll-reveal motion-delay-4">
               <p className="card-label">Models</p>
-              <p className="mt-3 text-4xl font-bold text-slate-950">${blueprint.dataModels.length}</p>
+              <p className="mt-3 text-4xl font-bold text-slate-950"><AnimatedNumber value={${blueprint.dataModels.length}} /></p>
               <p className="mt-2 text-sm leading-7 text-slate-500">Structured collections ready for Prisma schema, APIs, and UI lists.</p>
             </article>
           </div>
         </div>
 
-        <aside className="surface-panel rounded-[34px] px-6 py-6">
+        <aside className="surface-panel scroll-reveal motion-delay-2 rounded-[34px] px-6 py-6">
           <p className="card-label">Product runway</p>
           <div className="mt-5 space-y-4">
             {pageLinks.slice(0, 4).map((page: { name: string; route: string; description: string }, index: number) => (
               <Link
                 key={page.route}
                 href={page.route}
-                className="block rounded-[26px] border border-slate-200/80 bg-white px-5 py-5 transition hover:-translate-y-0.5 hover:border-slate-300"
+                className="route-card scroll-reveal block"
+                style={{ animationDelay: \`\${120 + index * 80}ms\` }}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
@@ -1255,8 +1910,12 @@ function generateEditorialHomeLayout(
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {featureCards.map((feature: { name: string; description: string; priority: string }) => (
-          <article key={feature.name} className="feature-card">
+        {featureCards.map((feature: { name: string; description: string; priority: string }, index: number) => (
+          <article
+            key={feature.name}
+            className="feature-card scroll-reveal"
+            style={{ animationDelay: \`\${180 + index * 80}ms\` }}
+          >
             <p className="card-label">{feature.priority}</p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">{feature.name}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-500">{feature.description}</p>
@@ -1277,7 +1936,7 @@ function generateSpotlightHomeLayout(
   return dedent(`
     <>
       <section className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(330px,0.9fr)]">
-        <div className="hero-shell">
+        <div className="hero-shell scroll-reveal">
           <span className="eyebrow">Launch-ready product build</span>
           <h1 className="mt-5 max-w-4xl text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
             ${headline}
@@ -1289,7 +1948,7 @@ function generateSpotlightHomeLayout(
           </div>
         </div>
 
-        <aside className="surface-panel-strong rounded-[34px] px-6 py-6">
+        <aside className="surface-panel-strong scroll-reveal motion-delay-2 rounded-[34px] px-6 py-6">
           <p className="card-label">Launch map</p>
           <h2 className="mt-3 text-3xl font-semibold text-slate-950">From idea to working workspace</h2>
           <div className="mt-6 space-y-3">
@@ -1297,7 +1956,8 @@ function generateSpotlightHomeLayout(
               <Link
                 key={page.route}
                 href={page.route}
-                className="flex items-start justify-between rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300"
+                className="route-card scroll-reveal flex items-start justify-between"
+                style={{ animationDelay: \`\${120 + index * 80}ms\` }}
               >
                 <div>
                   <p className="font-semibold text-slate-950">{page.name}</p>
@@ -1311,8 +1971,12 @@ function generateSpotlightHomeLayout(
       </section>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {featureCards.map((feature: { name: string; description: string; priority: string }) => (
-          <article key={feature.name} className="feature-card">
+        {featureCards.map((feature: { name: string; description: string; priority: string }, index: number) => (
+          <article
+            key={feature.name}
+            className="feature-card scroll-reveal"
+            style={{ animationDelay: \`\${180 + index * 80}ms\` }}
+          >
             <p className="card-label">{feature.priority}</p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">{feature.name}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-500">{feature.description}</p>
@@ -1332,7 +1996,7 @@ function generateWorkspaceHomeLayout(
 ) {
   return dedent(`
     <>
-      <section className="hero-shell">
+      <section className="hero-shell scroll-reveal">
         <div className="grid gap-8 xl:grid-cols-[minmax(0,1.1fr)_minmax(340px,0.9fr)]">
           <div className="space-y-6">
             <span className="eyebrow">Operational workspace</span>
@@ -1346,27 +2010,28 @@ function generateWorkspaceHomeLayout(
             </div>
           </div>
           <div className="grid gap-4">
-            <div className="rounded-[28px] border border-white/12 bg-white/10 px-5 py-5 backdrop-blur">
+            <div className="hero-stat-card scroll-reveal motion-delay-2">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Coverage</p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <div>
-                  <p className="text-4xl font-bold text-white">${blueprint.features.length}</p>
+                  <p className="text-4xl font-bold text-white"><AnimatedNumber value={${blueprint.features.length}} /></p>
                   <p className="mt-2 text-sm text-white/68">Capabilities mapped into the product workflow.</p>
                 </div>
                 <div>
-                  <p className="text-4xl font-bold text-white">${blueprint.apiEndpoints.length}</p>
+                  <p className="text-4xl font-bold text-white"><AnimatedNumber value={${blueprint.apiEndpoints.length}} /></p>
                   <p className="mt-2 text-sm text-white/68">API routes backing the generated experience.</p>
                 </div>
               </div>
             </div>
-            <div className="rounded-[28px] border border-white/12 bg-black/15 px-5 py-5 backdrop-blur">
+            <div className="hero-stat-card scroll-reveal motion-delay-3 bg-black/15">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Launch order</p>
               <div className="mt-4 space-y-3">
                 {pageLinks.slice(0, 3).map((page: { name: string; route: string; description: string }, index: number) => (
                   <Link
                     key={page.route}
                     href={page.route}
-                    className="flex items-start justify-between rounded-[22px] border border-white/10 bg-white/6 px-4 py-4 transition hover:bg-white/12"
+                    className="route-card route-card-dark scroll-reveal flex items-start justify-between"
+                    style={{ animationDelay: \`\${140 + index * 80}ms\` }}
                   >
                     <div>
                       <p className="font-semibold text-white">{page.name}</p>
@@ -1382,8 +2047,12 @@ function generateWorkspaceHomeLayout(
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
-        {featureCards.slice(0, 3).map((feature: { name: string; description: string; priority: string }) => (
-          <article key={feature.name} className="feature-card">
+        {featureCards.slice(0, 3).map((feature: { name: string; description: string; priority: string }, index: number) => (
+          <article
+            key={feature.name}
+            className="feature-card scroll-reveal"
+            style={{ animationDelay: \`\${200 + index * 80}ms\` }}
+          >
             <p className="card-label">{feature.priority}</p>
             <h2 className="mt-3 text-2xl font-semibold text-slate-950">{feature.name}</h2>
             <p className="mt-3 text-sm leading-7 text-slate-500">{feature.description}</p>
@@ -1403,7 +2072,7 @@ function generateShowcaseHomeLayout(
 ) {
   return dedent(`
     <>
-      <section className="hero-shell text-center">
+      <section className="hero-shell scroll-reveal text-center">
         <div className="mx-auto max-w-4xl space-y-6">
           <span className="eyebrow">Product showcase layout</span>
           <h1 className="text-balance text-4xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
@@ -1417,36 +2086,40 @@ function generateShowcaseHomeLayout(
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-[26px] border border-white/12 bg-white/10 px-5 py-5 text-left backdrop-blur">
+          <article className="hero-stat-card scroll-reveal motion-delay-2 text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Features</p>
-            <p className="mt-3 text-4xl font-bold text-white">${blueprint.features.length}</p>
+            <p className="mt-3 text-4xl font-bold text-white"><AnimatedNumber value={${blueprint.features.length}} /></p>
           </article>
-          <article className="rounded-[26px] border border-white/12 bg-white/10 px-5 py-5 text-left backdrop-blur">
+          <article className="hero-stat-card scroll-reveal motion-delay-3 text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Pages</p>
-            <p className="mt-3 text-4xl font-bold text-white">${blueprint.pages.length}</p>
+            <p className="mt-3 text-4xl font-bold text-white"><AnimatedNumber value={${blueprint.pages.length}} /></p>
           </article>
-          <article className="rounded-[26px] border border-white/12 bg-white/10 px-5 py-5 text-left backdrop-blur">
+          <article className="hero-stat-card scroll-reveal motion-delay-4 text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Data models</p>
-            <p className="mt-3 text-4xl font-bold text-white">${blueprint.dataModels.length}</p>
+            <p className="mt-3 text-4xl font-bold text-white"><AnimatedNumber value={${blueprint.dataModels.length}} /></p>
           </article>
-          <article className="rounded-[26px] border border-white/12 bg-white/10 px-5 py-5 text-left backdrop-blur">
+          <article className="hero-stat-card scroll-reveal motion-delay-5 text-left">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/60">Endpoints</p>
-            <p className="mt-3 text-4xl font-bold text-white">${blueprint.apiEndpoints.length}</p>
+            <p className="mt-3 text-4xl font-bold text-white"><AnimatedNumber value={${blueprint.apiEndpoints.length}} /></p>
           </article>
         </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.1fr)_minmax(320px,0.9fr)]">
         <div className="grid gap-4 md:grid-cols-2">
-          {featureCards.slice(0, 4).map((feature: { name: string; description: string; priority: string }) => (
-            <article key={feature.name} className="feature-card">
+          {featureCards.slice(0, 4).map((feature: { name: string; description: string; priority: string }, index: number) => (
+            <article
+              key={feature.name}
+              className="feature-card scroll-reveal"
+              style={{ animationDelay: \`\${180 + index * 80}ms\` }}
+            >
               <p className="card-label">{feature.priority}</p>
               <h2 className="mt-3 text-2xl font-semibold text-slate-950">{feature.name}</h2>
               <p className="mt-3 text-sm leading-7 text-slate-500">{feature.description}</p>
             </article>
           ))}
         </div>
-        <aside className="surface-panel rounded-[34px] px-6 py-6">
+        <aside className="surface-panel scroll-reveal motion-delay-3 rounded-[34px] px-6 py-6">
           <p className="card-label">Product path</p>
           <h2 className="mt-3 text-3xl font-semibold text-slate-950">Jump into the routes that matter</h2>
           <div className="mt-6 space-y-3">
@@ -1454,7 +2127,8 @@ function generateShowcaseHomeLayout(
               <Link
                 key={page.route}
                 href={page.route}
-                className="flex items-start justify-between rounded-[24px] border border-slate-200/80 bg-white px-4 py-4 transition hover:-translate-y-0.5 hover:border-slate-300"
+                className="route-card scroll-reveal flex items-start justify-between"
+                style={{ animationDelay: \`\${220 + index * 70}ms\` }}
               >
                 <div>
                   <p className="font-semibold text-slate-950">{page.name}</p>
@@ -1524,6 +2198,20 @@ function serializeCollectionFields(model: BlueprintDataModel) {
     type: field.type,
     required: field.required,
   }));
+}
+
+function serializeEditableFields(model: BlueprintDataModel) {
+  return model.fields
+    .filter(
+      (field) =>
+        !['id', 'createdAt', 'updatedAt'].includes(field.name) && field.type !== 'relation'
+    )
+    .map((field) => ({
+      name: field.name,
+      label: toTitleCase(field.name),
+      type: field.type,
+      required: field.required,
+    }));
 }
 
 function getVisibleFields(model: BlueprintDataModel) {
@@ -1645,6 +2333,21 @@ function getCollectionApiPath(model: BlueprintDataModel, blueprint: Blueprint) {
   }
 
   return '/api/' + pluralize(toKebabCase(model.name));
+}
+
+function getRecordApiBasePath(model: BlueprintDataModel, blueprint: Blueprint) {
+  const matchingRecordEndpoint = getEndpointsForModel(model, blueprint).find((endpoint) =>
+    /\/(?:\[\[?\.\.\.[^\]/]+\]\]|\[[^\]/]+\]|:[^/]+|id)$/i.test(endpoint.path)
+  );
+
+  if (!matchingRecordEndpoint) {
+    return null;
+  }
+
+  return matchingRecordEndpoint.path.replace(
+    /\/(?:\[\[?\.\.\.[^\]/]+\]\]|\[[^\]/]+\]|:[^/]+|id)$/i,
+    ''
+  );
 }
 
 function getPrimaryFieldName(model: BlueprintDataModel) {

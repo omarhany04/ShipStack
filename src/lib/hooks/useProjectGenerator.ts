@@ -246,7 +246,14 @@ export function useProjectGenerator() {
 
       addLog('Launching live preview...');
 
-      const result = await runPreview(preparedFiles, data.blueprint, setStage, addLog, setState);
+      const result = await runPreview(
+        preparedFiles,
+        data.blueprint,
+        setStage,
+        addLog,
+        setState,
+        controller.signal
+      );
       teardownRef.current = result.teardown;
 
       setState((current) => ({
@@ -257,7 +264,7 @@ export function useProjectGenerator() {
         previewUrl: result.url,
       }));
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
+      if (isAbortError(error)) {
         return;
       }
 
@@ -373,11 +380,168 @@ export function useProjectGenerator() {
     });
   }
 
+  async function cancelGeneration() {
+    abortRef.current?.abort();
+    abortRef.current = null;
+
+    if (teardownRef.current) {
+      await teardownRef.current();
+      teardownRef.current = null;
+    }
+
+    try {
+      const { teardownWebContainer } = await import('@/lib/webcontainer');
+      await teardownWebContainer();
+    } catch {}
+
+    setState((current) => {
+      const hasProject = Boolean(current.project);
+      return {
+        ...current,
+        stage: hasProject ? 'ready' : 'idle',
+        progress: hasProject ? 100 : 0,
+        message: hasProject
+          ? 'Generation canceled. Latest output remains available.'
+          : STAGE_MESSAGES.idle,
+        error: null,
+        previewUrl: null,
+        logs: hasProject
+          ? [
+              ...current.logs.slice(-198),
+              'Generation canceled. The latest generated files remain available.',
+            ]
+          : [],
+      };
+    });
+  }
+
+  async function fixPreview() {
+    if (!state.project) {
+      return;
+    }
+
+    const currentProject = state.project;
+    const currentLogs = state.logs;
+
+    abortRef.current?.abort();
+    abortRef.current = new AbortController();
+    const controller = abortRef.current;
+
+    if (!controller) {
+      return;
+    }
+
+    if (teardownRef.current) {
+      await teardownRef.current();
+      teardownRef.current = null;
+    }
+
+    try {
+      const { teardownWebContainer } = await import('@/lib/webcontainer');
+      await teardownWebContainer();
+    } catch {}
+
+    setState((current) => ({
+      ...current,
+      stage: 'preview_booting',
+      progress: STAGE_PROGRESS.preview_booting,
+      message: 'Analyzing preview issues and repairing the generated app...',
+      error: null,
+      previewUrl: null,
+    }));
+    addLog('Manual repair requested. Inspecting the latest preview/build issues...');
+
+    try {
+      const { requestPreviewRepair } = await import('@/lib/preview-repair');
+      const preparedFiles = prepareGeneratedFiles(
+        currentProject.files.map((file) => ({
+          path: file.path,
+          content: file.content,
+          source: file.source as 'template' | 'ai' | 'hybrid',
+        })),
+        currentProject.blueprint
+      );
+
+      const repairIntent = [
+        'User manually requested preview repair after hitting errors while navigating or interacting with the generated app.',
+        'Prioritize a fully functional site: stable routes, scrolling, client interactions, and build/runtime safety.',
+      ].join('\n');
+
+      const repairResult = await requestPreviewRepair(
+        preparedFiles,
+        currentProject.blueprint,
+        currentLogs,
+        repairIntent
+      );
+
+      let filesForRetry = preparedFiles;
+
+      if (repairResult) {
+        filesForRetry = repairResult.files;
+        addLog(
+          `Manual repair updated ${repairResult.repairedPaths.length} file${
+            repairResult.repairedPaths.length === 1 ? '' : 's'
+          }. Retrying preview...`
+        );
+        repairResult.warnings.forEach((warning) => addLog(`Repair note: ${warning}`));
+
+        setState((current) => ({
+          ...current,
+          project: current.project
+            ? {
+                ...current.project,
+                files: filesForRetry,
+                displayTree: buildDisplayTree(filesForRetry, currentProject.blueprint),
+                warnings: [...current.project.warnings, ...repairResult.warnings],
+              }
+            : current.project,
+        }));
+      } else {
+        addLog('Manual repair did not change files. Retrying preview with the latest workspace...');
+      }
+
+      const result = await runPreview(
+        filesForRetry,
+        currentProject.blueprint,
+        setStage,
+        addLog,
+        setState,
+        controller.signal
+      );
+      teardownRef.current = result.teardown;
+
+      setState((current) => ({
+        ...current,
+        stage: 'ready',
+        progress: 100,
+        message: STAGE_MESSAGES.ready,
+        previewUrl: result.url,
+      }));
+    } catch (error) {
+      if (isAbortError(error)) {
+        return;
+      }
+
+      const message = error instanceof Error ? error.message : 'Preview repair failed';
+      addLog(`Manual repair failed: ${message}`);
+      setState((current) => ({
+        ...current,
+        stage: 'ready',
+        progress: 100,
+        message: 'Project generated (preview unavailable)',
+        error: message,
+        previewUrl: null,
+      }));
+    }
+  }
+
   return {
     state,
     generate,
     refineWithPrompt,
     regenerateFromBlueprint,
+    cancelGeneration,
+    fixPreview,
     download,
     reset,
   };
@@ -388,7 +552,8 @@ async function runPreview(
   blueprint: Blueprint,
   setStage: (stage: PipelineStage, message?: string) => void,
   addLog: (message: string) => void,
-  setState: Dispatch<SetStateAction<PipelineState>>
+  setState: Dispatch<SetStateAction<PipelineState>>,
+  signal: AbortSignal
 ) {
   const { runInWebContainer } = await import('@/lib/webcontainer');
   const { requestPreviewRepair } = await import('@/lib/preview-repair');
@@ -398,33 +563,46 @@ async function runPreview(
 
   const executePreview = async (
     previewFiles: Array<{ path: string; content: string; source: 'template' | 'ai' | 'hybrid' }>
-  ) =>
-    runInWebContainer(buildFileSystemTree(previewFiles, blueprint), {
-      onStatus(status) {
-        if (status === 'booting') setStage('preview_booting');
-        if (status === 'installing') setStage('preview_installing');
-        if (status === 'starting') setStage('preview_starting');
-        if (status === 'ready') setStage('ready');
+  ) => {
+    if (signal.aborted) {
+      throw createAbortError();
+    }
+
+    return runInWebContainer(
+      buildFileSystemTree(previewFiles, blueprint),
+      {
+        onStatus(status) {
+          if (status === 'booting') setStage('preview_booting');
+          if (status === 'installing') setStage('preview_installing');
+          if (status === 'starting') setStage('preview_starting');
+          if (status === 'ready') setStage('ready');
+        },
+        onLog(message) {
+          recentLogs = [...recentLogs.slice(-199), message];
+          addLog(message);
+        },
+        onUrl(url) {
+          setState((current) => ({
+            ...current,
+            previewUrl: url,
+          }));
+        },
+        onError(message) {
+          lastErrorMessage = message;
+          addLog(`Preview error: ${message}`);
+        },
       },
-      onLog(message) {
-        recentLogs = [...recentLogs.slice(-199), message];
-        addLog(message);
-      },
-      onUrl(url) {
-        setState((current) => ({
-          ...current,
-          previewUrl: url,
-        }));
-      },
-      onError(message) {
-        lastErrorMessage = message;
-        addLog(`Preview error: ${message}`);
-      },
-    });
+      { signal }
+    );
+  };
 
   try {
     return await executePreview(currentFiles);
   } catch (error) {
+    if (signal.aborted || isAbortError(error)) {
+      throw createAbortError();
+    }
+
     const failureMessage = error instanceof Error ? error.message : 'Preview failed';
     const repairResult = await requestPreviewRepair(
       currentFiles,
@@ -441,6 +619,10 @@ async function runPreview(
         message: 'Project generated (preview unavailable)',
       }));
       throw error;
+    }
+
+    if (signal.aborted) {
+      throw createAbortError();
     }
 
     currentFiles = repairResult.files;
@@ -468,6 +650,10 @@ async function runPreview(
     try {
       return await executePreview(currentFiles);
     } catch (retryError) {
+      if (signal.aborted || isAbortError(retryError)) {
+        throw createAbortError();
+      }
+
       setState((current) => ({
         ...current,
         stage: 'ready',
@@ -477,4 +663,12 @@ async function runPreview(
       throw retryError;
     }
   }
+}
+
+function createAbortError() {
+  return new DOMException('Generation canceled by the user.', 'AbortError');
+}
+
+function isAbortError(error: unknown) {
+  return error instanceof DOMException && error.name === 'AbortError';
 }

@@ -1,6 +1,8 @@
 import { aiLogger } from '@/ai/logger';
 import { prepareGeneratedFiles } from '@/builder/file-writer';
 import { selectDesignProfile, summarizeDesignProfile } from './design-system';
+import type { ProjectImageContextInput } from './demo-media';
+import { resolveProjectInternetImages } from './internet-images';
 import { repairGeneratedProject } from './project-repair';
 import { Blueprint } from '@/validators/blueprint.validator';
 import { enhanceWithAI } from './ai-enhancer';
@@ -164,10 +166,29 @@ export async function generateFullProject(
     message: 'Generation complete',
   });
 
-  let preparedFiles = prepareGeneratedFiles(allFiles, blueprint);
+  let projectImageContext: ProjectImageContextInput = blueprint;
+
+  try {
+    const imageResolution = await resolveProjectInternetImages(blueprint);
+    if (imageResolution.resolvedImages.length > 0) {
+      projectImageContext = {
+        ...blueprint,
+        resolvedImages: imageResolution.resolvedImages,
+      };
+    }
+    warnings.push(...imageResolution.warnings);
+  } catch (error) {
+    warnings.push(
+      `Prompt-aware internet image sourcing failed: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`
+    );
+  }
+
+  let preparedFiles = prepareGeneratedFiles(allFiles, projectImageContext);
   const repairResult = await repairGeneratedProject(preparedFiles, blueprint);
   if (repairResult.repairedPaths.length > 0) {
-    preparedFiles = prepareGeneratedFiles(repairResult.files, blueprint);
+    preparedFiles = prepareGeneratedFiles(repairResult.files, projectImageContext);
   } else {
     preparedFiles = repairResult.files;
   }

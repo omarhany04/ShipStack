@@ -264,13 +264,13 @@ function buildDemoImagePath(
 ) {
   return buildStaticDemoImageUrl(
     `${projectContext.projectName}-${modelName}-${fieldName}`,
-    buildDemoImageLabel(fieldName),
+    buildDemoImageLabel(modelName, fieldName),
     projectContext
   );
 }
 
-function buildDemoImageLabel(fieldName: string) {
-  return fieldName
+function buildDemoImageLabel(modelName: string, fieldName: string) {
+  return `${modelName} ${fieldName}`
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/[_-]+/g, ' ')
     .split(' ')

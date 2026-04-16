@@ -9,6 +9,7 @@ interface PreviewPanelProps {
   logs: string[];
   isReady: boolean;
   files?: FileItem[];
+  onFix?: () => void | Promise<void>;
 }
 
 type Tab = 'preview' | 'code' | 'logs';
@@ -19,6 +20,7 @@ export default function PreviewPanel({
   logs,
   isReady,
   files = [],
+  onFix,
 }: PreviewPanelProps) {
   const [activeTab, setActiveTab] = useState<Tab>('preview');
   const [viewMode, setViewMode] = useState<ViewMode>('desktop');
@@ -33,8 +35,13 @@ export default function PreviewPanel({
       return { label: 'Preview unavailable', tone: 'warning' as const };
     }
 
-    return { label: 'Preparing sandbox', tone: 'default' as const };
+      return { label: 'Preparing sandbox', tone: 'default' as const };
   }, [isReady, url]);
+
+  const showFixButton = useMemo(
+    () => Boolean(onFix) && files.length > 0 && hasRepairableIssue(logs, url, isReady),
+    [files.length, isReady, logs, onFix, url]
+  );
 
   return (
     <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[30px] shadow-[0_24px_80px_rgba(15,23,42,0.08)]">
@@ -82,6 +89,17 @@ export default function PreviewPanel({
 
             {url ? (
               <>
+                {showFixButton ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void onFix?.();
+                    }}
+                    className="theme-button-primary inline-flex h-10 items-center justify-center rounded-full px-4 text-sm font-semibold"
+                  >
+                    Fix website
+                  </button>
+                ) : null}
                 <IconButton
                   label="Refresh preview"
                   onClick={() => setIframeKey((value) => value + 1)}
@@ -141,6 +159,22 @@ export default function PreviewPanel({
                     ? 'The preview sandbox could not start, but your generated files and download remain available.'
                     : 'The sandbox is booting, installing dependencies, and getting your generated app ready.'}
                 </p>
+                {showFixButton ? (
+                  <div className="mt-6 space-y-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void onFix?.();
+                      }}
+                      className="theme-button-primary inline-flex rounded-full px-5 py-3 text-sm font-semibold transition hover:-translate-y-0.5"
+                    >
+                      Fix website
+                    </button>
+                    <p className="text-xs leading-6 text-slate-400">
+                      Reproduce the issue in preview first when possible, then use this button to run another repair pass against the generated app.
+                    </p>
+                  </div>
+                ) : null}
               </div>
             </div>
           )
@@ -323,5 +357,16 @@ function CodeGlyph() {
       <path strokeLinecap="round" strokeLinejoin="round" d="m16 9 4 3-4 3" />
       <path strokeLinecap="round" strokeLinejoin="round" d="m14 5-4 14" />
     </svg>
+  );
+}
+
+function hasRepairableIssue(logs: string[], url: string | null, isReady: boolean) {
+  if (!url && isReady) {
+    return true;
+  }
+
+  const recentText = logs.slice(-30).join('\n');
+  return /failed to compile|build error|preview error|runtime error|module not found|cannot resolve|nonerroremittederror|expression expected|typeerror|referenceerror|hydration|cannot read|is not defined|is not a function/i.test(
+    recentText
   );
 }

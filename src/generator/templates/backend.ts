@@ -480,7 +480,7 @@ function buildImageDefaultsObject(fields: BlueprintField[], modelName: string) {
     .filter((field) => isImageLikeField(field))
     .map((field) => {
       const seed = buildDemoImageSeed(modelName, field.name);
-      const label = buildDemoImageLabel(field.name);
+      const label = buildDemoImageLabel(modelName, field.name);
       return `          ...(typeof body.${field.name} === 'string' && body.${field.name}.trim()\n            ? {}\n            : { ${field.name}: getDemoImageUrl('${seed}', '${label}') }),`;
     })
     .join('\n');
@@ -507,8 +507,8 @@ function buildDemoImageSeed(modelName: string, fieldName: string) {
     .toLowerCase();
 }
 
-function buildDemoImageLabel(fieldName: string) {
-  return fieldName
+function buildDemoImageLabel(modelName: string, fieldName: string) {
+  return `${modelName} ${fieldName}`
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/[_-]+/g, ' ')
     .split(' ')

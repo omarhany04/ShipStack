@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { IBM_Plex_Sans, Space_Grotesk } from 'next/font/google';
 import './globals.css';
+import AmbientBackground from './components/AmbientBackground';
 import Providers from './providers';
 
 const headingFont = Space_Grotesk({
@@ -31,8 +32,11 @@ export default function RootLayout({
         <meta httpEquiv="Cross-Origin-Embedder-Policy" content="require-corp" />
         <meta httpEquiv="Cross-Origin-Opener-Policy" content="same-origin" />
       </head>
-      <body>
-        <Providers>{children}</Providers>
+      <body className="relative overflow-x-hidden">
+        <AmbientBackground />
+        <div className="relative z-10">
+          <Providers>{children}</Providers>
+        </div>
       </body>
     </html>
   );

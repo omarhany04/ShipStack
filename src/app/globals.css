@@ -155,6 +155,97 @@
     mask-image: linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.9) 15%, rgba(0, 0, 0, 0.9) 82%, transparent);
   }
 
+  .ambient-shell {
+    background:
+      radial-gradient(circle at 12% 16%, rgba(185, 130, 77, 0.14), transparent 24%),
+      radial-gradient(circle at 86% 18%, rgba(83, 119, 153, 0.14), transparent 26%),
+      radial-gradient(circle at 68% 80%, rgba(22, 32, 51, 0.08), transparent 24%),
+      linear-gradient(180deg, rgba(250, 247, 241, 0.86) 0%, rgba(238, 243, 247, 0.9) 38%, rgba(232, 238, 245, 0.94) 100%);
+  }
+
+  .ambient-grid {
+    background-image:
+      linear-gradient(rgba(83, 119, 153, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(83, 119, 153, 0.055) 1px, transparent 1px);
+    background-position: center;
+    background-size: 68px 68px;
+    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 0.72), transparent 88%);
+    animation: ambient-grid-drift 30s linear infinite;
+  }
+
+  .ambient-sheen {
+    background: linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.2) 24%,
+      rgba(255, 255, 255, 0.06) 58%,
+      rgba(255, 255, 255, 0) 100%
+    );
+    filter: blur(18px);
+    opacity: 0.65;
+  }
+
+  .ambient-sheen-left {
+    transform: rotate(18deg);
+    animation: ambient-sheen-left 20s ease-in-out infinite;
+  }
+
+  .ambient-sheen-right {
+    transform: rotate(-20deg);
+    animation: ambient-sheen-right 24s ease-in-out infinite;
+  }
+
+  .ambient-orb {
+    border-radius: 9999px;
+    filter: blur(90px);
+    opacity: 0.72;
+  }
+
+  .ambient-orb-primary {
+    background: radial-gradient(circle, rgba(185, 130, 77, 0.22), rgba(185, 130, 77, 0.05) 54%, transparent 74%);
+    animation: ambient-orb-primary 18s ease-in-out infinite;
+  }
+
+  .ambient-orb-secondary {
+    background: radial-gradient(circle, rgba(83, 119, 153, 0.24), rgba(83, 119, 153, 0.06) 56%, transparent 76%);
+    animation: ambient-orb-secondary 22s ease-in-out infinite;
+  }
+
+  .ambient-orb-tertiary {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.34), rgba(83, 119, 153, 0.05) 52%, transparent 74%);
+    animation: ambient-orb-tertiary 26s ease-in-out infinite;
+  }
+
+  .ambient-ring {
+    border: 1px solid rgba(255, 255, 255, 0.45);
+    box-shadow:
+      0 0 0 1px rgba(83, 119, 153, 0.08),
+      inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    opacity: 0.55;
+    animation: ambient-ring-pulse 14s ease-in-out infinite;
+  }
+
+  .ambient-ring-delayed {
+    animation-delay: -7s;
+  }
+
+  .ambient-pulse {
+    background: rgba(83, 119, 153, 0.44);
+    box-shadow: 0 0 0 10px rgba(83, 119, 153, 0.08);
+    animation: ambient-dot-pulse 8s ease-in-out infinite;
+  }
+
+  .ambient-pulse-delayed {
+    background: rgba(185, 130, 77, 0.52);
+    box-shadow: 0 0 0 10px rgba(185, 130, 77, 0.08);
+    animation-delay: -3s;
+  }
+
+  .ambient-pulse-slow {
+    animation-duration: 11s;
+    animation-delay: -5s;
+  }
+
   .theme-eyebrow {
     color: var(--brand-accent-strong);
     letter-spacing: 0.24em;
@@ -419,6 +510,101 @@
   }
 }
 
+@keyframes ambient-grid-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(32px, 24px, 0);
+  }
+}
+
+@keyframes ambient-sheen-left {
+  0%,
+  100% {
+    opacity: 0.3;
+    transform: rotate(18deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.8;
+    transform: rotate(21deg) translate3d(28px, -22px, 0);
+  }
+}
+
+@keyframes ambient-sheen-right {
+  0%,
+  100% {
+    opacity: 0.24;
+    transform: rotate(-20deg) translate3d(0, 0, 0);
+  }
+
+  50% {
+    opacity: 0.72;
+    transform: rotate(-17deg) translate3d(-36px, 28px, 0);
+  }
+}
+
+@keyframes ambient-orb-primary {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(54px, -18px, 0) scale(1.08);
+  }
+}
+
+@keyframes ambient-orb-secondary {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(-48px, 26px, 0) scale(1.06);
+  }
+}
+
+@keyframes ambient-orb-tertiary {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(22px, -34px, 0) scale(1.12);
+  }
+}
+
+@keyframes ambient-ring-pulse {
+  0%,
+  100% {
+    opacity: 0.22;
+    transform: scale(0.94);
+  }
+
+  50% {
+    opacity: 0.64;
+    transform: scale(1.06);
+  }
+}
+
+@keyframes ambient-dot-pulse {
+  0%,
+  100% {
+    opacity: 0.32;
+    transform: scale(0.84);
+  }
+
+  50% {
+    opacity: 0.82;
+    transform: scale(1.16);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-fade-up,
   .animate-float-soft,
@@ -428,7 +614,15 @@
   .animate-aurora-pan,
   .animate-pulse-glow,
   .animate-wave-shift,
-  .animate-shimmer::after {
+  .animate-shimmer::after,
+  .ambient-grid,
+  .ambient-sheen-left,
+  .ambient-sheen-right,
+  .ambient-orb-primary,
+  .ambient-orb-secondary,
+  .ambient-orb-tertiary,
+  .ambient-ring,
+  .ambient-pulse {
     animation: none !important;
   }
 }

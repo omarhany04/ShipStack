@@ -39,6 +39,7 @@ export default function HomePage() {
   const showProgress = isLoading || state.stage === 'error';
   const previousStageRef = useRef(state.stage);
   const hasTabNotificationRef = useRef(false);
+  const runtimeLogsRef = useRef<HTMLDivElement | null>(null);
   const faviconStateRef = useRef<{
     link: HTMLLinkElement | null;
     originalHref: string;
@@ -262,6 +263,14 @@ export default function HomePage() {
     };
   }, [state.message, state.stage]);
 
+  useEffect(() => {
+    if (!runtimeLogsRef.current || state.logs.length === 0) {
+      return;
+    }
+
+    runtimeLogsRef.current.scrollTop = runtimeLogsRef.current.scrollHeight;
+  }, [state.logs]);
+
   return (
     <div className="relative min-h-screen overflow-hidden">
       <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[480px] bg-[radial-gradient(circle_at_top_left,_rgba(185,130,77,0.22),_transparent_30%),radial-gradient(circle_at_top_right,_rgba(83,119,153,0.18),_transparent_26%),linear-gradient(180deg,_rgba(255,255,255,0.82),_transparent)]" />
@@ -385,7 +394,10 @@ export default function HomePage() {
                   <p className="text-sm font-semibold text-slate-900">Runtime activity</p>
                   <p className="mt-1 text-xs text-slate-400">Recent orchestration and preview events</p>
                 </div>
-                <div className="max-h-[260px] overflow-y-auto bg-slate-950 px-4 py-4 text-xs text-slate-300">
+                <div
+                  ref={runtimeLogsRef}
+                  className="max-h-[260px] overflow-y-auto bg-slate-950 px-4 py-4 text-xs text-slate-300"
+                >
                   {state.logs.map((log, index) => (
                     <p key={`${index}-${log}`} className="py-1 font-mono leading-6">
                       {log}

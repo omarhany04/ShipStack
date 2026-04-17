@@ -169,7 +169,7 @@ export async function generateFullProject(
   let projectImageContext: ProjectImageContextInput = blueprint;
 
   try {
-    const imageResolution = await resolveProjectInternetImages(blueprint);
+    const imageResolution = await resolveProjectInternetImages(blueprint, allFiles);
     if (imageResolution.resolvedImages.length > 0) {
       projectImageContext = {
         ...blueprint,

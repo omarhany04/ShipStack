@@ -802,6 +802,7 @@ function normalizeFileContent(
     `${projectContext.projectName}-${file.path}`,
     labelFromPath(file.path)
   );
+  content = replaceArbitraryUnsplashUrls(content, projectContext, file.path);
 
   return content;
 }
@@ -936,6 +937,34 @@ function replaceLocalDemoImageUrls(
       `${projectContext.projectName}-${filePath}-${replacementIndex}`;
     const label = params.get('label') ?? labelFromPath(filePath);
     return buildStaticDemoImageUrl(seed, label, projectContext);
+  });
+}
+
+function replaceArbitraryUnsplashUrls(
+  content: string,
+  projectContext: ResolvedProjectImageContext,
+  filePath: string
+) {
+  if (filePath === 'src/lib/demo-media.ts') {
+    return content;
+  }
+
+  const unsplashPattern = /https?:\/\/images\.unsplash\.com\/photo-[^'"`\s)]+/gi;
+
+  if (!unsplashPattern.test(content)) {
+    return content;
+  }
+
+  unsplashPattern.lastIndex = 0;
+  let replacementIndex = 0;
+
+  return content.replace(unsplashPattern, () => {
+    replacementIndex += 1;
+    return buildStaticDemoImageUrl(
+      `${projectContext.projectName}-${filePath}-unsplash-${replacementIndex}`,
+      labelFromPath(filePath),
+      projectContext
+    );
   });
 }
 

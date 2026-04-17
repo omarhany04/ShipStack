@@ -3,13 +3,16 @@ import { Blueprint } from '@/validators/blueprint.validator';
 export type ProjectImageContextInput =
   | string
   | ResolvedProjectImageContext
-  | (Pick<Blueprint, 'projectName' | 'description' | 'features'> & {
+  | (Pick<Blueprint, 'projectName' | 'description' | 'features' | 'pages' | 'dataModels'> & {
       resolvedImages?: ProjectImageSearchResult[];
     })
   | {
       projectName?: string;
       description?: string;
       featureNames?: string[];
+      pageNames?: string[];
+      pageDescriptions?: string[];
+      modelNames?: string[];
       themeHint?: string;
       resolvedImages?: ProjectImageSearchResult[];
     };
@@ -56,6 +59,55 @@ const WIDE_IMAGE_HINTS = [
   'feature',
   'landing',
   'showcase',
+];
+
+const DETAIL_IMAGE_HINTS = [
+  'gallery',
+  'product',
+  'products',
+  'item',
+  'items',
+  'menu',
+  'dish',
+  'meal',
+  'recipe',
+  'pizza',
+  'burger',
+  'pasta',
+  'sushi',
+  'dessert',
+  'drink',
+  'coffee',
+  'beverage',
+  'cocktail',
+  'listing',
+  'listings',
+  'catalog',
+  'collection',
+  'thumbnail',
+  'card',
+  'detail',
+  'details',
+  'interior',
+  'exterior',
+  'room',
+  'suite',
+  'property',
+  'vehicle',
+  'car',
+  'fashion',
+  'outfit',
+  'shoe',
+  'bag',
+  'jewelry',
+  'watch',
+  'device',
+  'screen',
+  'dashboard',
+  'course',
+  'lesson',
+  'book',
+  'equipment',
 ];
 
 const DEMO_IMAGE_CATEGORY_KEYWORDS = [
@@ -445,9 +497,43 @@ export function resolveProjectImageContext(
           Array.isArray(input.featureNames)
         ? input.featureNames
         : [];
+  const pageNames =
+    input && typeof input === 'object' && 'pages' in input && Array.isArray(input.pages)
+      ? input.pages.map((page) => page.name)
+      : input &&
+          typeof input === 'object' &&
+          'pageNames' in input &&
+          Array.isArray(input.pageNames)
+        ? input.pageNames
+        : [];
+  const pageDescriptions =
+    input && typeof input === 'object' && 'pages' in input && Array.isArray(input.pages)
+      ? input.pages.map((page) => page.description)
+      : input &&
+          typeof input === 'object' &&
+          'pageDescriptions' in input &&
+          Array.isArray(input.pageDescriptions)
+        ? input.pageDescriptions
+        : [];
+  const modelNames =
+    input && typeof input === 'object' && 'dataModels' in input && Array.isArray(input.dataModels)
+      ? input.dataModels.map((model) => model.name)
+      : input &&
+          typeof input === 'object' &&
+          'modelNames' in input &&
+          Array.isArray(input.modelNames)
+        ? input.modelNames
+        : [];
 
   const themeHint = normalizeHintText(
-    [projectName, description, ...featureNames.filter(Boolean)].join(' ')
+    [
+      projectName,
+      description,
+      ...featureNames.filter(Boolean),
+      ...pageNames.filter(Boolean),
+      ...pageDescriptions.filter(Boolean),
+      ...modelNames.filter(Boolean),
+    ].join(' ')
   );
 
   return {
@@ -533,6 +619,8 @@ const PROJECT_THEME_HINT = ${JSON.stringify(projectContext.themeHint)};
 const PORTRAIT_IMAGE_HINTS: string[] = ${JSON.stringify(PORTRAIT_IMAGE_HINTS, null, 2)};
 
 const WIDE_IMAGE_HINTS: string[] = ${JSON.stringify(WIDE_IMAGE_HINTS, null, 2)};
+
+const DETAIL_IMAGE_HINTS: string[] = ${JSON.stringify(DETAIL_IMAGE_HINTS, null, 2)};
 
 const DEMO_IMAGE_CATEGORY_KEYWORDS: Array<{ category: DemoImageCategory; keywords: string[] }> = ${JSON.stringify(
     DEMO_IMAGE_CATEGORY_KEYWORDS,
@@ -625,19 +713,33 @@ export function getDemoImageUrl(seed: string, label = 'Demo Photo', _variant?: s
 }
 
 function pickDemoImageSize(context: string) {
-  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return { width: 640, height: 640 };
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
+
+  if (isWideContext) {
+    return { width: 1600, height: 900 };
   }
 
-  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return { width: 1600, height: 900 };
+  if (isDetailContext) {
+    return { width: 1200, height: 1200 };
+  }
+
+  if (isPortraitContext) {
+    return { width: 640, height: 640 };
   }
 
   return { width: 1200, height: 900 };
 }
 
 function pickDemoImageBaseUrl(context: string) {
-  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
+
+  if (isPortraitContext) {
     return UNSPLASH_PORTRAIT_URLS[hashString(context) % UNSPLASH_PORTRAIT_URLS.length];
   }
 
@@ -654,52 +756,107 @@ function pickResolvedProjectImageUrl(context: string) {
 
   const slot = detectProjectImageSlot(context);
   const slotOrder = getResolvedImageSlotOrder(slot);
+  const rankedEntries = RESOLVED_PROJECT_IMAGES
+    .map((entry) => ({
+      entry,
+      slotPriority: slotOrder.indexOf(entry.slot),
+    }))
+    .filter(({ entry, slotPriority }) => slotPriority !== -1 && Array.isArray(entry.urls) && entry.urls.length > 0)
+    .sort(
+      (left, right) =>
+        scoreResolvedImageEntry(context, right.entry, right.slotPriority) -
+        scoreResolvedImageEntry(context, left.entry, left.slotPriority)
+    );
 
-  for (const nextSlot of slotOrder) {
-    const matches = RESOLVED_PROJECT_IMAGES.filter((entry) => entry.slot === nextSlot);
-    if (matches.length === 0) {
-      continue;
-    }
-
-    const urls = matches.flatMap((entry) => Array.isArray(entry.urls) ? entry.urls : []).filter(Boolean);
+  for (const { entry } of rankedEntries) {
+    const urls = entry.urls.filter(Boolean);
     if (urls.length === 0) {
       continue;
     }
 
-    return urls[hashString(context + ':' + nextSlot) % urls.length];
+    return urls[hashString(context + ':' + entry.slot + ':' + entry.query) % urls.length];
   }
 
   return null;
 }
 
 function detectProjectImageSlot(context: string) {
-  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return 'portrait';
-  }
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
 
-  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+  if (isWideContext) {
     return 'hero';
   }
 
-  if (
-    [
-      'gallery',
-      'product',
-      'menu',
-      'listing',
-      'thumbnail',
-      'card',
-      'detail',
-      'interior',
-      'vehicle',
-      'property',
-      'dish',
-    ].some((hint) => context.includes(hint))
-  ) {
+  if (isDetailContext) {
     return 'gallery';
   }
 
+  if (isPortraitContext) {
+    return 'portrait';
+  }
+
   return 'generic';
+}
+
+function scoreResolvedImageEntry(
+  context: string,
+  entry: ProjectImageSearchResult,
+  slotPriority: number
+) {
+  const contextTokens = tokenizeHintText(context);
+  const queryText = normalizeHintText(entry.query);
+  const queryTokens = tokenizeHintText(entry.query);
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
+
+  let score = 120 - slotPriority * 24;
+
+  for (const token of queryTokens) {
+    if (contextTokens.has(token)) {
+      score += 18;
+    }
+  }
+
+  if (entry.slot === 'portrait' && !isPortraitContext) {
+    score -= 40;
+  }
+
+  if (entry.slot === 'gallery' && isDetailContext) {
+    score += 18;
+  }
+
+  if (entry.slot === 'hero' && isWideContext) {
+    score += 12;
+  }
+
+  if (entry.slot === 'generic' && !isPortraitContext && !isDetailContext && !isWideContext) {
+    score += 8;
+  }
+
+  if (
+    !isPortraitContext &&
+    /portrait|founder|speaker|teacher|doctor|trainer|agent|chef portrait|team/i.test(queryText)
+  ) {
+    score -= 42;
+  }
+
+  if (
+    isDetailContext &&
+    /dish|meal|product|detail|close up|still life|interior|room|suite|device|catalog|menu/i.test(queryText)
+  ) {
+    score += 16;
+  }
+
+  return score;
+}
+
+function tokenizeHintText(value: string) {
+  return new Set(normalizeHintText(value).split(' ').filter((token) => token.length > 2));
 }
 
 function getResolvedImageSlotOrder(slot: ProjectImageSlot): ProjectImageSlot[] {
@@ -799,19 +956,33 @@ function coerceDemoString(value: unknown): string {
 }
 
 function pickDemoImageSize(context: string) {
-  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return { width: 640, height: 640 };
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
+
+  if (isWideContext) {
+    return { width: 1600, height: 900 };
   }
 
-  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return { width: 1600, height: 900 };
+  if (isDetailContext) {
+    return { width: 1200, height: 1200 };
+  }
+
+  if (isPortraitContext) {
+    return { width: 640, height: 640 };
   }
 
   return { width: 1200, height: 900 };
 }
 
 function pickDemoImageBaseUrl(context: string) {
-  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
+
+  if (isPortraitContext) {
     return UNSPLASH_PORTRAIT_URLS[hashString(context) % UNSPLASH_PORTRAIT_URLS.length];
   }
 
@@ -831,52 +1002,107 @@ function pickResolvedProjectImageUrl(
 
   const slot = detectProjectImageSlot(context);
   const slotOrder = getResolvedImageSlotOrder(slot);
+  const rankedEntries = projectContext.resolvedImages
+    .map((entry) => ({
+      entry,
+      slotPriority: slotOrder.indexOf(entry.slot),
+    }))
+    .filter(({ entry, slotPriority }) => slotPriority !== -1 && entry.urls.length > 0)
+    .sort(
+      (left, right) =>
+        scoreResolvedImageEntry(context, right.entry, right.slotPriority) -
+        scoreResolvedImageEntry(context, left.entry, left.slotPriority)
+    );
 
-  for (const nextSlot of slotOrder) {
-    const matches = projectContext.resolvedImages.filter((entry) => entry.slot === nextSlot);
-    if (matches.length === 0) {
-      continue;
-    }
-
-    const urls = matches.flatMap((entry) => entry.urls).filter(Boolean);
+  for (const { entry } of rankedEntries) {
+    const urls = entry.urls.filter(Boolean);
     if (urls.length === 0) {
       continue;
     }
 
-    return urls[hashString(`${context}:${nextSlot}`) % urls.length];
+    return urls[hashString(`${context}:${entry.slot}:${entry.query}`) % urls.length];
   }
 
   return null;
 }
 
 function detectProjectImageSlot(context: string): ProjectImageSlot {
-  if (PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint))) {
-    return 'portrait';
-  }
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
 
-  if (WIDE_IMAGE_HINTS.some((hint) => context.includes(hint))) {
+  if (isWideContext) {
     return 'hero';
   }
 
-  if (
-    [
-      'gallery',
-      'product',
-      'menu',
-      'listing',
-      'thumbnail',
-      'card',
-      'detail',
-      'interior',
-      'vehicle',
-      'property',
-      'dish',
-    ].some((hint) => context.includes(hint))
-  ) {
+  if (isDetailContext) {
     return 'gallery';
   }
 
+  if (isPortraitContext) {
+    return 'portrait';
+  }
+
   return 'generic';
+}
+
+function scoreResolvedImageEntry(
+  context: string,
+  entry: ProjectImageSearchResult,
+  slotPriority: number
+) {
+  const contextTokens = tokenizeHintText(context);
+  const queryText = normalizeHintText(entry.query);
+  const queryTokens = tokenizeHintText(entry.query);
+  const isWideContext = WIDE_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isDetailContext = DETAIL_IMAGE_HINTS.some((hint) => context.includes(hint));
+  const isPortraitContext =
+    PORTRAIT_IMAGE_HINTS.some((hint) => context.includes(hint)) && !isWideContext && !isDetailContext;
+
+  let score = 120 - slotPriority * 24;
+
+  for (const token of queryTokens) {
+    if (contextTokens.has(token)) {
+      score += 18;
+    }
+  }
+
+  if (entry.slot === 'portrait' && !isPortraitContext) {
+    score -= 40;
+  }
+
+  if (entry.slot === 'gallery' && isDetailContext) {
+    score += 18;
+  }
+
+  if (entry.slot === 'hero' && isWideContext) {
+    score += 12;
+  }
+
+  if (entry.slot === 'generic' && !isPortraitContext && !isDetailContext && !isWideContext) {
+    score += 8;
+  }
+
+  if (
+    !isPortraitContext &&
+    /portrait|founder|speaker|teacher|doctor|trainer|agent|chef portrait|team/i.test(queryText)
+  ) {
+    score -= 42;
+  }
+
+  if (
+    isDetailContext &&
+    /dish|meal|product|detail|close up|still life|interior|room|suite|device|catalog|menu/i.test(queryText)
+  ) {
+    score += 16;
+  }
+
+  return score;
+}
+
+function tokenizeHintText(value: string) {
+  return new Set(normalizeHintText(value).split(' ').filter((token) => token.length > 2));
 }
 
 function getResolvedImageSlotOrder(slot: ProjectImageSlot): ProjectImageSlot[] {

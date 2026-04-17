@@ -170,7 +170,7 @@ Image theme: ${imageTheme}
   - Use Tailwind CSS only
   - Use only built-in Next.js or React imports plus local modules that are guaranteed to exist in the generated app
   - If you use local UI imports, limit them to '@/components/AnimatedNumber', '@/components/ui/button', '@/components/ui/card', '@/components/ui/badge', '@/components/ui/input', '@/components/ui/textarea', '@/components/ui/label', '@/components/ui/separator', '@/components/ui/sparkles-core', '@/lib/demo-media', and '@/lib/utils'
-  - Prefer importing getDemoImageUrl from '@/lib/demo-media' instead of hardcoding image URLs
+  - Prefer importing getDemoImageUrl from '@/lib/demo-media' instead of hardcoding direct image URLs
   - When you call getDemoImageUrl, use descriptive prompt-aware labels like "vegan meal hero", "boutique hotel suite", or "trainer portrait" rather than generic labels
   - ShipStack can resolve those labels to prompt-aware internet photo URLs, so make the subject matter explicit
   - For any hero image, avatar, product card, testimonial, gallery, or illustration slot, use theme-specific real photos that match this product domain: ${imageTheme}

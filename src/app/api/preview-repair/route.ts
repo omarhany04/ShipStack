@@ -16,6 +16,7 @@ interface PreviewRepairRequest {
   blueprint?: unknown;
   logs?: string[];
   error?: string;
+  aggressive?: boolean;
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -48,16 +49,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       content: file.content,
       source: normalizeSource(file.source),
     }));
-    const errorContext = [body.error, ...(Array.isArray(body.logs) ? body.logs.slice(-60) : [])]
+    const errorContext = [body.error, ...(Array.isArray(body.logs) ? body.logs.slice(-120) : [])]
       .filter(Boolean)
       .join('\n');
 
-    const repairResult = await repairGeneratedProject(files, validatedBlueprint.blueprint, errorContext);
+    const repairResult = await repairGeneratedProject(files, validatedBlueprint.blueprint, errorContext, {
+      aggressive: body.aggressive === true,
+    });
     const preparedFiles = prepareGeneratedFiles(repairResult.files, validatedBlueprint.blueprint);
+    const repaired =
+      repairResult.repairedPaths.length > 0 || !areGeneratedFilesEquivalent(files, preparedFiles);
 
     return NextResponse.json({
       success: true,
-      repaired: repairResult.repairedPaths.length > 0,
+      repaired,
       repairedPaths: repairResult.repairedPaths,
       warnings: repairResult.warnings,
       files: preparedFiles.map((file) => ({
@@ -66,6 +71,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         source: file.source,
       })),
       unresolvedIssues: repairResult.unresolvedIssues,
+      unresolvedValidationIssues: repairResult.unresolvedValidationIssues,
     });
   } catch (error) {
     aiLogger.error('Preview repair failed', undefined, undefined, {
@@ -88,4 +94,25 @@ function normalizeSource(source?: string): GeneratedFile['source'] {
   }
 
   return 'template';
+}
+
+function areGeneratedFilesEquivalent(left: GeneratedFile[], right: GeneratedFile[]) {
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  const rightMap = new Map(right.map((file) => [file.path, file]));
+
+  for (const file of left) {
+    const counterpart = rightMap.get(file.path);
+    if (!counterpart) {
+      return false;
+    }
+
+    if (counterpart.content !== file.content || counterpart.source !== file.source) {
+      return false;
+    }
+  }
+
+  return true;
 }

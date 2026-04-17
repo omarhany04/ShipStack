@@ -186,7 +186,9 @@ export async function generateFullProject(
   }
 
   let preparedFiles = prepareGeneratedFiles(allFiles, projectImageContext);
-  const repairResult = await repairGeneratedProject(preparedFiles, blueprint);
+  const repairResult = await repairGeneratedProject(preparedFiles, blueprint, undefined, {
+    aggressive: true,
+  });
   if (repairResult.repairedPaths.length > 0) {
     preparedFiles = prepareGeneratedFiles(repairResult.files, projectImageContext);
   } else {

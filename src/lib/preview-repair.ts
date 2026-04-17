@@ -15,11 +15,16 @@ interface PreviewRepairResponse {
   error?: string;
 }
 
+interface RequestPreviewRepairOptions {
+  aggressive?: boolean;
+}
+
 export async function requestPreviewRepair(
   files: PreviewRepairFile[],
   blueprint: Blueprint,
   logs: string[],
-  error: string
+  error: string,
+  options: RequestPreviewRepairOptions = {}
 ) {
   const response = await fetch('/api/preview-repair', {
     method: 'POST',
@@ -29,8 +34,9 @@ export async function requestPreviewRepair(
     body: JSON.stringify({
       files,
       blueprint,
-      logs: logs.slice(-80),
+      logs: logs.slice(-160),
       error,
+      aggressive: options.aggressive === true,
     }),
   });
 

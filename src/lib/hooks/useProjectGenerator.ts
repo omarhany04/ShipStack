@@ -99,6 +99,10 @@ interface RunOptions {
   startsWithBlueprint?: boolean;
 }
 
+interface RunPreviewOptions {
+  maxRepairAttempts?: number;
+}
+
 export function useProjectGenerator() {
   const [state, setState] = useState<PipelineState>({
     stage: 'idle',
@@ -252,7 +256,8 @@ export function useProjectGenerator() {
         setStage,
         addLog,
         setState,
-        controller.signal
+        controller.signal,
+        { maxRepairAttempts: 2 }
       );
       teardownRef.current = result.teardown;
 
@@ -471,7 +476,8 @@ export function useProjectGenerator() {
         preparedFiles,
         currentProject.blueprint,
         currentLogs,
-        repairIntent
+        repairIntent,
+        { aggressive: true }
       );
 
       let filesForRetry = preparedFiles;
@@ -492,7 +498,7 @@ export function useProjectGenerator() {
                 ...current.project,
                 files: filesForRetry,
                 displayTree: buildDisplayTree(filesForRetry, currentProject.blueprint),
-                warnings: [...current.project.warnings, ...repairResult.warnings],
+                warnings: mergeProjectWarnings(current.project.warnings, repairResult.warnings),
               }
             : current.project,
         }));
@@ -506,7 +512,8 @@ export function useProjectGenerator() {
         setStage,
         addLog,
         setState,
-        controller.signal
+        controller.signal,
+        { maxRepairAttempts: 4 }
       );
       teardownRef.current = result.teardown;
 
@@ -553,10 +560,12 @@ async function runPreview(
   setStage: (stage: PipelineStage, message?: string) => void,
   addLog: (message: string) => void,
   setState: Dispatch<SetStateAction<PipelineState>>,
-  signal: AbortSignal
+  signal: AbortSignal,
+  options: RunPreviewOptions = {}
 ) {
   const { runInWebContainer } = await import('@/lib/webcontainer');
   const { requestPreviewRepair } = await import('@/lib/preview-repair');
+  const maxRepairAttempts = Math.max(0, options.maxRepairAttempts ?? 1);
   let recentLogs: string[] = [];
   let currentFiles = files;
   let lastErrorMessage = '';
@@ -596,73 +605,72 @@ async function runPreview(
     );
   };
 
-  try {
-    return await executePreview(currentFiles);
-  } catch (error) {
-    if (signal.aborted || isAbortError(error)) {
-      throw createAbortError();
-    }
-
-    const failureMessage = error instanceof Error ? error.message : 'Preview failed';
-    const repairResult = await requestPreviewRepair(
-      currentFiles,
-      blueprint,
-      recentLogs,
-      lastErrorMessage || failureMessage
-    );
-
-    if (!repairResult) {
-      setState((current) => ({
-        ...current,
-        stage: 'ready',
-        progress: 100,
-        message: 'Project generated (preview unavailable)',
-      }));
-      throw error;
-    }
-
-    if (signal.aborted) {
-      throw createAbortError();
-    }
-
-    currentFiles = repairResult.files;
-    recentLogs = [];
-    lastErrorMessage = '';
-    addLog(
-      `Automatic repair updated ${repairResult.repairedPaths.length} file${
-        repairResult.repairedPaths.length === 1 ? '' : 's'
-      }. Retrying preview...`
-    );
-    repairResult.warnings.forEach((warning) => addLog(`Repair note: ${warning}`));
-    setState((current) => ({
-      ...current,
-      project: current.project
-        ? {
-            ...current.project,
-            files: currentFiles,
-            displayTree: buildDisplayTree(currentFiles, blueprint),
-            warnings: [...current.project.warnings, ...repairResult.warnings],
-          }
-        : current.project,
-      previewUrl: null,
-    }));
-
+  for (let repairAttempt = 0; repairAttempt <= maxRepairAttempts; repairAttempt += 1) {
     try {
       return await executePreview(currentFiles);
-    } catch (retryError) {
-      if (signal.aborted || isAbortError(retryError)) {
+    } catch (error) {
+      if (signal.aborted || isAbortError(error)) {
         throw createAbortError();
       }
 
+      const failureMessage = error instanceof Error ? error.message : 'Preview failed';
+      if (repairAttempt >= maxRepairAttempts) {
+        setState((current) => ({
+          ...current,
+          stage: 'ready',
+          progress: 100,
+          message: 'Project generated (preview unavailable)',
+        }));
+        throw error;
+      }
+
+      const repairResult = await requestPreviewRepair(
+        currentFiles,
+        blueprint,
+        recentLogs,
+        lastErrorMessage || failureMessage,
+        { aggressive: true }
+      );
+
+      if (!repairResult) {
+        setState((current) => ({
+          ...current,
+          stage: 'ready',
+          progress: 100,
+          message: 'Project generated (preview unavailable)',
+        }));
+        throw error;
+      }
+
+      if (signal.aborted) {
+        throw createAbortError();
+      }
+
+      currentFiles = repairResult.files;
+      recentLogs = [];
+      lastErrorMessage = '';
+      addLog(
+        `${repairAttempt === 0 ? 'Automatic repair' : `Automatic repair cycle ${repairAttempt + 1}`} updated ${
+          repairResult.repairedPaths.length
+        } file${repairResult.repairedPaths.length === 1 ? '' : 's'}. Retrying preview...`
+      );
+      repairResult.warnings.forEach((warning) => addLog(`Repair note: ${warning}`));
       setState((current) => ({
         ...current,
-        stage: 'ready',
-        progress: 100,
-        message: 'Project generated (preview unavailable)',
+        project: current.project
+          ? {
+              ...current.project,
+              files: currentFiles,
+              displayTree: buildDisplayTree(currentFiles, blueprint),
+              warnings: mergeProjectWarnings(current.project.warnings, repairResult.warnings),
+            }
+          : current.project,
+        previewUrl: null,
       }));
-      throw retryError;
     }
   }
+
+  throw new Error('Preview failed');
 }
 
 function createAbortError() {
@@ -671,4 +679,18 @@ function createAbortError() {
 
 function isAbortError(error: unknown) {
   return error instanceof DOMException && error.name === 'AbortError';
+}
+
+const REPAIR_WARNING_PATTERNS = [
+  /^Automatically repaired \d+ generated file/i,
+  /^Some generated files still have syntax issues:/i,
+  /^Some generated files still have validation issues:/i,
+  /^Automatic repair produced remaining syntax issues in /i,
+];
+
+function mergeProjectWarnings(existing: string[], incoming: string[]) {
+  const preservedWarnings = existing.filter((warning) => !REPAIR_WARNING_PATTERNS.some((pattern) => pattern.test(warning)));
+  const merged = [...preservedWarnings, ...incoming];
+
+  return merged.filter((warning, index) => merged.indexOf(warning) === index);
 }

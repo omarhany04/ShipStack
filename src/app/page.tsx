@@ -484,7 +484,11 @@ export default function HomePage() {
             ) : null}
 
             <div className="grid gap-6 xl:grid-cols-[0.88fr_1.12fr]">
-              <FollowUpPrompt onSubmit={refineWithPrompt} isLoading={isLoading} />
+              <FollowUpPrompt
+                blueprint={state.project.blueprint}
+                onSubmit={refineWithPrompt}
+                isLoading={isLoading}
+              />
               <BlueprintEditor
                 blueprint={state.project.blueprint}
                 onRegenerate={regenerateFromBlueprint}

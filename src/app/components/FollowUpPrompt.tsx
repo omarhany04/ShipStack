@@ -1,36 +1,40 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import type { Blueprint } from '@/validators/blueprint.validator';
 
 interface FollowUpPromptProps {
+  blueprint: Blueprint;
   onSubmit: (prompt: string) => void | Promise<void>;
   isLoading: boolean;
 }
 
-const EXAMPLE_REFINEMENTS = [
-  {
-    title: 'Upgrade the admin layer',
-    prompt: 'Add an admin dashboard with audit logs, role management, activity feeds, and moderation tools.',
-  },
-  {
-    title: 'Make the product feel premium',
-    prompt: 'Redesign the landing page with more premium visuals, clearer pricing, testimonials, and a stronger conversion flow.',
-  },
-  {
-    title: 'Add collaboration',
-    prompt: 'Introduce team workspaces, invitations, approval flows, and role-based access across the product.',
-  },
-  {
-    title: 'Bring in analytics',
-    prompt: 'Add analytics charts, KPI summaries, trend views, and weekly email summaries for managers.',
-  },
-] as const;
+interface SuggestedRefinement {
+  title: string;
+  prompt: string;
+}
 
 export default function FollowUpPrompt({
+  blueprint,
   onSubmit,
   isLoading,
 }: FollowUpPromptProps) {
   const [prompt, setPrompt] = useState('');
+  const candidates = useMemo(() => buildProjectSpecificSuggestions(blueprint), [blueprint]);
+  const blueprintSignature = useMemo(() => {
+    return JSON.stringify({
+      projectName: blueprint.projectName,
+      features: blueprint.features.map((feature) => feature.name),
+      models: blueprint.dataModels.map((model) => model.name),
+      pages: blueprint.pages.map((page) => page.route),
+      auth: blueprint.techStack.auth,
+    });
+  }, [blueprint]);
+  const [suggestion, setSuggestion] = useState<SuggestedRefinement>(() => candidates[0]);
+
+  useEffect(() => {
+    setSuggestion(candidates[Math.floor(Math.random() * candidates.length)] ?? candidates[0]);
+  }, [blueprintSignature, candidates]);
 
   function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -62,7 +66,7 @@ export default function FollowUpPrompt({
         <textarea
           value={prompt}
           onChange={(event) => setPrompt(event.target.value)}
-          placeholder="Example: Add a client billing dashboard, make the navigation more polished, and include an onboarding checklist for new users."
+          placeholder={`Example: ${suggestion.prompt}`}
           rows={6}
           disabled={isLoading}
           className="theme-input w-full rounded-[26px] px-4 py-4 text-sm leading-7 disabled:cursor-not-allowed disabled:opacity-60"
@@ -93,25 +97,97 @@ export default function FollowUpPrompt({
         </div>
       </form>
 
-      <div className="mt-5 grid gap-3">
-        {EXAMPLE_REFINEMENTS.slice(0, 2).map((example) => (
-          <button
-            key={example.title}
-            type="button"
-            disabled={isLoading}
-            onClick={() => setPrompt(example.prompt)}
-            className="theme-card group flex w-full items-start justify-between gap-4 rounded-[24px] px-4 py-4 text-left transition hover:border-[rgba(83,119,153,0.34)] hover:bg-[rgba(241,246,250,0.94)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            <div>
-              <p className="text-sm font-semibold text-slate-900">{example.title}</p>
-              <p className="mt-2 text-sm leading-7 text-slate-500">{example.prompt}</p>
-            </div>
-            <ArrowGlyph className="mt-1 h-4 w-4 flex-shrink-0 text-slate-300 transition group-hover:text-[color:var(--brand-accent)]" />
-          </button>
-        ))}
+      <div className="mt-5">
+        <button
+          type="button"
+          disabled={isLoading}
+          onClick={() => setPrompt(suggestion.prompt)}
+          className="theme-card group flex w-full items-start justify-between gap-4 rounded-[24px] px-4 py-4 text-left transition hover:border-[rgba(83,119,153,0.34)] hover:bg-[rgba(241,246,250,0.94)] disabled:cursor-not-allowed disabled:opacity-60"
+        >
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[color:var(--brand-accent-strong)]">
+              Suggested next move
+            </p>
+            <p className="mt-2 text-sm font-semibold text-slate-900">{suggestion.title}</p>
+            <p className="mt-2 text-sm leading-7 text-slate-500">{suggestion.prompt}</p>
+          </div>
+          <ArrowGlyph className="mt-1 h-4 w-4 flex-shrink-0 text-slate-300 transition group-hover:text-[color:var(--brand-accent)]" />
+        </button>
       </div>
     </section>
   );
+}
+
+function buildProjectSpecificSuggestions(blueprint: Blueprint): SuggestedRefinement[] {
+  const keyFeature = pickFeature(blueprint);
+  const keyModel = blueprint.dataModels[0]?.name ?? 'core data';
+  const secondModel = blueprint.dataModels[1]?.name ?? keyModel;
+  const keyPage = pickPage(blueprint);
+  const authEnabled = blueprint.techStack.auth.toLowerCase() !== 'none';
+  const featureFocus = toLowerLead(keyFeature.name);
+  const featureSentence = trimSentence(keyFeature.description);
+  const pageFocus = keyPage.name;
+  const pageRoute = keyPage.route;
+
+  return [
+    {
+      title: `Deepen the ${pageFocus} workflow`,
+      prompt: `Expand the ${pageFocus} experience at ${pageRoute} so it feels complete for ${featureFocus}. Add clearer states, richer actions, and a more polished flow tied to ${keyModel} data. Build in validation, empty states, and success feedback so the workflow feels production-ready.`,
+    },
+    {
+      title: `Turn ${keyModel} into an operator view`,
+      prompt: `Create a richer operational dashboard around ${keyModel} and ${secondModel}. Add filters, status views, bulk actions, and timeline context so the team can manage ${featureFocus} without leaving the product.`,
+    },
+    {
+      title: authEnabled ? 'Polish the signed-in journey' : 'Add a stronger onboarding layer',
+      prompt: authEnabled
+        ? `Make the signed-in experience more intentional after login. Add onboarding steps, role-aware navigation, and guided actions that help users get value quickly from ${featureFocus}, especially around ${pageFocus} and ${keyModel}.`
+        : `Add onboarding and account flows that help users start using the product immediately. Introduce sign-up, guided setup, and progress tracking so new users can reach the ${pageFocus} workflow faster and understand how ${keyModel} supports ${featureFocus}.`,
+    },
+    {
+      title: `Add insight loops for ${featureFocus}`,
+      prompt: `Introduce analytics and insight surfaces tailored to ${featureFocus}. Add KPI cards, trend summaries, and activity views connected to ${keyModel} so users can understand performance directly inside ${pageFocus}.`,
+    },
+    {
+      title: `Make ${blueprint.projectName} feel more premium`,
+      prompt: `Upgrade the overall product experience for ${blueprint.projectName}. Refine the visual hierarchy, add more intentional storytelling around "${featureSentence}", and make ${pageFocus} feel more premium with stronger layout rhythm, trust-building details, and sharper calls to action.`,
+    },
+  ];
+}
+
+function pickFeature(blueprint: Blueprint) {
+  return (
+    blueprint.features.find((feature) => feature.priority === 'core') ??
+    blueprint.features[0] ?? {
+      name: blueprint.projectName.replace(/-/g, ' '),
+      description: blueprint.description,
+      priority: 'important' as const,
+    }
+  );
+}
+
+function pickPage(blueprint: Blueprint) {
+  return (
+    blueprint.pages.find((page) => page.route !== '/' && page.route !== '/home') ??
+    blueprint.pages[0] ?? {
+      name: 'main workspace',
+      route: '/',
+      description: blueprint.description,
+      components: [],
+    }
+  );
+}
+
+function toLowerLead(value: string) {
+  if (!value) {
+    return value;
+  }
+
+  return value.charAt(0).toLowerCase() + value.slice(1);
+}
+
+function trimSentence(value: string) {
+  return value.replace(/\.$/, '');
 }
 
 function ArrowGlyph({ className = 'h-4 w-4' }: { className?: string }) {

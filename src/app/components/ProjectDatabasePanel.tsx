@@ -269,16 +269,16 @@ export default function ProjectDatabasePanel({
             role="dialog"
             aria-modal="true"
             aria-label={`${projectName} project database`}
-            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[960px] flex-col border-l border-white/40 bg-[linear-gradient(180deg,_rgba(248,245,239,0.98),_rgba(241,246,250,0.98))] shadow-[-24px_0_80px_rgba(15,23,42,0.16)]"
+            className="absolute inset-y-0 right-0 flex h-full w-full max-w-[1180px] flex-col border-l border-[rgba(188,199,214,0.8)] bg-[linear-gradient(180deg,_rgba(255,255,255,0.97),_rgba(245,248,252,0.95))] shadow-[-24px_0_80px_rgba(15,23,42,0.16)]"
           >
             <div className="theme-dark-panel border-b border-slate-200 px-6 py-6 text-white sm:px-8">
               <div className="flex items-start justify-between gap-4">
-                <div className="max-w-2xl">
+                <div className="max-w-3xl">
                   <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#eadbcb]">
                     Generated schema studio
                   </div>
                   <h2 className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">{projectName}</h2>
-                  <p className="mt-3 max-w-xl text-sm leading-7 text-slate-200">
+                  <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-200">
                     Review the generated data model, inspect relationships, and open the raw Prisma
                     schema without leaving the workspace.
                   </p>
@@ -353,7 +353,7 @@ export default function ProjectDatabasePanel({
                           title="Tables in this project"
                           description="Each entity below is normalized from the generated Prisma schema when available, otherwise from the blueprint models."
                         >
-                          <div className="grid gap-3 md:grid-cols-2">
+                          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                             {tables.map((table) => (
                               <div
                                 key={table.name}
@@ -448,7 +448,7 @@ export default function ProjectDatabasePanel({
                     />
                   </div>
                 ) : (
-                  <div className="grid h-full min-h-0 grid-rows-[auto_1fr] overflow-hidden xl:grid-cols-[300px_1fr] xl:grid-rows-1">
+                  <div className="grid h-full min-h-0 grid-rows-[auto_1fr] overflow-hidden xl:grid-cols-[320px_1fr] xl:grid-rows-1">
                     <div className="flex min-h-0 flex-col border-b border-slate-200 bg-white px-6 py-5 xl:border-b-0 xl:border-r xl:px-5">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -484,7 +484,7 @@ export default function ProjectDatabasePanel({
                               onClick={() => setSelectedTableName(table.name)}
                               className={`w-full rounded-[22px] border px-4 py-4 text-left transition ${
                                 selectedTable?.name === table.name
-                                  ? 'border-orange-300 bg-orange-50 shadow-[0_14px_36px_rgba(249,115,22,0.12)]'
+                                  ? 'theme-row-active'
                                   : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                               }`}
                             >
@@ -678,11 +678,11 @@ export default function ProjectDatabasePanel({
               {activeTab === 'schema' ? (
                 <div className="h-full min-h-0 overflow-y-auto px-6 py-6 sm:px-8">
                   {schemaText ? (
-                    <div className="overflow-hidden rounded-[30px] border border-slate-200 bg-slate-950 shadow-[0_18px_50px_rgba(15,23,42,0.12)]">
-                      <div className="flex flex-col gap-3 border-b border-slate-800 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="theme-dark-panel overflow-hidden rounded-[30px]">
+                      <div className="flex flex-col gap-3 border-b border-white/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <p className="text-sm font-semibold text-white">Schema source</p>
-                          <p className="mt-1 text-xs text-slate-400">
+                          <p className="mt-1 text-xs text-slate-300">
                             {schemaFile
                               ? 'Loaded from prisma/schema.prisma in the generated project.'
                               : 'Generated preview from the saved blueprint because no Prisma file was stored.'}
@@ -698,9 +698,16 @@ export default function ProjectDatabasePanel({
                         </button>
                       </div>
 
-                      <pre className="max-h-[calc(100vh-280px)] overflow-auto px-5 py-5 text-xs leading-7 text-slate-300">
-                        <code>{schemaText}</code>
-                      </pre>
+                      <div className="flex max-h-[calc(100vh-260px)] overflow-auto font-mono text-xs leading-6">
+                        <div className="sticky left-0 select-none border-r border-white/10 bg-black/15 px-4 py-5 text-right text-slate-500">
+                          {schemaText.split('\n').map((_, index) => (
+                            <div key={index}>{index + 1}</div>
+                          ))}
+                        </div>
+                        <pre className="flex-1 px-5 py-5 text-slate-200">
+                          <code>{schemaText}</code>
+                        </pre>
+                      </div>
                     </div>
                   ) : (
                     <EmptyState

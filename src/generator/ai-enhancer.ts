@@ -127,6 +127,33 @@ async function generateAIFile(task: EnhancementTask, blueprint: Blueprint) {
   }
 }
 
+function buildPaletteDirectives(designProfile: DesignProfile) {
+  const { palette } = designProfile;
+
+  return `PALETTE (use these exact colors via the CSS variables already defined in globals.css - var(--accent), var(--accent-strong), var(--accent-soft), var(--secondary), var(--foreground), var(--muted), etc.):
+- accent: ${palette.accent} (var(--accent))
+- accent strong: ${palette.accentStrong} (var(--accent-strong))
+- accent soft: ${palette.accentSoft} (var(--accent-soft))
+- secondary: ${palette.secondary} (var(--secondary))
+- foreground/text: ${palette.foreground} (var(--foreground))
+- muted text: ${palette.muted} (var(--muted))
+- hero gradient: ${palette.heroFrom} -> ${palette.heroVia} -> ${palette.heroTo}
+
+Strict color rules:
+- Use ONLY the colors above (via CSS variables) for accents, buttons, links, highlights, badges, gradients, and icons
+- Do NOT use hardcoded Tailwind color utilities for branding/accent purposes (e.g. bg-orange-500, text-blue-600, from-orange-400) unless that exact hue is part of the palette above
+- Never introduce orange/amber as an accent color unless it is explicitly part of the palette above
+- Neutral grays/whites/blacks from Tailwind (slate, gray, zinc, white, black) are fine for text, borders, and surfaces`;
+}
+
+function buildDesignNotesDirective(blueprint: Blueprint) {
+  if (!blueprint.designNotes.trim()) {
+    return '';
+  }
+
+  return `\nUser design preferences (must be honored): ${blueprint.designNotes.trim()}\n`;
+}
+
 function buildReadmePrompt(blueprint: Blueprint, designProfile: DesignProfile) {
   return `Generate a concise and professional README.md for "${blueprint.projectName}".
 
@@ -134,7 +161,7 @@ Description: ${blueprint.description}
 Features: ${blueprint.features.map((feature) => feature.name).join(', ')}
 Models: ${blueprint.dataModels.map((model) => model.name).join(', ')}
 Design direction: ${summarizeDesignProfile(designProfile)}
-
+${buildDesignNotesDirective(blueprint)}
 Include:
 - Title and summary
 - Tech stack
@@ -157,6 +184,8 @@ Pages: ${blueprint.pages.map((page) => `${page.name} (${page.route})`).join(', '
 Design direction: ${summarizeDesignProfile(designProfile)}
 Layout family: ${designProfile.homeVariant}
 Image theme: ${imageTheme}
+${buildDesignNotesDirective(blueprint)}
+${buildPaletteDirectives(designProfile)}
 
   Requirements:
   - Make it feel modern, premium, and product-specific rather than generic
@@ -198,6 +227,8 @@ function buildDashboardPrompt(blueprint: Blueprint, designProfile: DesignProfile
   - Use Tailwind CSS
   - Include loading and error states
   - Match this design direction: ${summarizeDesignProfile(designProfile)}
+${buildDesignNotesDirective(blueprint)}
+${buildPaletteDirectives(designProfile)}
   - Use premium motion patterns that fit dashboards: animated counters, staggered card entrances, hover depth, and restrained ambient polish
   - Reuse the generated motion-friendly classes where helpful, including scroll-reveal, route-card, hero-stat-card, and nav-chip
   - Respect reduced-motion users and keep motion fast and readable

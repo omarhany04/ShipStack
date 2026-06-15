@@ -8,7 +8,7 @@ export interface DesignFontDefinition {
 }
 
 export interface DesignProfile {
-  id: 'nova' | 'editorial' | 'executive' | 'pulse';
+  id: 'nova' | 'editorial' | 'executive' | 'pulse' | 'slate' | 'aurora' | 'field' | 'crimson';
   label: string;
   summary: string;
   accentLabel: string;
@@ -203,10 +203,335 @@ const DESIGN_PROFILES: DesignProfile[] = [
       glowB: 'rgba(20,184,166,0.14)',
     },
   },
+  {
+    id: 'slate',
+    label: 'Monochrome Studio',
+    summary:
+      'A refined monochrome studio aesthetic with charcoal and graphite tones, crisp grid-driven layouts, and minimal high-contrast accents.',
+    accentLabel: 'Studio build',
+    homeVariant: 'workspace',
+    fonts: {
+      heading: {
+        importName: 'Space_Grotesk',
+        constName: 'spaceGrotesk',
+        variable: '--font-heading',
+        options: "{ subsets: ['latin'], variable: '--font-heading', weight: ['500', '600', '700'] }",
+      },
+      body: {
+        importName: 'Inter',
+        constName: 'inter',
+        variable: '--font-body',
+        options: "{ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600', '700'] }",
+      },
+    },
+    palette: {
+      background: '#f4f4f5',
+      backgroundSecondary: '#e4e4e7',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(82,82,91,0.18)',
+      foreground: '#18181b',
+      muted: '#71717a',
+      accent: '#27272a',
+      accentStrong: '#09090b',
+      accentSoft: 'rgba(39,39,42,0.08)',
+      secondary: '#52525b',
+      secondarySoft: 'rgba(82,82,91,0.08)',
+      heroFrom: '#09090b',
+      heroVia: '#27272a',
+      heroTo: '#52525b',
+      glowA: 'rgba(255,255,255,0.08)',
+      glowB: 'rgba(148,163,184,0.14)',
+    },
+  },
+  {
+    id: 'aurora',
+    label: 'Aurora Frame',
+    summary:
+      'A bold violet-and-indigo product direction with rich gradients, glassy panels, layered depth, and confident contrast.',
+    accentLabel: 'Aurora build',
+    homeVariant: 'spotlight',
+    fonts: {
+      heading: {
+        importName: 'Lexend',
+        constName: 'lexend',
+        variable: '--font-heading',
+        options: "{ subsets: ['latin'], variable: '--font-heading', weight: ['500', '600', '700', '800'] }",
+      },
+      body: {
+        importName: 'Work_Sans',
+        constName: 'workSans',
+        variable: '--font-body',
+        options: "{ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600', '700'] }",
+      },
+    },
+    palette: {
+      background: '#f7f6fb',
+      backgroundSecondary: '#f1eefb',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(124,58,237,0.16)',
+      foreground: '#1e1b2e',
+      muted: '#6b6480',
+      accent: '#7c3aed',
+      accentStrong: '#5b21b6',
+      accentSoft: 'rgba(124,58,237,0.12)',
+      secondary: '#1e1b4b',
+      secondarySoft: 'rgba(30,27,75,0.08)',
+      heroFrom: '#150f2e',
+      heroVia: '#4c1d95',
+      heroTo: '#7c3aed',
+      glowA: 'rgba(124,58,237,0.22)',
+      glowB: 'rgba(56,189,248,0.12)',
+    },
+  },
+  {
+    id: 'field',
+    label: 'Field Notes',
+    summary:
+      'A warm editorial direction with cream surfaces, refined serif headlines, expressive spacing, and grounded emerald-green accents.',
+    accentLabel: 'Field build',
+    homeVariant: 'editorial',
+    fonts: {
+      heading: {
+        importName: 'Source_Serif_4',
+        constName: 'sourceSerif4',
+        variable: '--font-heading',
+        options: "{ subsets: ['latin'], variable: '--font-heading', weight: ['500', '600', '700'] }",
+      },
+      body: {
+        importName: 'DM_Sans',
+        constName: 'dmSans',
+        variable: '--font-body',
+        options: "{ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '700'] }",
+      },
+    },
+    palette: {
+      background: '#f6f8f4',
+      backgroundSecondary: '#fdfdf9',
+      surface: 'rgba(255,253,246,0.92)',
+      surfaceStrong: '#fffef8',
+      panelBorder: 'rgba(22,101,52,0.16)',
+      foreground: '#1f2937',
+      muted: '#6b7c6f',
+      accent: '#15803d',
+      accentStrong: '#166534',
+      accentSoft: 'rgba(21,128,61,0.12)',
+      secondary: '#14532d',
+      secondarySoft: 'rgba(20,83,45,0.08)',
+      heroFrom: '#08170d',
+      heroVia: '#14532d',
+      heroTo: '#15803d',
+      glowA: 'rgba(21,128,61,0.2)',
+      glowB: 'rgba(132,204,22,0.12)',
+    },
+  },
+  {
+    id: 'crimson',
+    label: 'Signal Crimson',
+    summary:
+      'A high-contrast crimson-and-charcoal showcase with bold typography, rounded geometry, and energetic accents.',
+    accentLabel: 'Signal build',
+    homeVariant: 'showcase',
+    fonts: {
+      heading: {
+        importName: 'Urbanist',
+        constName: 'urbanist',
+        variable: '--font-heading',
+        options: "{ subsets: ['latin'], variable: '--font-heading', weight: ['500', '600', '700', '800'] }",
+      },
+      body: {
+        importName: 'Be_Vietnam_Pro',
+        constName: 'beVietnamPro',
+        variable: '--font-body',
+        options: "{ subsets: ['latin'], variable: '--font-body', weight: ['400', '500', '600', '700'] }",
+      },
+    },
+    palette: {
+      background: '#fbf7f7',
+      backgroundSecondary: '#fdf0f0',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(220,38,38,0.16)',
+      foreground: '#1c1917',
+      muted: '#7a716e',
+      accent: '#dc2626',
+      accentStrong: '#991b1b',
+      accentSoft: 'rgba(220,38,38,0.12)',
+      secondary: '#1c1917',
+      secondarySoft: 'rgba(28,25,23,0.08)',
+      heroFrom: '#1a0f0f',
+      heroVia: '#7f1d1d',
+      heroTo: '#dc2626',
+      glowA: 'rgba(220,38,38,0.22)',
+      glowB: 'rgba(120,113,108,0.14)',
+    },
+  },
 ];
 
-export function selectDesignProfile(_blueprint: Blueprint) {
-  return DESIGN_PROFILES[Math.floor(Math.random() * DESIGN_PROFILES.length)];
+interface PaletteOverride {
+  label: string;
+  matchers: RegExp[];
+  palette: DesignProfile['palette'];
+}
+
+const PALETTE_OVERRIDES: PaletteOverride[] = [
+  {
+    label: 'monochrome grey and black',
+    matchers: [
+      /\bgrey\s+and\s+black\b/,
+      /\bgray\s+and\s+black\b/,
+      /\bblack\s+and\s+grey\b/,
+      /\bblack\s+and\s+gray\b/,
+      /\bblack\s+(?:,|and)\s+white(?:\s+and\s+grey|\s+and\s+gray)?\b/,
+      /\bmonochrome\b/,
+      /\bgrayscale\b/,
+      /\bgreyscale\b/,
+      /\bcharcoal\b/,
+      /\bgraphite\b/,
+      /\bnoir\b/,
+    ],
+    palette: {
+      background: '#f4f4f5',
+      backgroundSecondary: '#e4e4e7',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(82,82,91,0.18)',
+      foreground: '#18181b',
+      muted: '#71717a',
+      accent: '#27272a',
+      accentStrong: '#09090b',
+      accentSoft: 'rgba(39,39,42,0.08)',
+      secondary: '#52525b',
+      secondarySoft: 'rgba(82,82,91,0.08)',
+      heroFrom: '#09090b',
+      heroVia: '#27272a',
+      heroTo: '#52525b',
+      glowA: 'rgba(255,255,255,0.08)',
+      glowB: 'rgba(148,163,184,0.14)',
+    },
+  },
+  {
+    label: 'navy and blue',
+    matchers: [/\bnavy\b/, /\bcobalt\b/, /\broyal\s+blue\b/, /\bblue\b/],
+    palette: {
+      background: '#f5f8fc',
+      backgroundSecondary: '#eaf1f8',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(30,64,175,0.16)',
+      foreground: '#0f172a',
+      muted: '#5b6b85',
+      accent: '#1d4ed8',
+      accentStrong: '#1e3a8a',
+      accentSoft: 'rgba(29,78,216,0.12)',
+      secondary: '#0f172a',
+      secondarySoft: 'rgba(15,23,42,0.08)',
+      heroFrom: '#0b1226',
+      heroVia: '#1e3a8a',
+      heroTo: '#1d4ed8',
+      glowA: 'rgba(29,78,216,0.2)',
+      glowB: 'rgba(56,189,248,0.14)',
+    },
+  },
+  {
+    label: 'green and emerald',
+    matchers: [/\bgreen\b/, /\bemerald\b/, /\bforest\b/, /\bsage\b/],
+    palette: {
+      background: '#f5faf6',
+      backgroundSecondary: '#eaf6ee',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(22,101,52,0.16)',
+      foreground: '#1a2e22',
+      muted: '#5d7766',
+      accent: '#15803d',
+      accentStrong: '#166534',
+      accentSoft: 'rgba(21,128,61,0.12)',
+      secondary: '#14532d',
+      secondarySoft: 'rgba(20,83,45,0.08)',
+      heroFrom: '#08170d',
+      heroVia: '#14532d',
+      heroTo: '#15803d',
+      glowA: 'rgba(21,128,61,0.2)',
+      glowB: 'rgba(132,204,22,0.12)',
+    },
+  },
+  {
+    label: 'purple and violet',
+    matchers: [/\bpurple\b/, /\bviolet\b/, /\bindigo\b/, /\blavender\b/, /\bplum\b/],
+    palette: {
+      background: '#f8f7fc',
+      backgroundSecondary: '#f0edfa',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(109,40,217,0.16)',
+      foreground: '#1e1b2e',
+      muted: '#6b6480',
+      accent: '#7c3aed',
+      accentStrong: '#5b21b6',
+      accentSoft: 'rgba(124,58,237,0.12)',
+      secondary: '#1e1b4b',
+      secondarySoft: 'rgba(30,27,75,0.08)',
+      heroFrom: '#150f2e',
+      heroVia: '#4c1d95',
+      heroTo: '#7c3aed',
+      glowA: 'rgba(124,58,237,0.22)',
+      glowB: 'rgba(56,189,248,0.12)',
+    },
+  },
+  {
+    label: 'red and crimson',
+    matchers: [/\bred\b/, /\bcrimson\b/, /\bburgundy\b/, /\bmaroon\b/, /\bruby\b/, /\bscarlet\b/],
+    palette: {
+      background: '#fbf7f7',
+      backgroundSecondary: '#fdf0f0',
+      surface: 'rgba(255,255,255,0.92)',
+      surfaceStrong: '#ffffff',
+      panelBorder: 'rgba(220,38,38,0.16)',
+      foreground: '#1c1917',
+      muted: '#7a716e',
+      accent: '#dc2626',
+      accentStrong: '#991b1b',
+      accentSoft: 'rgba(220,38,38,0.12)',
+      secondary: '#1c1917',
+      secondarySoft: 'rgba(28,25,23,0.08)',
+      heroFrom: '#1a0f0f',
+      heroVia: '#7f1d1d',
+      heroTo: '#dc2626',
+      glowA: 'rgba(220,38,38,0.22)',
+      glowB: 'rgba(120,113,108,0.14)',
+    },
+  },
+];
+
+function buildPreferenceText(blueprint: Blueprint): string {
+  return [blueprint.description, blueprint.designNotes, ...blueprint.features.map((feature) => feature.description)]
+    .join(' ')
+    .toLowerCase();
+}
+
+function findPaletteOverride(blueprint: Blueprint): PaletteOverride | null {
+  const haystack = buildPreferenceText(blueprint);
+  return PALETTE_OVERRIDES.find((entry) => entry.matchers.some((matcher) => matcher.test(haystack))) ?? null;
+}
+
+function applyPaletteOverride(profile: DesignProfile, blueprint: Blueprint): DesignProfile {
+  const override = findPaletteOverride(blueprint);
+  if (!override) {
+    return profile;
+  }
+
+  return {
+    ...profile,
+    palette: override.palette,
+    summary: `${profile.summary} Color direction adjusted to match the requested ${override.label} palette - do not introduce unrelated accent colors such as orange.`,
+  };
+}
+
+export function selectDesignProfile(blueprint: Blueprint) {
+  const base = DESIGN_PROFILES[Math.floor(Math.random() * DESIGN_PROFILES.length)];
+  return applyPaletteOverride(base, blueprint);
 }
 
 export function selectStableDesignProfile(blueprint: Blueprint) {
@@ -217,7 +542,8 @@ export function selectStableDesignProfile(blueprint: Blueprint) {
     hash = (hash * 31 + key.charCodeAt(index)) >>> 0;
   }
 
-  return DESIGN_PROFILES[hash % DESIGN_PROFILES.length];
+  const base = DESIGN_PROFILES[hash % DESIGN_PROFILES.length];
+  return applyPaletteOverride(base, blueprint);
 }
 
 export function summarizeDesignProfile(profile: DesignProfile) {

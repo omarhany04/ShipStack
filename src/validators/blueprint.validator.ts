@@ -43,6 +43,7 @@ export interface BlueprintTechStack {
 export interface Blueprint {
   projectName: string;
   description: string;
+  designNotes: string;
   features: BlueprintFeature[];
   dataModels: BlueprintDataModel[];
   apiEndpoints: BlueprintApiEndpoint[];
@@ -99,6 +100,8 @@ export function validateBlueprint(parsed: unknown): BlueprintValidationResult {
     wasRepaired = true;
   }
 
+  const designNotes = validateString(raw.designNotes) ?? '';
+
   const features = validateFeatures(raw.features, warnings);
   const dataModels = validateDataModels(raw.dataModels, warnings);
   const apiEndpoints = validateApiEndpoints(raw.apiEndpoints, warnings);
@@ -127,6 +130,7 @@ export function validateBlueprint(parsed: unknown): BlueprintValidationResult {
     ? {
         projectName,
         description,
+        designNotes,
         features: features.items,
         dataModels: dataModels.items,
         apiEndpoints: apiEndpoints.items,

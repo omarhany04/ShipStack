@@ -9,6 +9,7 @@ Use this exact schema:
 {
   "projectName": "string (kebab-case)",
   "description": "string",
+  "designNotes": "string - capture any explicit visual/branding preferences the user mentioned (colors, color combinations, tone, mood, dark/light mode, typography style, industry aesthetic). Empty string if the user did not mention any.",
   "features": [
     {
       "name": "string",
@@ -74,6 +75,8 @@ Focus on MVP scope. Generate 3-6 models, 8-15 endpoints, and 4-8 pages.`,
   - The generated app must stay stable during initial render, navigation, scrolling, resizing, and common user interactions
   - Avoid repeating the same landing-page skeleton, spacing rhythm, or card layout across unrelated products
   - When given a design direction, commit to it and make the composition feel intentionally different
+  - When a PALETTE is provided, use exactly those colors (via the given CSS variables) for every accent, button, gradient, badge, and highlight - never substitute a different hue (especially never default to orange/amber) unless it is explicitly part of the given palette
+  - When user design preferences are provided (colors, tone, mood, typography style), the generated UI must visibly and consistently reflect that direction across the hero, navigation, buttons, and highlight elements
   - Keep interactions useful and working, not placeholder-only
   - Every visible button, link, tab, and form control must map to a real route, real submission, or real state change
   - Never use "#", "javascript:void(0)", or unresolved dynamic paths like "/items/[id]" as user-facing actions
@@ -143,6 +146,7 @@ Rules:
 - Keep the existing blueprint structure unless the request explicitly changes it
 - Preserve useful details that are still compatible
 - Update features, pages, models, endpoints, and tech stack where needed
+- Preserve "designNotes" from the current blueprint unless the request adds or changes visual/branding preferences (colors, tone, typography style, mood); merge new preferences into "designNotes" rather than discarding existing ones
 - Return ONLY valid JSON`,
   };
 }

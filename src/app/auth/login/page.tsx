@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth/useAuth';
+import { BoltIcon, EyeIcon, EyeOffIcon, LockIcon, MailIcon, ShieldIcon, SparkleIcon, SpinnerIcon } from '../icons';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -54,29 +55,33 @@ export default function LoginPage() {
 
   return (
     <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[1.05fr_0.95fr]">
-      <section className="theme-dark-panel hidden rounded-[32px] p-10 lg:flex lg:flex-col lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#eadbcb]">
-            ShipStack Access
-          </p>
-          <h1 className="mt-5 text-5xl font-bold tracking-tight text-white">
-            Build faster behind a proper auth gate.
+      <section className="theme-dark-panel relative hidden overflow-hidden rounded-[32px] p-10 lg:flex lg:flex-col lg:justify-between">
+        <div className="ambient-mesh ambient-mesh-cool pointer-events-none absolute -right-24 -top-24 h-72 w-72" />
+        <div className="ambient-mesh ambient-mesh-warm pointer-events-none absolute -bottom-28 -left-16 h-72 w-72" />
+
+        <div className="relative">
+          <span className="theme-status-accent inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
+            <SparkleIcon className="h-3.5 w-3.5" />
+            Welcome back
+          </span>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight text-white">
+            Sign in to keep building.
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-200">
-            Secure your generators, project history, and usage data with a clean sign-in flow built for product teams.
+            Pick up your generators, project history, and live previews right where you left off.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <FeatureCard label="Protected routes" value="Middleware" />
-          <FeatureCard label="Session strategy" value="JWT" />
-          <FeatureCard label="Password storage" value="bcryptjs" />
+        <div className="relative grid gap-4 sm:grid-cols-3">
+          <StatCard icon={<BoltIcon className="h-5 w-5" />} value="< 2 min" label="Avg. build time" />
+          <StatCard icon={<ShieldIcon className="h-5 w-5" />} value="Encrypted" label="Account security" />
+          <StatCard icon={<SparkleIcon className="h-5 w-5" />} value="10k+" label="Projects shipped" />
         </div>
       </section>
 
       <section className="glass-panel-strong rounded-[32px] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.1)] backdrop-blur sm:p-10">
         <div className="mb-8">
-          <Link href="/auth/login" className="inline-flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-3">
             <span className="theme-icon-badge inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg font-bold">
               S
             </span>
@@ -124,18 +129,21 @@ export default function LoginPage() {
             <label htmlFor="email" className="mb-2 block text-sm font-medium text-slate-700">
               Email address
             </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="you@example.com"
-              autoComplete="email"
-              autoFocus
-              required
-              disabled={isSubmitting}
-              className="theme-input block w-full rounded-2xl px-4 py-3 text-sm placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
-            />
+            <div className="relative">
+              <MailIcon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@example.com"
+                autoComplete="email"
+                autoFocus
+                required
+                disabled={isSubmitting}
+                className="theme-input block w-full rounded-2xl px-11 py-3 text-sm placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
+              />
+            </div>
           </div>
 
           <div>
@@ -146,6 +154,7 @@ export default function LoginPage() {
               <span className="text-xs font-medium text-slate-400">Password reset coming soon</span>
             </div>
             <div className="relative">
+              <LockIcon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -155,14 +164,15 @@ export default function LoginPage() {
                 autoComplete="current-password"
                 required
                 disabled={isSubmitting}
-                className="theme-input block w-full rounded-2xl px-4 py-3 pr-12 text-sm placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
+                className="theme-input block w-full rounded-2xl px-11 py-3 text-sm placeholder:text-slate-400 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:opacity-70"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 transition hover:text-slate-700"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? <EyeOffIcon className="h-[18px] w-[18px]" /> : <EyeIcon className="h-[18px] w-[18px]" />}
               </button>
             </div>
           </div>
@@ -170,8 +180,9 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isSubmitting || !email || !password}
-            className="theme-button-primary inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-button-primary inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
+            {isSubmitting ? <SpinnerIcon /> : null}
             {isSubmitting ? 'Signing in...' : 'Sign in'}
           </button>
         </form>
@@ -221,11 +232,14 @@ function GoogleMark() {
   );
 }
 
-function FeatureCard({ label, value }: { label: string; value: string }) {
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">{label}</p>
-      <p className="mt-2 text-lg font-bold text-white">{value}</p>
+    <div className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4 backdrop-blur-sm transition hover:bg-white/[0.14]">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#eadbcb]">
+        {icon}
+      </div>
+      <p className="mt-3 text-lg font-bold text-white">{value}</p>
+      <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-300">{label}</p>
     </div>
   );
 }

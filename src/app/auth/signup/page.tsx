@@ -4,6 +4,18 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '@/lib/auth/useAuth';
+import {
+  ClockIcon,
+  EyeIcon,
+  EyeOffIcon,
+  FolderIcon,
+  LockIcon,
+  MailIcon,
+  ShieldIcon,
+  SparkleIcon,
+  SpinnerIcon,
+  UserIcon,
+} from '../icons';
 
 interface FormState {
   name: string;
@@ -164,7 +176,7 @@ export default function SignupPage() {
     <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[0.98fr_1.02fr]">
       <section className="glass-panel-strong rounded-[32px] p-8 shadow-[0_24px_80px_rgba(15,23,42,0.1)] backdrop-blur sm:p-10">
         <div className="mb-8">
-          <Link href="/auth/login" className="inline-flex items-center gap-3">
+          <Link href="/" className="inline-flex items-center gap-3">
             <span className="theme-icon-badge inline-flex h-11 w-11 items-center justify-center rounded-2xl text-lg font-bold">
               S
             </span>
@@ -217,6 +229,7 @@ export default function SignupPage() {
             placeholder="Jane Doe"
             autoComplete="name"
             disabled={isSubmitting}
+            icon={<UserIcon className="h-[18px] w-[18px]" />}
           />
 
           <Field
@@ -229,6 +242,7 @@ export default function SignupPage() {
             placeholder="you@example.com"
             autoComplete="email"
             disabled={isSubmitting}
+            icon={<MailIcon className="h-[18px] w-[18px]" />}
           />
 
           <div>
@@ -236,6 +250,7 @@ export default function SignupPage() {
               Password
             </label>
             <div className="relative">
+              <LockIcon className="pointer-events-none absolute left-4 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" />
               <input
                 id="password"
                 type={showPassword ? 'text' : 'password'}
@@ -244,7 +259,7 @@ export default function SignupPage() {
                 autoComplete="new-password"
                 placeholder="Create a strong password"
                 disabled={isSubmitting}
-                className={`block w-full rounded-2xl px-4 py-3 pr-12 text-sm placeholder:text-slate-400 focus:outline-none ${
+                className={`block w-full rounded-2xl px-11 py-3 text-sm placeholder:text-slate-400 focus:outline-none ${
                   fieldErrors.password
                     ? 'border-rose-300 bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-100'
                     : 'theme-input'
@@ -253,9 +268,10 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword((current) => !current)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 transition hover:text-slate-700"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600"
               >
-                {showPassword ? 'Hide' : 'Show'}
+                {showPassword ? <EyeOffIcon className="h-[18px] w-[18px]" /> : <EyeIcon className="h-[18px] w-[18px]" />}
               </button>
             </div>
             {fieldErrors.password ? (
@@ -307,6 +323,7 @@ export default function SignupPage() {
             placeholder="Re-enter your password"
             autoComplete="new-password"
             disabled={isSubmitting}
+            icon={<LockIcon className="h-[18px] w-[18px]" />}
           />
 
           <label className="theme-card-muted flex items-start gap-3 rounded-2xl px-4 py-3 text-xs leading-6 text-slate-500">
@@ -324,8 +341,9 @@ export default function SignupPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="theme-button-primary inline-flex w-full items-center justify-center rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
+            className="theme-button-primary inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
           >
+            {isSubmitting ? <SpinnerIcon /> : null}
             {isSubmitting ? 'Creating account...' : 'Create account'}
           </button>
         </form>
@@ -338,23 +356,27 @@ export default function SignupPage() {
         </p>
       </section>
 
-      <section className="theme-dark-panel hidden rounded-[32px] p-10 lg:flex lg:flex-col lg:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#eadbcb]">
-            Product workspace
-          </p>
-          <h1 className="mt-5 text-5xl font-bold tracking-tight text-white">
-            Save every generated project under your own account.
+      <section className="theme-dark-panel relative hidden overflow-hidden rounded-[32px] p-10 lg:flex lg:flex-col lg:justify-between">
+        <div className="ambient-mesh ambient-mesh-warm pointer-events-none absolute -right-20 -top-24 h-72 w-72" />
+        <div className="ambient-mesh ambient-mesh-cool pointer-events-none absolute -bottom-28 -left-16 h-72 w-72" />
+
+        <div className="relative">
+          <span className="theme-status-accent inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em]">
+            <SparkleIcon className="h-3.5 w-3.5" />
+            Get started
+          </span>
+          <h1 className="mt-6 text-5xl font-bold tracking-tight text-white">
+            Turn ideas into shipped apps.
           </h1>
           <p className="mt-5 max-w-xl text-lg leading-8 text-slate-200">
-            Once you sign up, ShipStack protects the builder, ties generations to your identity, and keeps project history ready for follow-up work.
+            Create your workspace to save every generated project, track build history, and jump back into live previews anytime.
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-3">
-          <FeaturePill title="Saved projects" text="Backed by Prisma + Postgres" />
-          <FeaturePill title="Protected APIs" text="Credentials-based access" />
-          <FeaturePill title="Usage visibility" text="Health and stats stay private" />
+        <div className="relative grid gap-4 sm:grid-cols-3">
+          <FeaturePill icon={<FolderIcon className="h-5 w-5" />} title="Project history" text="Every build saved and ready to revisit" />
+          <FeaturePill icon={<ShieldIcon className="h-5 w-5" />} title="Private by default" text="Your projects stay isolated to your account" />
+          <FeaturePill icon={<ClockIcon className="h-5 w-5" />} title="Pick up instantly" text="Resume generation and previews anytime" />
         </div>
       </section>
     </div>
@@ -371,6 +393,7 @@ function Field({
   autoComplete,
   disabled,
   type = 'text',
+  icon,
 }: {
   id: string;
   label: string;
@@ -381,36 +404,47 @@ function Field({
   autoComplete: string;
   disabled: boolean;
   type?: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <div>
       <label htmlFor={id} className="mb-2 block text-sm font-medium text-slate-700">
         {label}
       </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        autoComplete={autoComplete}
-        disabled={disabled}
-        className={`block w-full rounded-2xl px-4 py-3 text-sm placeholder:text-slate-400 focus:outline-none ${
-          error
-            ? 'border-rose-300 bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-100'
-            : 'theme-input'
-        }`}
-      />
+      <div className="relative">
+        {icon ? (
+          <span className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+            {icon}
+          </span>
+        ) : null}
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          autoComplete={autoComplete}
+          disabled={disabled}
+          className={`block w-full rounded-2xl py-3 text-sm placeholder:text-slate-400 focus:outline-none ${icon ? 'px-11' : 'px-4'} ${
+            error
+              ? 'border-rose-300 bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-100'
+              : 'theme-input'
+          }`}
+        />
+      </div>
       {error ? <p className="mt-2 text-xs text-rose-600">{error}</p> : null}
     </div>
   );
 }
 
-function FeaturePill({ title, text }: { title: string; text: string }) {
+function FeaturePill({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4">
-      <p className="text-sm font-semibold text-white">{title}</p>
-      <p className="mt-2 text-sm text-slate-200">{text}</p>
+    <div className="rounded-3xl border border-white/10 bg-white/10 px-5 py-4 backdrop-blur-sm transition hover:bg-white/[0.14]">
+      <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 text-[#eadbcb]">
+        {icon}
+      </div>
+      <p className="mt-3 text-sm font-semibold text-white">{title}</p>
+      <p className="mt-1 text-xs leading-5 text-slate-300">{text}</p>
     </div>
   );
 }

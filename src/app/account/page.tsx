@@ -27,7 +27,6 @@ export default async function AccountPage() {
             id: user.id,
             name: user.name ?? '',
             email: user.email ?? '',
-            company: user.company ?? '',
             avatarUrl: user.avatarUrl,
             role: user.role,
             hasPassword: Boolean(user.passwordHash),

@@ -85,7 +85,6 @@ export default async function DatabasePage() {
               <KeyValue label="Name" value={data.viewer.name} />
               <KeyValue label="Email" value={data.viewer.email} />
               <KeyValue label="Role" value={data.viewer.role} />
-              <KeyValue label="Company" value={data.viewer.company || 'Not set'} />
               <KeyValue label="Password login" value={data.viewer.hasPassword ? 'Enabled' : 'Not set'} />
               <KeyValue label="Email verification" value={data.viewer.emailVerified ? formatDateTime(data.viewer.emailVerified) : 'Pending'} />
               <KeyValue label="Created" value={formatDateTime(data.viewer.createdAt)} />

@@ -8,7 +8,6 @@ export interface AccountProfile {
   id?: string;
   name: string;
   email: string;
-  company: string;
   avatarUrl: string | null;
   role: string;
   hasPassword: boolean;
@@ -94,7 +93,6 @@ export default function AccountSettingsClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: profile.name,
-          company: profile.company,
           avatarDataUrl: removeAvatar ? undefined : avatarPreview,
           removeAvatar,
         }),
@@ -245,23 +243,6 @@ export default function AccountSettingsClient({
                   value={profile.email}
                   disabled
                   className="theme-card-muted block w-full rounded-2xl px-4 py-3 text-sm text-slate-500"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="company" className="mb-2 block text-sm font-medium text-slate-700">
-                  Company
-                </label>
-                <input
-                  id="company"
-                  type="text"
-                  value={profile.company}
-                  onChange={(event) => {
-                    setProfile((current) => ({ ...current, company: event.target.value }));
-                    setProfileMessage(null);
-                  }}
-                  placeholder="Your company or studio"
-                  className="theme-input block w-full rounded-2xl px-4 py-3 text-sm placeholder:text-slate-400"
                 />
               </div>
 

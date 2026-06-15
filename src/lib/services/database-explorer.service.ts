@@ -6,7 +6,6 @@ export interface DatabaseExplorerViewer {
   id: string;
   name: string;
   email: string;
-  company: string | null;
   role: string;
   avatarUrl: string | null;
   createdAt: Date;
@@ -135,7 +134,6 @@ export async function getDatabaseExplorerData(
       id: true,
       name: true,
       email: true,
-      company: true,
       role: true,
       avatarUrl: true,
       createdAt: true,
@@ -357,7 +355,6 @@ export async function getDatabaseExplorerData(
       id: viewer.id,
       name: viewer.name?.trim() || viewer.email?.split('@')[0] || 'ShipStack user',
       email: viewer.email ?? 'No email available',
-      company: viewer.company,
       role: viewer.role,
       avatarUrl: viewer.avatarUrl,
       createdAt: viewer.createdAt,

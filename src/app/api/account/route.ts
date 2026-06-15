@@ -7,7 +7,6 @@ export const dynamic = 'force-dynamic';
 
 const ALLOWED_AVATAR_TYPES = new Set(['image/png', 'image/jpeg', 'image/jpg', 'image/webp']);
 const MAX_AVATAR_BYTES = 2 * 1024 * 1024;
-const MAX_COMPANY_LENGTH = 100;
 
 function unauthorizedResponse() {
   return NextResponse.json(
@@ -48,23 +47,6 @@ function validateAvatarDataUrl(dataUrl: string): { isValid: true } | { isValid: 
   return { isValid: true };
 }
 
-function normalizeCompany(company?: string | null) {
-  const value = company?.trim() ?? '';
-
-  if (!value) {
-    return { isValid: true as const, value: null };
-  }
-
-  if (value.length > MAX_COMPANY_LENGTH) {
-    return {
-      isValid: false as const,
-      error: `Company name must be at most ${MAX_COMPANY_LENGTH} characters.`,
-    };
-  }
-
-  return { isValid: true as const, value };
-}
-
 export async function GET(): Promise<NextResponse> {
   try {
     const user = await getCurrentUser();
@@ -74,7 +56,6 @@ export async function GET(): Promise<NextResponse> {
       profile: {
         name: user.name ?? '',
         email: user.email ?? '',
-        company: user.company ?? '',
         avatarUrl: user.avatarUrl,
         role: user.role,
         hasPassword: Boolean(user.passwordHash),
@@ -104,7 +85,6 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     const user = await getCurrentUser();
     const body = (await request.json()) as {
       name?: string;
-      company?: string;
       avatarDataUrl?: string | null;
       removeAvatar?: boolean;
     };
@@ -114,14 +94,6 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
     if (!nameValidation.isValid) {
       return NextResponse.json(
         { success: false, error: nameValidation.error, field: 'name' },
-        { status: 400 }
-      );
-    }
-
-    const companyValidation = normalizeCompany(body.company);
-    if (!companyValidation.isValid) {
-      return NextResponse.json(
-        { success: false, error: companyValidation.error, field: 'company' },
         { status: 400 }
       );
     }
@@ -144,14 +116,12 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
       where: { id: user.id },
       data: {
         name: nameValue.trim(),
-        company: companyValidation.value,
         ...(avatarUrl !== undefined ? { avatarUrl } : {}),
       },
       select: {
         id: true,
         name: true,
         email: true,
-        company: true,
         avatarUrl: true,
         role: true,
         passwordHash: true,
@@ -164,7 +134,6 @@ export async function PATCH(request: NextRequest): Promise<NextResponse> {
         id: updatedUser.id,
         name: updatedUser.name ?? '',
         email: updatedUser.email ?? '',
-        company: updatedUser.company ?? '',
         avatarUrl: updatedUser.avatarUrl,
         role: updatedUser.role,
         hasPassword: Boolean(updatedUser.passwordHash),

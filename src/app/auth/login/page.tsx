@@ -73,9 +73,9 @@ export default function LoginPage() {
         </div>
 
         <div className="relative grid gap-4 sm:grid-cols-3">
-          <StatCard icon={<BoltIcon className="h-5 w-5" />} value="< 2 min" label="Avg. build time" />
+          <StatCard icon={<BoltIcon className="h-5 w-5" />} value="< 5 min" label="Avg. build time" />
           <StatCard icon={<ShieldIcon className="h-5 w-5" />} value="Encrypted" label="Account security" />
-          <StatCard icon={<SparkleIcon className="h-5 w-5" />} value="10k+" label="Projects shipped" />
+          <StatCard icon={<SparkleIcon className="h-5 w-5" />} value="100+" label="Projects shipped" />
         </div>
       </section>
 
